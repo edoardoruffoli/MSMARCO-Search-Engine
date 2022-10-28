@@ -1,5 +1,0 @@
-C:/Users/franc/vsProjects/MSMARCO-Search-Engine/out/build/x64-debug/CMakeFiles/edit_cache.dir
-C:/Users/franc/vsProjects/MSMARCO-Search-Engine/out/build/x64-debug/CMakeFiles/rebuild_cache.dir
-C:/Users/franc/vsProjects/MSMARCO-Search-Engine/out/build/x64-debug/MSMARCO-Search-Engine/CMakeFiles/MSMARCO-Search-Engine.dir
-C:/Users/franc/vsProjects/MSMARCO-Search-Engine/out/build/x64-debug/MSMARCO-Search-Engine/CMakeFiles/edit_cache.dir
-C:/Users/franc/vsProjects/MSMARCO-Search-Engine/out/build/x64-debug/MSMARCO-Search-Engine/CMakeFiles/rebuild_cache.dir

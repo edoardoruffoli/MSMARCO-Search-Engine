@@ -6,4 +6,4 @@ cmake_minimum_required (VERSION 3.8)
 project ("MSMARCO-Search-Engine")
 
 # Include sub-projects.
-add_subdirectory ("MSMARCO-Search-Engine")
+add_subdirectory ("inverted_index")

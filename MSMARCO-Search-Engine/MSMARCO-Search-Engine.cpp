@@ -41,7 +41,7 @@ void write_block_to_disk(std::unordered_map<std::string, std::list<int>>& dictio
 	ss << block_num;
 	std::string out_file;
 	ss >> out_file;
-	std::ofstream file("C:\\Users\\franc\\vsProjects\\Repos\\" + out_file);
+	std::ofstream file("results" + out_file);
 	if (file.fail()) std::cout << "Error\n";
 	for (auto& kv : dictionary) {
 		file << kv.first;
@@ -69,7 +69,12 @@ int main(int argc, char* argv[])
 	int current_size = 0;
 	int block_num = 1;
 
-	const char* docfile = "C:\\Users\\franc\\vsProjects\\Repos\\MSMARCO-Search-Engine\\examples.txt";
+	std::filesystem::path cwd = std::filesystem::current_path() / "filename.txt";
+	std::ofstream file(cwd.string());
+	file.close();
+	std::cout << cwd.string() << std::endl;
+
+	const char* docfile = argv[1];
 	//std::cout << "--->Parameters<---" << std::endl;
 	std::cout << "-> docfile: " << docfile << std::endl << std::endl;
 

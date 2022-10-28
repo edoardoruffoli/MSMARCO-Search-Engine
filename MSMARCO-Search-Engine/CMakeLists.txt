@@ -4,7 +4,7 @@
 cmake_minimum_required (VERSION 3.8)
 
 # Add source to this project's executable.
-add_executable (MSMARCO-Search-Engine "MSMARCO-Search-Engine.cpp" "MSMARCO-Search-Engine.h")
+add_executable (MSMARCO-Search-Engine "MSMARCO-Search-Engine.cpp" "MSMARCO-Search-Engine.h"  )
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET MSMARCO-Search-Engine PROPERTY CXX_STANDARD 20)

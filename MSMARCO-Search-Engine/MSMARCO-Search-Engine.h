@@ -4,5 +4,12 @@
 #pragma once
 
 #include <iostream>
+#include <cmath>
+#include <fstream>
+#include <random>
+#include <string>
+#include <unordered_set>
+#include <unordered_map>
+#include <sstream>
 
 // TODO: Reference additional headers your program requires here.

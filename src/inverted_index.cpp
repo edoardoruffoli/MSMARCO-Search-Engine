@@ -1,7 +1,7 @@
 ﻿// MSMARCO-Search-Engine.cpp : Defines the entry point for the application.
 //
 
-#include "MSMARCO-Search-Engine.h"
+#include "MSMARCO-Search-Engine/inverted_index.h"
 
 std::string clearToken(const std::string& token) {
 	std::string cleared_token;

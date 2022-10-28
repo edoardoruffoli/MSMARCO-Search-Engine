@@ -22,7 +22,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     # Note this needs to be done in the main CMakeLists
     # since it calls enable_testing, which must be in the
     # main CMakeLists.
-    include(CTest)
+    #include(CTest)
 
     # Docs only available if this is the main app
     #find_package(Doxygen)
@@ -41,5 +41,5 @@ add_subdirectory(apps)
 # Emergency override MODERN_CMAKE_BUILD_TESTING provided as well
 if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MODERN_CMAKE_BUILD_TESTING)
    AND BUILD_TESTING)
-  add_subdirectory(tests)
+    #add_subdirectory(tests)
 endif()

@@ -15,7 +15,7 @@ target_include_directories(msmarco_search_engine PUBLIC ../include)
 target_link_libraries(msmarco_search_engine PRIVATE)
 
 # All users of this library will need at least C++11
-target_compile_features(msmarco_search_engine PUBLIC cxx_std_11)
+target_compile_features(msmarco_search_engine PUBLIC cxx_std_17)
 
 # IDEs should put the headers in a nice place
 source_group(

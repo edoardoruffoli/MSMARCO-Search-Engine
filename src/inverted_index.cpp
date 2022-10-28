@@ -41,7 +41,7 @@ void write_block_to_disk(std::unordered_map<std::string, std::list<int>>& dictio
 	ss << block_num;
 	std::string out_file;
 	ss >> out_file;
-	std::ofstream file("results" + out_file);
+	std::ofstream file("../../results" + out_file);
 	if (file.fail()) std::cout << "Error\n";
 	for (auto& kv : dictionary) {
 		file << kv.first;

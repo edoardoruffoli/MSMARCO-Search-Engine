@@ -6,7 +6,7 @@ int main(int argc, char* argv[])
 	int current_size = 0;
 	int block_num = 1;
 
-	const char* docfile = argv[1];
+	const char* docfile = "../../examples.txt";//argv[1];
 	//std::cout << "--->Parameters<---" << std::endl;
 	std::cout << "-> docfile: " << docfile << std::endl << std::endl;
 

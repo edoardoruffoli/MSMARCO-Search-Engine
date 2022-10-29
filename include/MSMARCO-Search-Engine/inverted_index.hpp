@@ -22,10 +22,10 @@
 
 std::string clearToken(const std::string& token);
 
-std::unordered_map<std::string, int> getTokens(const std::string &content, const int& doc_id);
+std::unordered_map<std::string, int> getTokens(const std::string &content);
 
-void invert_index(const std::unordered_map<std::string, int>& token_stream, std::unordered_map<std::string, std::list<int>>& dictionary);
+void invert_index(const std::unordered_map<std::string, int>& token_stream, std::unordered_map<std::string, std::list<std::pair<int, int>>>& dictionary, int docId);
 
-void write_block_to_disk(std::unordered_map<std::string, std::list<int>>& dictionary, int block_num);
+void write_block_to_disk(std::unordered_map<std::string, std::list<std::pair<int, int>>>& dictionary, int block_num);
 
 int getFileSize(const std::string& text);

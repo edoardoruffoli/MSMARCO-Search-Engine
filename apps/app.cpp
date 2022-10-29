@@ -1,4 +1,10 @@
 #include "MSMARCO-Search-Engine/inverted_index.hpp"
+#include <iostream>
+#include <fstream>
+
+#include <codecvt>
+#include <fcntl.h>
+#include <io.h>
 
 int main(int argc, char* argv[])
 {
@@ -13,36 +19,40 @@ int main(int argc, char* argv[])
 	std::ifstream f(docfile);
 
 	std::string loaded_content;
-	int pid;
+	int docId;
 	std::string id;
 	std::string text;
-	std::unordered_map<std::string, std::list<int>> dictionary;
+	std::unordered_map<std::string, std::list<std::pair<int, int>>> partial_inv_idx; //list<MSMarco::posting>>
 
 	while (getline(f, loaded_content)) {
 		std::istringstream iss(loaded_content);
 		getline(iss, id, '\t');
-		pid = stoi(id);
-		getline(iss, text, '\t');
-		current_size += getFileSize(text);
+		docId = stoi(id);
+		getline(iss, text, '\n');
+
+		std::unordered_map<std::string, int> tokens = getTokens(text);
+		current_size += tokens.size();
+
+		//current_size += getFileSize(text);
 		if (current_size < BLOCK_SIZE) {
-			std::unordered_map<std::string, int> tokens = getTokens(text, pid);
-			invert_index(tokens, dictionary);
+			invert_index(tokens, partial_inv_idx, docId);
 		}
 		else {
-			write_block_to_disk(dictionary, block_num);
+			write_block_to_disk(partial_inv_idx, block_num);
 			current_size = 0;
 			block_num++;
-			dictionary.clear();
+			partial_inv_idx.clear();
+			invert_index(tokens, partial_inv_idx, docId);
 		}
 	}
 
-	write_block_to_disk(dictionary, block_num);
+	write_block_to_disk(partial_inv_idx, block_num);
 
-	for (auto& s : dictionary)
+	for (auto& s : partial_inv_idx)
 	{
 		std::cout << s.first << " ";
 		for (auto innerItr : s.second)
-			std::cout << innerItr << " ";
+			std::cout << innerItr.first << " " << innerItr.second;
 		std::cout << std::endl;
 	}
 

@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
 	{
 		std::cout << s.first << " ";
 		for (auto innerItr : s.second)
-			std::cout << innerItr.first << " " << innerItr.second;
+			std::cout << innerItr.first << " f:" << innerItr.second << " ";
 		std::cout << std::endl;
 	}
 

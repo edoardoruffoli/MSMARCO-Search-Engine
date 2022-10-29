@@ -20,10 +20,7 @@ std::unordered_map<std::string, int> getTokens(const std::string &content) {
 		if (itr == ' ' || itr == '\n') {
 			if (token.length() > 1) {
 				token = clearToken(token);
-				//if (tokens.find(token) == tokens.end())
-				//	tokens[token].first = doc_id;
 				tokens[token]++;
-
 			}
 			token.clear();
 			continue;

@@ -33,7 +33,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     #endif()
 endif()
 
-
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 add_subdirectory(src)
 

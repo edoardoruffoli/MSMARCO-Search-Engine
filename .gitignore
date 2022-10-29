@@ -36,3 +36,6 @@
 # VS folder
 .vs/
 out/
+
+# Data
+collection.tsv

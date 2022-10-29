@@ -8,20 +8,22 @@ std::string clearToken(const std::string& token) {
 	for (char ch : token) {
 		ch = char(tolower(ch));
 		if (int(ch) >= 97 && int(ch) <= 122)
-			cleared_token += ch;
+		cleared_token += ch;
 	}
 	return cleared_token;
 }
 
-std::unordered_map<std::string, int> getTokens(const std::string &content, const int& doc_id) {
-	std::unordered_map<std::string, int> tokens; //pair<int, int>
+std::unordered_map<std::string, int> getTokens(const std::string &content) {
+	std::unordered_map<std::string, int> tokens;
 	std::string token;
 	for (char itr : content) {
 		if (itr == ' ' || itr == '\n') {
 			if (token.length() > 1) {
 				token = clearToken(token);
-				//if token is present count++
-				tokens[token] = doc_id;
+				//if (tokens.find(token) == tokens.end())
+				//	tokens[token].first = doc_id;
+				tokens[token]++;
+
 			}
 			token.clear();
 			continue;
@@ -31,12 +33,12 @@ std::unordered_map<std::string, int> getTokens(const std::string &content, const
 	return tokens;
 }
 
-void invert_index(const std::unordered_map<std::string, int>& token_stream, std::unordered_map<std::string, std::list<int>>& dictionary) {
+void invert_index(const std::unordered_map<std::string, int>& token_stream, std::unordered_map<std::string, std::list<std::pair<int, int>>>& partial_inv_idx, int docId) {
 	for (const std::pair<std::string, int> term_doc : token_stream)
-		dictionary[term_doc.first].push_back(term_doc.second);
+		partial_inv_idx[term_doc.first].push_back(std::make_pair(docId, term_doc.second));
 }
 
-void write_block_to_disk(std::unordered_map<std::string, std::list<int>>& dictionary, int block_num) {
+void write_block_to_disk(std::unordered_map<std::string, std::list<std::pair<int, int>>>& dictionary, int block_num) {
 	std::stringstream ss;
 	ss << block_num;
 	std::string out_file;
@@ -46,7 +48,7 @@ void write_block_to_disk(std::unordered_map<std::string, std::list<int>>& dictio
 	for (auto& kv : dictionary) {
 		file << kv.first;
 		for (auto& i : kv.second)
-			file << " " << i;
+			file << ' ' << i.first << ' ' << i.second;
 		file << std::endl;
 	}
 }

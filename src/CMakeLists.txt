@@ -12,7 +12,7 @@ add_library(msmarco_search_engine inverted_index.cpp ${HEADER_LIST})
 target_include_directories(msmarco_search_engine PUBLIC ../include)
 
 # This depends on (header only) boost
-target_link_libraries(msmarco_search_engine PRIVATE)
+target_link_libraries(msmarco_search_engine PUBLIC Boost::boost Boost::filesystem)
 
 # All users of this library will need at least C++11
 target_compile_features(msmarco_search_engine PUBLIC cxx_std_17)

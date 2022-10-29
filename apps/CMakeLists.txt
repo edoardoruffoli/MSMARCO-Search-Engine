@@ -1,4 +1,4 @@
-﻿add_executable(app app.cpp)
-target_compile_features(app PRIVATE cxx_std_17)
+﻿add_executable(spimi spimi.cpp)
+target_compile_features(spimi PRIVATE cxx_std_17)
 
-target_link_libraries(app PRIVATE msmarco_search_engine)
+target_link_libraries(spimi PRIVATE msmarco_search_engine)

@@ -1,10 +1,5 @@
 #include "MSMARCO-Search-Engine/inverted_index.hpp"
-#include <iostream>
-#include <fstream>
-
-#include <codecvt>
-#include <fcntl.h>
-#include <io.h>
+#include "MSMARCO-Search-Engine/parsing.hpp"
 
 int main(int argc, char* argv[])
 {
@@ -33,7 +28,6 @@ int main(int argc, char* argv[])
 		std::unordered_map<std::string, int> tokens = getTokens(text);
 		current_size += tokens.size();
 
-		//current_size += getFileSize(text);
 		if (current_size < BLOCK_SIZE) {
 			invert_index(tokens, partial_inv_idx, docId);
 		}
@@ -52,7 +46,7 @@ int main(int argc, char* argv[])
 	{
 		std::cout << s.first << " ";
 		for (auto innerItr : s.second)
-			std::cout << innerItr.first << " f:" << innerItr.second << " ";
+			std::cout << innerItr.first << " " << innerItr.second << ", ";
 		std::cout << std::endl;
 	}
 

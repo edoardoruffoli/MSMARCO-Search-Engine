@@ -35,6 +35,7 @@
 
 # VS folder
 .vs/
+.vscode
 out/
 
 # Data

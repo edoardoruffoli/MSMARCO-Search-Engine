@@ -1,28 +1,29 @@
 #include "MSMARCO-Search-Engine/parsing.hpp"
+#include <boost/algorithm/string/case_conv.hpp>
+#include <boost/locale.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/regex.hpp>
+#include <boost/tokenizer.hpp>
 
-std::string clearToken(const std::string& token) {
-	std::string cleared_token;
-	for (char ch : token) {
-		ch = char(tolower(ch));
-		if (int(ch) >= 97 && int(ch) <= 122)
-		cleared_token += ch;
-	}
-	return cleared_token;
-}
-
-std::unordered_map<std::string, int> getTokens(const std::string &content) {
+std::unordered_map<std::string, int> getTokens(const std::string content) {
+	//How to deal with empty page, malformed lines, malformed characters?
 	std::unordered_map<std::string, int> tokens;
-	std::string token;
-	for (char itr : content) {
-		if (itr == ' ' || itr == '\n') {
-			if (token.length() > 1) {
-				token = clearToken(token);
-				tokens[token]++;
-			}
-			token.clear();
+
+	boost::char_separator<char> sep(" ");
+	typedef boost::tokenizer< boost::char_separator<char> > t_tokenizer;
+	t_tokenizer tok(content, sep);
+
+	for (t_tokenizer::iterator beg = tok.begin(); beg != tok.end(); ++beg)
+	{
+		std::string token = *beg;
+		boost::trim_if(token, boost::is_punct());
+		if (token.size() == 0)
 			continue;
-		}
-		token += char(tolower(itr));
+		//std::cout << token << std::endl;
+		boost::algorithm::to_lower(token);
+		tokens[token]++;
 	}
+
 	return tokens;
 }

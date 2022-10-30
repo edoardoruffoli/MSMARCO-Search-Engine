@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
 	int docId;
 	std::string id;
 	std::string text;
-    /*
+    
     // std::map guarantees lexicographic terms ordering
 	std::map<std::string, std::list<std::pair<int, int>>> partial_inv_idx; //list<MSMarco::posting>>
     
@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
 	}
 
     write_block_to_disk(partial_inv_idx, block_num);
-    */
+    
     // Merge blocks
     merge_blocks(11);
     

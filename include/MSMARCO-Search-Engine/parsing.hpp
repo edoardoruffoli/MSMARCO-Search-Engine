@@ -12,6 +12,4 @@
 #include <filesystem>
 #include <boost/filesystem.hpp>
 
-std::string clearToken(const std::string& token);
-
-std::unordered_map<std::string, int> getTokens(const std::string &content);
+std::unordered_map<std::string, int> getTokens(const std::string content);

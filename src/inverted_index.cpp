@@ -29,18 +29,21 @@ void write_block_to_disk(std::map<std::string, std::list<std::pair<int, int>>>& 
 }
 
 void merge_blocks(int n_blocks) {
-    // Utility
+    // Utility to sort the priority queue as min heap in lexicographic
     struct compare {
         bool operator()(
             index_record const& a,
             index_record const& b) const {
-            return a.term > b.term;
+                if (a.term == b.term)
+                    return a.block_id > b.block_id;
+                return a.term > b.term;
         }
     };
 
     std::ofstream out_file("../../final_results");
-    std::priority_queue<index_record, std::vector<index_record>, compare> min_heap;   //pair<term, blockid>
+    std::priority_queue<index_record, std::vector<index_record>, compare> min_heap;
 
+    // Buffer pointers to the block based inverted indexes 
     std::vector<std::ifstream> in_files;
     for (int i = 1; i <= n_blocks; ++i) {
         in_files.push_back(std::ifstream("../../results" + std::to_string(i)));
@@ -54,23 +57,24 @@ void merge_blocks(int n_blocks) {
         index_record cur = min_heap.top();
         min_heap.pop();
         
-        // Add new record to min heap
+        // Update min heap by pushing the new top value of the current block
         index_record tmp;
         tmp.block_id = cur.block_id;
-        read_record(in_files[cur.block_id-1], tmp);
+        read_record(in_files[tmp.block_id-1], tmp);
         min_heap.push(tmp);
 
+        // Merge the posting lists of the same terms of the other blocks
         while (min_heap.top().term == cur.term) {
             index_record cur2 = min_heap.top();
             min_heap.pop();
-            cur.posting_list.splice(cur.posting_list.end(), cur2.posting_list);
-
             tmp.block_id = cur2.block_id;
             read_record(in_files[cur2.block_id-1], tmp);
-            min_heap.push(tmp);            
+            min_heap.push(tmp);     
+
+            cur.posting_list.splice(cur.posting_list.end(), cur2.posting_list);  // O(1)     
         } 
 
-        // Write
+        // Write on the out buffer
         std::cout << "Writing " << cur.term << '\n';
         write_record(out_file, cur);
     }
@@ -102,7 +106,7 @@ void write_record(std::ofstream &out, index_record &idx_record) {
 
     out << idx_record.term << ' ';
 	for (auto& entry : idx_record.posting_list) {
-		out << entry.first << ' ' << entry.second;
+		out << entry.first << ' ' << entry.second << ' ';
 	}
     out << '\n';
 }

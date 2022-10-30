@@ -68,8 +68,8 @@ void merge_blocks(int n_blocks) {
             index_record cur2 = min_heap.top();
             min_heap.pop();
             tmp.block_id = cur2.block_id;
-            read_record(in_files[cur2.block_id-1], tmp);
-            min_heap.push(tmp);     
+            if(read_record(in_files[cur2.block_id-1], tmp))
+                min_heap.push(tmp);     
 
             cur.posting_list.splice(cur.posting_list.end(), cur2.posting_list);  // O(1)     
         } 
@@ -80,7 +80,7 @@ void merge_blocks(int n_blocks) {
     }
 }
 
-bool read_record(std::ifstream &in, index_record &idx_record) {
+bool read_recordread_record(std::ifstream &in, index_record &idx_record) {
     if (in.eof())
         return false;
 

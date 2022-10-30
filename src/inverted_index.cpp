@@ -15,7 +15,7 @@ void write_block_to_disk(std::map<std::string, std::list<std::pair<int, int>>>& 
 	ss << block_num;
 	std::string out_file;
 	ss >> out_file;
-	std::ofstream file("../../results" + out_file);
+	std::ofstream file("../../results/results" + out_file);
 
 	if (file.fail()) 
         std::cout << "Error\n";
@@ -40,13 +40,13 @@ void merge_blocks(int n_blocks) {
         }
     };
 
-    std::ofstream out_file("../../final_results");
+    std::ofstream out_file("../../results/final_results");
     std::priority_queue<index_record, std::vector<index_record>, compare> min_heap;
 
     // Buffer pointers to the block based inverted indexes 
     std::vector<std::ifstream> in_files;
     for (int i = 1; i <= n_blocks; ++i) {
-        in_files.push_back(std::ifstream("../../results" + std::to_string(i)));
+        in_files.push_back(std::ifstream("../../results/results" + std::to_string(i)));
         index_record tmp;
         tmp.block_id = i;
         read_record(in_files.back(), tmp);

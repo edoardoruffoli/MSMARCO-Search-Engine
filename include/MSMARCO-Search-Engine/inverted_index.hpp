@@ -7,10 +7,27 @@
 #include <string>
 #include <unordered_set>
 #include <unordered_map>
+#include <map>
+#include <queue>
 #include <sstream>
 #include <filesystem>
 #include <boost/filesystem.hpp>
+// includes for vector and unique_ptr.
+#include <vector>
+#include <memory>
 
-void invert_index(const std::unordered_map<std::string, int>& token_stream, std::unordered_map<std::string, std::list<std::pair<int, int>>>& dictionary, int docId);
+struct index_record{
+    int block_id;
+    std::string term;
+    std::list<std::pair<int, int>> posting_list;
+};
 
-void write_block_to_disk(std::unordered_map<std::string, std::list<std::pair<int, int>>>& dictionary, int block_num);
+void invert_index(std::map<std::string, std::list<std::pair<int, int>>>& dictionary, const std::unordered_map<std::string, int>& token_stream, int docId);
+
+void write_block_to_disk(std::map<std::string, std::list<std::pair<int, int>>>& dictionary, int block_num);
+
+void merge_blocks(int n_blocks);
+
+void read_record(std::ifstream &in, index_record &idx_record);
+
+void write_record(std::ofstream &out, index_record &idx_record);

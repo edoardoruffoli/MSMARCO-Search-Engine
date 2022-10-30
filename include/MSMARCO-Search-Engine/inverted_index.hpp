@@ -28,6 +28,6 @@ void write_block_to_disk(std::map<std::string, std::list<std::pair<int, int>>>& 
 
 void merge_blocks(int n_blocks);
 
-void read_record(std::ifstream &in, index_record &idx_record);
+bool read_record(std::ifstream &in, index_record &idx_record);
 
 void write_record(std::ofstream &out, index_record &idx_record);

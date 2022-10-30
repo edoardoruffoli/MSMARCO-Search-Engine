@@ -66,9 +66,9 @@ void merge_blocks(int n_blocks) {
             cur.posting_list.splice(cur.posting_list.end(), cur2.posting_list);
 
             tmp.block_id = cur2.block_id;
-            read_record(in_files[cur2.block_id-1], tmp);
-            min_heap.push(tmp);            
-        } 
+            if(read_record(in_files[cur2.block_id-1], tmp))
+                min_heap.push(tmp);            
+        }
 
         // Write
         std::cout << "Writing " << cur.term << '\n';
@@ -76,9 +76,9 @@ void merge_blocks(int n_blocks) {
     }
 }
 
-void read_record(std::ifstream &in, index_record &idx_record) {
-    if (in.fail()) 
-        std::cout << "Error\n";
+bool read_record(std::ifstream &in, index_record &idx_record) {
+    if (in.eof())
+        return false;
 
     std::string loaded_content;
 
@@ -92,6 +92,7 @@ void read_record(std::ifstream &in, index_record &idx_record) {
         getline(iss, freq, ' ');
         idx_record.posting_list.push_back(std::make_pair(stoi(docid), stoi(freq)));
     }   
+    return true;
 }
 
 void write_record(std::ofstream &out, index_record &idx_record) {

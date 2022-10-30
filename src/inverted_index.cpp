@@ -47,23 +47,32 @@ void merge_blocks(int n_blocks) {
         index_record tmp;
         tmp.block_id = i;
         read_record(in_files.back(), tmp);
-        if (tmp.term != "")
-            min_heap.push(tmp);
+        min_heap.push(tmp);
     }
 
     while (!min_heap.empty()) {
         index_record cur = min_heap.top();
         min_heap.pop();
-
-        // Write
-        std::cout << "Writing " << cur.term << '\n';
-        write_record(out_file, cur);
-
+        
         // Add new record to min heap
         index_record tmp;
         tmp.block_id = cur.block_id;
         read_record(in_files[cur.block_id-1], tmp);
         min_heap.push(tmp);
+
+        while (min_heap.top().term == cur.term) {
+            index_record cur2 = min_heap.top();
+            min_heap.pop();
+            cur.posting_list.splice(cur.posting_list.end(), cur2.posting_list);
+
+            tmp.block_id = cur2.block_id;
+            read_record(in_files[cur2.block_id-1], tmp);
+            min_heap.push(tmp);            
+        } 
+
+        // Write
+        std::cout << "Writing " << cur.term << '\n';
+        write_record(out_file, cur);
     }
 }
 

@@ -80,7 +80,7 @@ void merge_blocks(int n_blocks) {
     }
 }
 
-bool read_recordread_record(std::ifstream &in, index_record &idx_record) {
+bool read_record(std::ifstream &in, index_record &idx_record) {
     if (in.eof())
         return false;
 

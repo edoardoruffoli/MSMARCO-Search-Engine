@@ -34,7 +34,7 @@ void merge_blocks(int n_blocks) {
         bool operator()(
             index_record const& a,
             index_record const& b) const {
-            return a.term >= b.term;
+            return a.term > b.term;
         }
     };
 

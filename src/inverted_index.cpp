@@ -74,7 +74,7 @@ void merge_blocks(int n_blocks) {
         min_heap.push(tmp);
 
         // Merge the posting lists of the same terms of the other blocks
-        while (min_heap.top().term == cur.term) {
+        while (!min_heap.empty() && min_heap.top().term == cur.term) {
             index_record cur2 = min_heap.top();
             min_heap.pop();
             tmp.block_id = cur2.block_id;

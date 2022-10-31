@@ -40,7 +40,14 @@ void merge_blocks(int n_blocks) {
         }
     };
 
-    std::ofstream out_file("../../results/final_results");
+    std::ofstream out_inverted_index("../../results/inverted_index");
+    if (out_inverted_index.fail()) 
+        std::cout << "Error\n";
+    
+    std::ofstream out_lexicon("../../results/lexicon");
+    if (out_lexicon.fail()) 
+        std::cout << "Error\n";
+
     std::priority_queue<index_record, std::vector<index_record>, compare> min_heap;
 
     // Buffer pointers to the block based inverted indexes 
@@ -52,6 +59,9 @@ void merge_blocks(int n_blocks) {
         read_record(in_files.back(), tmp);
         min_heap.push(tmp);
     }
+
+    // Pointer to the posting list in the inverted index file
+    unsigned long offset = 0;
 
     while (!min_heap.empty()) {
         index_record cur = min_heap.top();
@@ -74,9 +84,13 @@ void merge_blocks(int n_blocks) {
             cur.posting_list.splice(cur.posting_list.end(), cur2.posting_list);  // O(1)     
         } 
 
-        // Write on the out buffer
+        // Writing
         std::cout << "Writing " << cur.term << '\n';
-        write_record(out_file, cur);
+        write_inverted_index_record(out_inverted_index, cur);
+        write_lexicon_record(out_lexicon, cur, offset);
+
+        // Increment offset
+        offset++;
     }
 }
 
@@ -99,15 +113,24 @@ bool read_record(std::ifstream &in, index_record &idx_record) {
     return true;
 }
 
-void write_record(std::ofstream &out, index_record &idx_record) {
-    // Check if term is present
-
-    if (out.fail()) 
-        std::cout << "Error\n";
-
+void write_inverted_index_record(std::ofstream &out, index_record &idx_record) {
     out << idx_record.term << ' ';
 	for (auto& entry : idx_record.posting_list) {
-		out << entry.first << ' ' << entry.second << ' ';
+		out << entry.first << ',';
 	}
+    out << ' ';
+    for (auto& entry : idx_record.posting_list) {
+		out << entry.second << ',';
+	}
+    out << '\n';
+}
+
+void write_lexicon_record(std::ofstream &out, index_record &idx_record, unsigned long offset) {
+    out << idx_record.term << ' ' << offset << ' ' << idx_record.posting_list.size();
+    out << '\n';
+}
+
+void write_doc_table_record(std::ofstream &out, std::string &doc_no, unsigned int doc_len) {
+    out << doc_no << ' ' << doc_len;
     out << '\n';
 }

@@ -15,6 +15,8 @@
 // includes for vector and unique_ptr.
 #include <vector>
 #include <memory>
+#include <boost/range/numeric.hpp>
+#include <boost/range/adaptor/map.hpp>
 
 struct index_record{
     int block_id;
@@ -30,4 +32,8 @@ void merge_blocks(int n_blocks);
 
 bool read_record(std::ifstream &in, index_record &idx_record);
 
-void write_record(std::ofstream &out, index_record &idx_record);
+void write_inverted_index_record(std::ofstream &out, index_record &idx_record);
+
+void write_lexicon_record(std::ofstream &out, index_record &idx_record, unsigned long offset);
+
+void write_doc_table_record(std::ofstream &out, std::string &doc_no, unsigned int doc_len);

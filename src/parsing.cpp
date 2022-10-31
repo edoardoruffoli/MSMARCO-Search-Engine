@@ -10,7 +10,7 @@ std::unordered_map<std::string, int> getTokens(const std::string content) {
 	//How to deal with empty page, malformed lines, malformed characters?
 	std::unordered_map<std::string, int> tokens;
 
-	boost::char_separator<char> sep(" ");
+	boost::char_separator<char> sep(" \t\n");
 	typedef boost::tokenizer< boost::char_separator<char> > t_tokenizer;
 	t_tokenizer tok(content, sep);
 

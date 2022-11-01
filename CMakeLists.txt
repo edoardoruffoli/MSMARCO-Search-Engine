@@ -33,8 +33,11 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     #endif()
 endif()
 
-set(ZLIB_LIBRARY "C:\\zlib-1.2.13\\lib\\zlib.lib")
-set(ZLIB_INCLUDE_DIR "C:\\zlib-1.2.13\\include")
+if (WIN32)
+    set(ZLIB_LIBRARY "C:\\zlib-1.2.13\\lib\\zlib.lib")
+    set(ZLIB_INCLUDE_DIR "C:\\zlib-1.2.13\\include")
+else()
+endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 

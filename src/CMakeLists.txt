@@ -6,7 +6,7 @@
 file(GLOB HEADER_LIST "${MSMARCO-Search-Engine_SOURCE_DIR}/include/MSMARCO-Search-Engine/*.hpp")
 
 # Make an automatic library - will be static or dynamic based on user setting
-add_library(msmarco_search_engine parsing.cpp inverted_index.cpp ${HEADER_LIST})
+add_library(msmarco_search_engine parsing.cpp merging.cpp ${HEADER_LIST})
 
 # We need this directory, and users of our library will need it too
 target_include_directories(msmarco_search_engine PUBLIC ../include)
@@ -16,6 +16,9 @@ target_link_libraries(msmarco_search_engine PUBLIC Boost::boost Boost::filesyste
 
 # All users of this library will need at least C++11
 target_compile_features(msmarco_search_engine PUBLIC cxx_std_17)
+
+# Create directory for intermediate results
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tmp)
 
 # IDEs should put the headers in a nice place
 source_group(

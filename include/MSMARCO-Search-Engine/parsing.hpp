@@ -20,6 +20,10 @@
 #include <boost/range/numeric.hpp>
 #include <boost/range/adaptor/map.hpp>
 
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+
 std::unordered_map<std::string, int> tokenize(const std::string content);
 
 void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& dictonary,

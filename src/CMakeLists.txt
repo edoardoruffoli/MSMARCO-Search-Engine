@@ -11,8 +11,11 @@ add_library(msmarco_search_engine parsing.cpp merging.cpp ${HEADER_LIST})
 # We need this directory, and users of our library will need it too
 target_include_directories(msmarco_search_engine PUBLIC ../include)
 
+find_package(ZLIB REQUIRED)
+include_directories(${ZLIB_INCLUDE_DIRS})
+
 # This depends on (header only) boost
-target_link_libraries(msmarco_search_engine PUBLIC Boost::boost Boost::filesystem)
+target_link_libraries(msmarco_search_engine PUBLIC Boost::boost Boost::filesystem Boost::iostreams ${ZLIB_LIBRARIES})
 
 # All users of this library will need at least C++11
 target_compile_features(msmarco_search_engine PUBLIC cxx_std_17)

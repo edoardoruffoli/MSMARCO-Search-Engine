@@ -51,14 +51,20 @@ void write_block_to_disk(std::map<std::string, std::list<std::pair<int, int>>>& 
 void parse(const char* in, const unsigned int BLOCK_SIZE) {
     std::cout << "Started Parsing Phase: \n\n";
 
-    std::ifstream f(in);
-
+    std::ifstream f(in, std::ios_base::in | std::ios_base::binary);
     // Check arguments validity
     if (f.fail()) 
         std::cout << "Error: input fail not valid.\n";
     
     if (BLOCK_SIZE == 0)
         std::cout << "Error: block size not valid.\n";
+
+    boost::iostreams::filtering_streambuf<boost::iostreams::input> inbuf;
+    inbuf.push(boost::iostreams::gzip_decompressor());
+    inbuf.push(f);
+
+    //Convert streambuf to istream
+    std::istream instream(&inbuf);
 
     // Document table output
     std::ofstream out_doc_table("../../output/doc_table");
@@ -74,7 +80,7 @@ void parse(const char* in, const unsigned int BLOCK_SIZE) {
 	std::string doc_no;
 	std::string text;
 
-    while (getline(f, loaded_content)) {
+    while (getline(instream, loaded_content)) {
         std::cout << "Processing doc_id: " << doc_id << std::endl;
 
 		std::istringstream iss(loaded_content);

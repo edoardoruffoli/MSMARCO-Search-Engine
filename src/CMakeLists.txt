@@ -11,7 +11,7 @@ add_library(msmarco_search_engine parsing.cpp merging.cpp ${HEADER_LIST})
 # We need this directory, and users of our library will need it too
 target_include_directories(msmarco_search_engine PUBLIC ../include)
 
-find_package(ZLIB REQUIRED)
+#find_package(ZLIB)
 include_directories(${ZLIB_INCLUDE_DIRS})
 target_link_libraries(msmarco_search_engine PUBLIC Boost::boost Boost::filesystem Boost::iostreams ${ZLIB_LIBRARIES})
 

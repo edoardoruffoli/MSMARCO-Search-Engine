@@ -13,8 +13,6 @@ target_include_directories(msmarco_search_engine PUBLIC ../include)
 
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
-
-# This depends on (header only) boost
 target_link_libraries(msmarco_search_engine PUBLIC Boost::boost Boost::filesystem Boost::iostreams ${ZLIB_LIBRARIES})
 
 # All users of this library will need at least C++11

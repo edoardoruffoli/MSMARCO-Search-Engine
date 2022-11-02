@@ -2,3 +2,6 @@
 	path = thirdparty/boost-cmake
 	url = https://github.com/Orphis/boost-cmake
 
+[submodule "thirdparty/zlib"]
+	path = thirdparty/zlib
+	url = https://github.com/commontk/zlib

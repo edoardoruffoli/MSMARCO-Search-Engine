@@ -24,7 +24,9 @@
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 
-std::unordered_map<std::string, int> tokenize(const std::string content);
+#include <Porter2.hpp>
+
+std::unordered_map<std::string, int> tokenize(const std::string content, bool flag, const char* stopwords_filename);
 
 void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& dictonary,
                   const std::unordered_map<std::string, int>& token_stream, int doc_id);
@@ -33,4 +35,4 @@ void write_doc_table_record(std::ofstream &out, std::string &doc_no, unsigned in
 
 void write_block_to_disk(std::map<std::string, std::list<std::pair<int, int>>>& dictionary, int block_num);
 
-void parse(const char* in, const unsigned int BLOCK_SIZE);
+void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char* stopwords_filename);

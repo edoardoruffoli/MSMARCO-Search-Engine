@@ -13,7 +13,7 @@ target_include_directories(msmarco_search_engine PUBLIC ../include)
 
 #find_package(ZLIB)
 include_directories(${ZLIB_INCLUDE_DIRS})
-target_link_libraries(msmarco_search_engine PUBLIC Boost::boost Boost::filesystem Boost::iostreams ${ZLIB_LIBRARIES})
+target_link_libraries(msmarco_search_engine PUBLIC Boost::boost Boost::filesystem Boost::iostreams ${ZLIB_LIBRARIES} Porter2)
 
 # All users of this library will need at least C++11
 target_compile_features(msmarco_search_engine PUBLIC cxx_std_17)

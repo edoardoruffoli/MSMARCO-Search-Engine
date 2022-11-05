@@ -36,7 +36,6 @@ void write_lexicon_record(std::ofstream &out, term_entry &term_entry, unsigned l
     out << '\n';
 }
 
-
 void merge_blocks(const unsigned int n_blocks) {
     std::cout << "Started Merging Phase: \n\n";
     std::cout << "Number of blocks: " << n_blocks << "\n\n";
@@ -45,9 +44,7 @@ void merge_blocks(const unsigned int n_blocks) {
     if (out_inverted_index.fail()) 
         std::cout << "Error: cannot open uncompressed_inverted_index\n";
     
-    std::ofstream out_lexicon("../../output/lexicon");
-    if (out_lexicon.fail()) 
-        std::cout << "Error: cannot open lexicon\n";
+    std::string lexicon_file("../../output/lexicon.bin");
 
     // Utility to sort the priority queue as min heap based on lexicographic order
     struct compare {
@@ -75,6 +72,9 @@ void merge_blocks(const unsigned int n_blocks) {
         min_heap.push(tmp);
     }
 
+    // Lexicon data structure
+    std::map<std::string, std::pair<unsigned long, size_t>> lexicon;
+
     // Pointer to the posting list in the inverted index file
     unsigned long offset = 0;
 
@@ -100,13 +100,17 @@ void merge_blocks(const unsigned int n_blocks) {
         } 
 
         // Writing
-        std::cout << "Writing " << cur.term << '\n';
+        std::cout << "Writing Inverted Index record" << cur.term << '\n';
         write_inverted_index_record(out_inverted_index, cur);
-        write_lexicon_record(out_lexicon, cur, offset);
+        //write_lexicon_record(out_lexicon, cur, offset);
+        lexicon[cur.term] = std::make_pair(offset, cur.posting_list.size());
 
         // Increment offset
         offset++;
     }
+
+    // Write Lexicon on file
+    save_lexicon(lexicon, lexicon_file);
 
     // Remove intermediate files
     for (unsigned int i = 1; i <= n_blocks; ++i) {

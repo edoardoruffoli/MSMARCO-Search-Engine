@@ -18,18 +18,12 @@
 #include <boost/tokenizer.hpp>
 #include <boost/range/numeric.hpp>
 #include <boost/range/adaptor/map.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/utility.hpp>
 
-#include "MSMARCO-Search-Engine/io.hpp"
 
-struct term_entry{
-    int block_id;
-    std::string term;
-    std::list<std::pair<int, int>> posting_list;
-};
-bool read_record(std::ifstream &in, term_entry &term_entry);
+void save_lexicon(const std::map<std::string, std::pair<unsigned long, size_t>>& lexicon, std::string& filename);
 
-void write_inverted_index_record(std::ofstream &out, term_entry &term_entry);
-
-void write_lexicon_record(std::ofstream &out, term_entry &term_entry, unsigned long offset);
-
-void merge_blocks(const unsigned int n_blocks);
+void load_lexicon(std::map<std::string, std::pair<unsigned long, size_t>>* lexicon, std::string& filename);

@@ -1,10 +1,20 @@
 #include "MSMARCO-Search-Engine/parsing.hpp"
 
-std::unordered_map<std::string, int> tokenize(const std::string content) {
+std::unordered_map<std::string, int> tokenize(const std::string content, bool flag, const char *stopwords_filename) {
 	//How to deal with empty page, malformed lines, malformed characters?
 	std::unordered_map<std::string, int> tokens;    // <term, term_freq>
-
 	boost::char_separator<char> sep(" \t\n");
+	std::unordered_set<std::string> stopwords;
+	//load stop words
+	if (flag) {
+		std::ifstream is(stopwords_filename);
+
+		std::string word;
+		while (std::getline(is, word)) {
+			stopwords.insert(word);
+		}
+	}
+
 	typedef boost::tokenizer< boost::char_separator<char> > t_tokenizer;
 	t_tokenizer tok(content, sep);
 
@@ -14,8 +24,12 @@ std::unordered_map<std::string, int> tokenize(const std::string content) {
 		boost::trim_if(token, boost::is_punct());
 		if (token.size() == 0)
 			continue;
-		//std::cout << token << std::endl;
 		boost::algorithm::to_lower(token);
+		if(flag)
+			if (std::find(stopwords.begin(), stopwords.end(), token) != stopwords.end()) {
+				continue;
+			}
+			token = porter2::Stemmer{}.stem(token);
 		tokens[token]++;
 	}
 
@@ -48,9 +62,9 @@ void write_block_to_disk(std::map<std::string, std::list<std::pair<int, int>>>& 
     f.close();
 }
 
-void parse(const char* in, const unsigned int BLOCK_SIZE) {
+void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char* stopwords_filename) {
     std::cout << "Started Parsing Phase: \n\n";
-
+	/*
     std::ifstream f(in, std::ios_base::in | std::ios_base::binary);
     // Check arguments validity
     if (f.fail()) 
@@ -65,7 +79,8 @@ void parse(const char* in, const unsigned int BLOCK_SIZE) {
 
     //Convert streambuf to istream
     std::istream instream(&inbuf);
-
+	*/
+	std::ifstream instream(in); //read from examples.txt for debugging
     // Document table output
     std::ofstream out_doc_table("../../output/doc_table");
 
@@ -87,7 +102,7 @@ void parse(const char* in, const unsigned int BLOCK_SIZE) {
 		getline(iss, doc_no, '\t');
 		getline(iss, text, '\n');
 
-		std::unordered_map<std::string, int> tokens = tokenize(text);
+		std::unordered_map<std::string, int> tokens = tokenize(text, flag, stopwords_filename);
 		//current_size += tokens.size();
         current_size++; // ????
 
@@ -115,5 +130,5 @@ void parse(const char* in, const unsigned int BLOCK_SIZE) {
     // Write last block
     write_block_to_disk(dictonary, block_num);
 
-    f.close();
+	instream.close();
 }

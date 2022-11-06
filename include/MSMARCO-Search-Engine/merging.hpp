@@ -19,16 +19,15 @@
 #include <boost/range/numeric.hpp>
 #include <boost/range/adaptor/map.hpp>
 
+#include "MSMARCO-Search-Engine/util.hpp"
 #include "MSMARCO-Search-Engine/io.hpp"
+#include "MSMARCO-Search-Engine/compressing.hpp"
 
-struct term_entry{
-    int block_id;
-    std::string term;
-    std::list<std::pair<int, int>> posting_list;
-};
 bool read_record(std::ifstream &in, term_entry &term_entry);
 
 void write_inverted_index_record(std::ofstream &out, term_entry &term_entry);
+
+void write_inverted_index_record_compressed(std::ofstream& out, term_entry& term_entry);
 
 void write_lexicon_record(std::ofstream &out, term_entry &term_entry, unsigned long offset);
 

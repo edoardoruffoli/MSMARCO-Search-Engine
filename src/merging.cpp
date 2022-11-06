@@ -31,6 +31,21 @@ void write_inverted_index_record(std::ofstream &out, term_entry &term_entry) {
     out << '\n';
 }
 
+//file output stream, out struct with term, posting list
+void write_inverted_index_record_compressed(std::ofstream& out, term_entry& term_entry) {
+    out << term_entry.term << ' ';
+    //encode DocID
+    for (auto& entry : term_entry.posting_list) {
+        encode(unsigned(entry.first), out);
+    }
+    out << ' ';
+    //encode frenquncy
+    for (auto& entry : term_entry.posting_list) {
+        encode(unsigned(entry.second), out);
+    }
+    out << '\n';
+}
+
 void write_lexicon_record(std::ofstream &out, term_entry &term_entry, unsigned long offset) {
     out << term_entry.term << ' ' << offset << ' ' << term_entry.posting_list.size();
     out << '\n';
@@ -40,7 +55,9 @@ void merge_blocks(const unsigned int n_blocks) {
     std::cout << "Started Merging Phase: \n\n";
     std::cout << "Number of blocks: " << n_blocks << "\n\n";
 
-    std::ofstream out_inverted_index("../tmp/uncompressed_inverted_index");
+    //std::ofstream out_inverted_index("../tmp/uncompressed_inverted_index");
+    std::ofstream out_inverted_index("../tmp/uncompressed_inverted_index.bin", std::ios::binary);
+    
     if (out_inverted_index.fail()) 
         std::cout << "Error: cannot open uncompressed_inverted_index\n";
     
@@ -101,7 +118,8 @@ void merge_blocks(const unsigned int n_blocks) {
 
         // Writing
         std::cout << "Writing Inverted Index record" << cur.term << '\n';
-        write_inverted_index_record(out_inverted_index, cur);
+        //write_inverted_index_record(out_inverted_index, cur);
+        write_inverted_index_record_compressed(out_inverted_index, cur);
         //write_lexicon_record(out_lexicon, cur, offset);
         lexicon[cur.term] = std::make_pair(offset, cur.posting_list.size());
 
@@ -118,4 +136,5 @@ void merge_blocks(const unsigned int n_blocks) {
         boost::filesystem::remove(boost::filesystem::path{"../tmp/intermediate_" + std::to_string(i)});
     }
     std::cout << "Removed intermediate files.\n";
+    read_compressed_index("../tmp/uncompressed_inverted_index");
 }

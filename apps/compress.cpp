@@ -1,3 +1,4 @@
+/*
 #include <fstream>
 #include <iostream>
 #include <bitset>
@@ -71,8 +72,9 @@ std::vector<int> VBDecode(std::string filename) {
 	}
 	return result;
 }
-
+*/
 int main() {
+	/*
 	uint8_t a = 255;
 	std::vector<char> c;
 	std::vector<int> i;
@@ -87,6 +89,6 @@ int main() {
 	for (std::vector<int>::iterator it = i.begin(); it != i.end(); it++) {
 		std::cout << "result " << *it << std::endl;
 	}
-
+	*/
 	return 0;
 }

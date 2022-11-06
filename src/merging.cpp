@@ -36,7 +36,6 @@ void write_inverted_index_record_compressed(std::ofstream& out, term_entry& term
     //out << term_entry.term << ' ';
     //encode DocID
     for (auto& entry : term_entry.posting_list) {
-        std::cout << entry.first << "--->" << unsigned(entry.first) << std::endl;
         encode(unsigned(entry.first), out);
     }
     //out << ' ';

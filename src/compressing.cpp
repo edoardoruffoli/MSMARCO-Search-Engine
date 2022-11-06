@@ -9,12 +9,12 @@ void encode(unsigned int num, std::ofstream& ofile) {
 		byte.flip(7);
 		num = (num - a) / 128;
 		b = byte.to_ulong();
-		std::cout << byte << std::endl;
+		//std::cout << byte << std::endl;
 		result.push_back(b);
 	}
 	int a = num % 128;
 	std::bitset<8> byte(a);
-	std::cout << byte << std::endl;
+	//std::cout << byte << std::endl;
 	b = byte.to_ulong();
 	result.push_back(b);
 
@@ -36,7 +36,7 @@ std::vector<int> decode(std::vector<char> &vec) {
 		while (byte[7] == 1) {
 			byte.flip(7);
 			num += byte.to_ulong() * pow(128, p);
-			std::cout << "num " << num << std::endl;
+			//std::cout << "num " << num << std::endl;
 			p++;
 			it++;
 			c = *it;
@@ -88,8 +88,9 @@ void read_compressed_index(std::string filename) {
 		    }
             for (std::vector<unsigned int>::iterator it = cur_posting_list.begin(); it != cur_posting_list.end(); it++) {
                 int t = *it;
-                out << t << '\n';
+                out << t << ',';
 		    }
+			out << '\n';
             cur.clear();
         }
 	}

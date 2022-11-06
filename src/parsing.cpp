@@ -98,7 +98,7 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 	std::string text;
 
     while (getline(instream, loaded_content)) {
-        std::cout << "Processing doc_id: " << doc_id << std::endl;
+        //std::cout << "Processing doc_id: " << doc_id << std::endl;
 
 		std::istringstream iss(loaded_content);
 		getline(iss, doc_no, '\t');

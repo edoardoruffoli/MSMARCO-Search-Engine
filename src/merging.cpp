@@ -137,5 +137,4 @@ void merge_blocks(const unsigned int n_blocks) {
         boost::filesystem::remove(boost::filesystem::path{"../tmp/intermediate_" + std::to_string(i)});
     }
     std::cout << "Removed intermediate files.\n";
-    read_compressed_index("../tmp/uncompressed_inverted_index_test");
 }

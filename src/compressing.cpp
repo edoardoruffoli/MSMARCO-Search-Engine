@@ -61,40 +61,39 @@ void read_compressed_index(std::string filename) {
 	char c;
 	int num;
 	int p;
-	std::vector<int> result;
+	std::vector<char> cur;
 
-	while (getline(ifile, loaded_content)) {
-		//std::istringstream iss(loaded_content);
-		//getline(iss, doc_ids);
-		std::cout << loaded_content << std::endl;
-		std::vector<char> vec(loaded_content.begin(), loaded_content.end());
+	while (ifile.get(c)) {
+        if (c != '\n')
+		    cur.push_back(c);
+        else {
+            std::vector<unsigned int> cur_posting_list;
+            for (std::vector<char>::iterator it = cur.begin(); it != cur.end(); it++) {
+                c = *it;
+                std::bitset<8> byte(c);
+                num = 0;
+                p = 0;
+                while (byte[7] == 1) {
+                    byte.flip(7);
+                    num += byte.to_ulong() * pow(128, p);
+                    //std::cout << "num " << num << std::endl;
+                    p++;
+                    it++;
+                    c = *it;
+                    byte = std::bitset<8>(c);
+			    }   
+			    num += (byte.to_ulong()) * pow(128, p);
 
-
-		for (std::vector<char>::iterator it = vec.begin(); it != vec.end(); it++) {
-			c = *it;
-			std::bitset<8> byte(c);
-			num = 0;
-			p = 0;
-			while (byte[7] == 1) {
-				byte.flip(7);
-				num += byte.to_ulong() * pow(128, p);
-				//std::cout << "num " << num << std::endl;
-				p++;
-				it++;
-				c = *it;
-				byte = std::bitset<8>(c);
-			}
-			num += (byte.to_ulong()) * pow(128, p);
-
-			result.push_back(num);
-		}
-		for (std::vector<int>::iterator it = result.begin(); it != result.end(); it++) {
-			int t = *it;
-			out << t << '\n';
-		}
-	
+			    cur_posting_list.push_back(num);
+		    }
+            for (std::vector<unsigned int>::iterator it = cur_posting_list.begin(); it != cur_posting_list.end(); it++) {
+                int t = *it;
+                out << t << '\n';
+		    }
+            cur.clear();
+        }
 	}
-
+	
 	//return result;
 	out.close();
 }

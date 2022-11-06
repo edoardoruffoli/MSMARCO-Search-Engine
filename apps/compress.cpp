@@ -1,5 +1,5 @@
+#include "MSMARCO-Search-Engine/compressing.hpp"
 /*
-#include <fstream>
 #include <iostream>
 #include <bitset>
 #include <vector>
@@ -90,5 +90,6 @@ int main() {
 		std::cout << "result " << *it << std::endl;
 	}
 	*/
+    read_compressed_index("../tmp/uncompressed_inverted_index_test");
 	return 0;
 }

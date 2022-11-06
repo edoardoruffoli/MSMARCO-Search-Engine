@@ -25,11 +25,11 @@ std::unordered_map<std::string, int> tokenize(const std::string content, bool fl
 		if (token.size() == 0)
 			continue;
 		boost::algorithm::to_lower(token);
-	/*	if(flag)
+		if(flag)
 			if (std::find(stopwords.begin(), stopwords.end(), token) != stopwords.end()) {
 				continue;
 			}
-			token = porter2::Stemmer{}.stem(token); */
+			token = porter2::Stemmer{}.stem(token);
 		tokens[token]++;
 	}
 

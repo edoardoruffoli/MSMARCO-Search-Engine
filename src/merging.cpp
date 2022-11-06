@@ -33,16 +33,17 @@ void write_inverted_index_record(std::ofstream &out, term_entry &term_entry) {
 
 //file output stream, out struct with term, posting list
 void write_inverted_index_record_compressed(std::ofstream& out, term_entry& term_entry) {
-    out << term_entry.term << ' ';
+    //out << term_entry.term << ' ';
     //encode DocID
     for (auto& entry : term_entry.posting_list) {
+        std::cout << entry.first << "--->" << unsigned(entry.first) << std::endl;
         encode(unsigned(entry.first), out);
     }
-    out << ' ';
+    //out << ' ';
     //encode frenquncy
-    for (auto& entry : term_entry.posting_list) {
-        encode(unsigned(entry.second), out);
-    }
+    //for (auto& entry : term_entry.posting_list) {
+    //    encode(unsigned(entry.second), out);
+    //}
     out << '\n';
 }
 
@@ -136,5 +137,5 @@ void merge_blocks(const unsigned int n_blocks) {
         boost::filesystem::remove(boost::filesystem::path{"../tmp/intermediate_" + std::to_string(i)});
     }
     std::cout << "Removed intermediate files.\n";
-    read_compressed_index("../tmp/uncompressed_inverted_index");
+    read_compressed_index("../tmp/uncompressed_inverted_index_test");
 }

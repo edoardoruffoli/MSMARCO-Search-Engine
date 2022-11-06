@@ -54,37 +54,47 @@ void read_compressed_index(std::string filename) {
 	std::ifstream ifile;
 	ifile.open(filename, std::ios::binary);
 
-	std::string term;
-	std::string loaded_content;
-	std::string doc;
-	std::string freq;
-
 	std::ofstream out("../tmp/uncompressed_inverted_index_test");
+	std::string loaded_content;
+	std::string doc_ids;
+
+	char c;
+	int num;
+	int p;
+	std::vector<int> result;
 
 	while (getline(ifile, loaded_content)) {
-		std::istringstream iss(loaded_content);
-		getline(iss, term, ' ');
-		getline(iss, doc, ' ');
-		std::vector<char> doc_id(doc.begin(), doc.end());
-		std::vector<int> d = decode(doc_id);
+		//std::istringstream iss(loaded_content);
+		//getline(iss, doc_ids);
+		std::cout << loaded_content << std::endl;
+		std::vector<char> vec(loaded_content.begin(), loaded_content.end());
 
-		getline(iss, freq, '\n');
-		std::vector<char> freqs(freq.begin(), freq.end());
-		std::vector<int> f = decode(freqs);
 
-		
-		
-		out << term << ' ';
-		for (std::vector<int>::iterator it = d.begin(); it != d.end(); it++) {
-			int t = *it;
-			out << t << ',';
+		for (std::vector<char>::iterator it = vec.begin(); it != vec.end(); it++) {
+			c = *it;
+			std::bitset<8> byte(c);
+			num = 0;
+			p = 0;
+			while (byte[7] == 1) {
+				byte.flip(7);
+				num += byte.to_ulong() * pow(128, p);
+				//std::cout << "num " << num << std::endl;
+				p++;
+				it++;
+				c = *it;
+				byte = std::bitset<8>(c);
+			}
+			num += (byte.to_ulong()) * pow(128, p);
+
+			result.push_back(num);
 		}
-		out << ' ';
-		for (std::vector<int>::iterator it = f.begin(); it != f.end(); it++) {
+		for (std::vector<int>::iterator it = result.begin(); it != result.end(); it++) {
 			int t = *it;
-			out << t << ',';
+			out << t << '\n';
 		}
-		out << '\n';
+	
 	}
+
+	//return result;
 	out.close();
 }

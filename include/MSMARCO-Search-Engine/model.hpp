@@ -1,15 +1,7 @@
 #pragma once
 
 #include <iostream>
-#include <fstream>
-#include <string>
 #include <vector>
-#include <queue>
-#include <memory>
-#include <unordered_set>
-#include <unordered_map>
-#include <map>
-#include <sstream>
 
 // Posting lists
 struct posting_list {
@@ -41,6 +33,7 @@ struct doc_entry{
         return doc_id < de.doc_id;
     }
 
+    // Needed for the find() by doc_id
     bool operator==(const doc_entry& de) const noexcept {
         return doc_id == de.doc_id;
     }

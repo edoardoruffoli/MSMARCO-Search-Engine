@@ -25,11 +25,11 @@ std::unordered_map<std::string, int> tokenize(const std::string content, bool fl
 		if (token.size() == 0)
 			continue;
 		boost::algorithm::to_lower(token);
-		if(flag)
+	/*	if(flag)
 			if (std::find(stopwords.begin(), stopwords.end(), token) != stopwords.end()) {
 				continue;
 			}
-			token = porter2::Stemmer{}.stem(token);
+			token = porter2::Stemmer{}.stem(token); */
 		tokens[token]++;
 	}
 
@@ -42,10 +42,11 @@ void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& 
 		dictonary[term_doc.first].push_back(std::make_pair(doc_id, term_doc.second));
 }
 
-void write_doc_table_record(std::ofstream &out, std::string &doc_no, unsigned int doc_len) {
-    out << doc_no << ' ' << doc_len;
-    out << '\n';
-}
+
+//void write_doc_table_record(std::ofstream &out, std::string &doc_no, unsigned int doc_len) {
+//    out << doc_no << ' ' << doc_len;
+//    out << '\n';
+//}
 
 void write_block_to_disk(std::map<std::string, std::list<std::pair<int, int>>>& dictionary, int block_num) {
 	std::ofstream f("../tmp/intermediate_" + std::to_string(block_num));
@@ -82,7 +83,7 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 	*/
 	std::ifstream instream(in); //read from examples.txt for debugging
     // Document table output
-    std::ofstream out_doc_table("../../output/doc_table");
+    std::string doc_table_filename("../../output/doc_table.bin");
 
     unsigned int current_size = 0;
 	unsigned int block_num = 1;
@@ -90,6 +91,7 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 
     // std::map guarantees lexicographic ordering of the terms
 	std::map<std::string, std::list<std::pair<int, int>>> dictonary;
+    std::set<doc_entry> doc_table;
 
 	std::string loaded_content;
 	std::string doc_no;
@@ -122,13 +124,17 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 		}
 
         // Update document table with current document
-        write_doc_table_record(out_doc_table, doc_no, doc_len);
+        //write_doc_table_record(out_doc_table, doc_no, doc_len);
+        doc_table.insert(doc_entry{doc_id, doc_no, doc_len});
 
         doc_id++;
 	}
 
     // Write last block
     write_block_to_disk(dictonary, block_num);
+
+    // Write document table
+    save_doc_table(doc_table, doc_table_filename);
 
 	instream.close();
 }

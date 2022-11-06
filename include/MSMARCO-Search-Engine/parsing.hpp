@@ -24,7 +24,10 @@
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 
-#include <Porter2.hpp>
+//#include <Porter2.hpp>
+
+#include "MSMARCO-Search-Engine/model.hpp"
+#include "MSMARCO-Search-Engine/io.hpp"
 
 std::unordered_map<std::string, int> tokenize(const std::string content, bool flag, const char* stopwords_filename);
 

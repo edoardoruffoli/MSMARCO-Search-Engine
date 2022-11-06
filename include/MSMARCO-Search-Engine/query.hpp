@@ -20,18 +20,15 @@
 #include <boost/range/adaptor/map.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
-#include <boost/serialization/set.hpp>
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/utility.hpp>
-#include <boost/serialization/export.hpp>
 
-#include "MSMARCO-Search-Engine/model.hpp"
+#include "MSMARCO-Search-Engine/io.hpp"
 
+#define CONJUNCTIVE_MODE 0
+#define DISJUNCTIVE_MODE 1
 
-void save_lexicon(const std::map<std::string, std::pair<unsigned long, size_t>>& lexicon, std::string& filename);
+std::map<std::string, std::pair<unsigned long, size_t>> lexicon;
 
-void load_lexicon(std::map<std::string, std::pair<unsigned long, size_t>>* lexicon, std::string& filename);
-
-void save_doc_table(const std::set<doc_entry> &doc_table, std::string &filename);
-
-void load_doc_table(std::set<doc_entry> *doc_table, std::string &filename);
+// Doc table
+std::set<doc_entry> &doc_table;

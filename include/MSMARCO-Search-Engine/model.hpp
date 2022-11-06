@@ -17,6 +17,8 @@ struct posting_list {
     std::vector<unsigned int> freqs;
 };
 
+// Lexicon
+
 // Document Table
 struct doc_entry{
     unsigned int doc_id; 

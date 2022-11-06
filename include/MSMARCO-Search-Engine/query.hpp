@@ -31,4 +31,8 @@
 std::map<std::string, std::pair<unsigned long, size_t>> lexicon;
 
 // Doc table
-std::set<doc_entry> &doc_table;
+std::set<doc_entry> doc_table;
+
+bool init_data_structures();
+
+bool execute_query(std::vector<std::string> &terms, unsigned int type);

@@ -24,8 +24,7 @@ unsigned long VBencode(unsigned int num, std::ofstream& ofile) {
 	return result.size();
 }
 
-//Define for char access decode
-std::vector<int> decode(std::vector<char> &vec) {
+std::vector<int> VBdecode(std::vector<char> &vec) {
 	char c;
 	int num;
 	int p;

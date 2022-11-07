@@ -27,7 +27,7 @@ bool read_record(std::ifstream &in, term_entry &term_entry);
 
 void write_inverted_index_record(std::ofstream &out, term_entry &term_entry);
 
-void write_inverted_index_record_compressed(std::ofstream& out, term_entry& term_entry);
+unsigned long write_inverted_index_record_compressed(std::ofstream& out, term_entry& term_entry);
 
 void write_lexicon_record(std::ofstream &out, term_entry &term_entry, unsigned long offset);
 

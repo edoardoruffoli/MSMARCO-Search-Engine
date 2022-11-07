@@ -31,19 +31,17 @@ void write_inverted_index_record(std::ofstream &out, term_entry &term_entry) {
     out << '\n';
 }
 
-//file output stream, out struct with term, posting list
-void write_inverted_index_record_compressed(std::ofstream& out, term_entry& term_entry) {
-    //out << term_entry.term << ' ';
+unsigned long write_inverted_index_record_compressed(std::ofstream& out, term_entry& term_entry) {
     //encode DocID
-    for (auto& entry : term_entry.posting_list) {
-        encode(unsigned(entry.first), out);
-    }
-    //out << ' ';
+    unsigned long num_bytes = 0;
+    for (auto& entry : term_entry.posting_list)
+        num_bytes += VBencode(unsigned(entry.first), out);
+
     //encode frenquncy
-    //for (auto& entry : term_entry.posting_list) {
-    //    encode(unsigned(entry.second), out);
-    //}
-    out << '\n';
+    for (auto& entry : term_entry.posting_list)
+        num_bytes += VBencode(unsigned(entry.second), out);
+
+    return num_bytes;
 }
 
 void write_lexicon_record(std::ofstream &out, term_entry &term_entry, unsigned long offset) {
@@ -94,6 +92,8 @@ void merge_blocks(const unsigned int n_blocks) {
 
     // Pointer to the posting list in the inverted index file
     unsigned long offset = 0;
+    unsigned long len = 0;
+
 
     while (!min_heap.empty()) {
         term_entry cur = min_heap.top();
@@ -117,14 +117,17 @@ void merge_blocks(const unsigned int n_blocks) {
         } 
 
         // Writing
-        std::cout << "Writing Inverted Index record" << cur.term << '\n';
+        std::cout << "Writing Inverted Index record -> " << cur.term << '\n';
         //write_inverted_index_record(out_inverted_index, cur);
-        write_inverted_index_record_compressed(out_inverted_index, cur);
+        //offset, length
+        offset += len;
+        len = write_inverted_index_record_compressed(out_inverted_index, cur);
+        lexicon[cur.term] = std::make_pair(offset, len);
         //write_lexicon_record(out_lexicon, cur, offset);
-        lexicon[cur.term] = std::make_pair(offset, cur.posting_list.size());
 
-        // Increment offset
-        offset++;
+        std::cout << cur.term << std::endl;
+        std::cout << lexicon[cur.term].first << std::endl;
+        std::cout << lexicon[cur.term].second << std::endl;
     }
 
     // Write Lexicon on file

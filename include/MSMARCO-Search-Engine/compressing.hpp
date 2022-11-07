@@ -16,7 +16,8 @@
 #include <sstream>
 
 #include "MSMARCO-Search-Engine/util.hpp"
+#include "MSMARCO-Search-Engine/io.hpp"
 
-void encode(unsigned int num, std::ofstream& ofile);
+unsigned long VBencode(unsigned int num, std::ofstream& ofile);
 std::vector<int> decode(std::vector<char>& vec);
 void read_compressed_index(std::string filename);

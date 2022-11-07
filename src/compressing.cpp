@@ -1,6 +1,7 @@
 #include "MSMARCO-Search-Engine/compressing.hpp"
 
-void encode(unsigned int num, std::ofstream& ofile) {
+
+unsigned long VBencode(unsigned int num, std::ofstream& ofile) {
 	std::vector<uint8_t> result;
 	uint8_t b;
 	while (num >= 128) {
@@ -9,20 +10,21 @@ void encode(unsigned int num, std::ofstream& ofile) {
 		byte.flip(7);
 		num = (num - a) / 128;
 		b = byte.to_ulong();
-		//std::cout << byte << std::endl;
 		result.push_back(b);
 	}
 	int a = num % 128;
 	std::bitset<8> byte(a);
-	//std::cout << byte << std::endl;
 	b = byte.to_ulong();
 	result.push_back(b);
 
 	for (std::vector<uint8_t>::iterator it = result.begin(); it != result.end(); it++) {
 		ofile.write(reinterpret_cast<const char*>(&(*it)), 1);
 	}
+
+	return result.size();
 }
 
+//Define for char access decode
 std::vector<int> decode(std::vector<char> &vec) {
 	char c;
 	int num;
@@ -36,7 +38,6 @@ std::vector<int> decode(std::vector<char> &vec) {
 		while (byte[7] == 1) {
 			byte.flip(7);
 			num += byte.to_ulong() * pow(128, p);
-			//std::cout << "num " << num << std::endl;
 			p++;
 			it++;
 			c = *it;
@@ -53,6 +54,10 @@ std::vector<int> decode(std::vector<char> &vec) {
 void read_compressed_index(std::string filename) {
 	std::ifstream ifile;
 	ifile.open(filename, std::ios::binary);
+	std::map<std::string, std::pair<unsigned long, size_t>> lexicon;
+	std::string lexicon_file("../../output/lexicon.bin");
+
+	load_lexicon(&lexicon, lexicon_file);
 
 	std::ofstream out("../tmp/uncompressed_inverted_index_test");
 	std::string loaded_content;
@@ -62,39 +67,53 @@ void read_compressed_index(std::string filename) {
 	int num;
 	int p;
 	std::vector<char> cur;
+	//bool control = true;
+	for (std::map<std::string, std::pair<unsigned long, size_t>>::iterator it = lexicon.begin(); it != lexicon.end(); it++) {
+		//if (control) {
+		//	control = false;
+		//	continue;
+		//}
+		std::string term = it->first;
+		unsigned long offset = it->second.first;
+		size_t p_len = it->second.second;
+		//std::cout << "Term : " << it->first << std::endl;
+		//std::cout << "Offset --> " << offset << std::endl;
+		//std::cout << "Len --> " << p_len << std::endl;
+		ifile.seekg(offset);
+		
+		#pragma omp simd 
+		while (p_len) {
+			ifile.get(c);
+			cur.push_back(c);
+			offset++;
+			p_len--;
+		}
 
-	while (ifile.get(c)) {
-        if (c != '\n')
-		    cur.push_back(c);
-        else {
-            std::vector<unsigned int> cur_posting_list;
-            for (std::vector<char>::iterator it = cur.begin(); it != cur.end(); it++) {
-                c = *it;
-                std::bitset<8> byte(c);
-                num = 0;
-                p = 0;
-                while (byte[7] == 1) {
-                    byte.flip(7);
-                    num += byte.to_ulong() * pow(128, p);
-                    //std::cout << "num " << num << std::endl;
-                    p++;
-                    it++;
-                    c = *it;
-                    byte = std::bitset<8>(c);
-			    }   
-			    num += (byte.to_ulong()) * pow(128, p);
+		std::vector<unsigned int> cur_posting_list;
+		for (std::vector<char>::iterator it = cur.begin(); it != cur.end(); it++) {
+			c = *it;
+			std::bitset<8> byte(c);
+			num = 0;
+			p = 0;
+			while (byte[7] == 1) {
+				byte.flip(7);
+				num += byte.to_ulong() * pow(128, p);
+				p++;
+				it++;
+				c = *it;
+				byte = std::bitset<8>(c);
+			}
+			num += (byte.to_ulong()) * pow(128, p);
 
-			    cur_posting_list.push_back(num);
-		    }
-            for (std::vector<unsigned int>::iterator it = cur_posting_list.begin(); it != cur_posting_list.end(); it++) {
-                int t = *it;
-                out << t << ',';
-		    }
-			out << '\n';
-            cur.clear();
-        }
+			cur_posting_list.push_back(num);
+		}
+		out << term << ' ';
+		for (std::vector<unsigned int>::iterator it = cur_posting_list.begin(); it != cur_posting_list.end(); it++) {
+			int t = *it;
+			out << t << ',';
+		}
+		out << '\n';
+		cur.clear();
 	}
-	
-	//return result;
 	out.close();
 }

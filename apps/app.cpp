@@ -8,7 +8,8 @@ int main(int argc, char* argv[]) {
 
     //auto it = doc_table.find(13);
     //std::cout << it->first << " " << it->second.first << " " << it->second.second << std::endl;
+    /*
     for (std::map<std::string, std::pair<unsigned long, size_t>>::iterator it = lexicon.begin(); it != lexicon.end(); it++) {
         std::cout << it->first << " " << it->second.first << " " << it->second.second << std::endl;
-    }
+    }*/
 }

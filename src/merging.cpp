@@ -117,7 +117,7 @@ void merge_blocks(const unsigned int n_blocks) {
         } 
 
         // Writing
-        std::cout << "Writing Inverted Index record -> " << cur.term << '\n';
+        //std::cout << "Writing Inverted Index record -> " << cur.term << '\n';
         //write_inverted_index_record(out_inverted_index, cur);
         //offset, length
         offset += len;
@@ -125,9 +125,6 @@ void merge_blocks(const unsigned int n_blocks) {
         lexicon[cur.term] = std::make_pair(offset, len);
         //write_lexicon_record(out_lexicon, cur, offset);
 
-        std::cout << cur.term << std::endl;
-        std::cout << lexicon[cur.term].first << std::endl;
-        std::cout << lexicon[cur.term].second << std::endl;
     }
 
     // Write Lexicon on file

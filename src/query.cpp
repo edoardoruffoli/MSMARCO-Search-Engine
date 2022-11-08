@@ -53,26 +53,39 @@ bool execute_query(std::vector<std::string> &terms, unsigned int mode) {
 
     return true;
 }
-/*
-posting_list openList(std::string term, const std::map<std::string, std::pair<unsigned long, size_t>>& lexicon) {
+
+void openList(std::string term, posting_list *result) {
     std::vector<char> cur;
-    std::vector<int> postingL;
+    std::vector<unsigned int> decompressed_list;
     char c;
+
     std::ifstream ifile;
+    
     ifile.open("../tmp/uncompressed_inverted_index.bin", std::ios::binary);
-    unsigned long offset = lexicon.find(term)->second.first;
-    size_t p_len = lexicon.find(term)->second.second;
+    auto it = lexicon.find(term);
+    unsigned long offset = it->second.first;
+    size_t p_len = it->second.second;
 
     ifile.seekg(offset);
-
+    
     while (p_len) {
         ifile.get(c);
         cur.push_back(c);
         offset++;
         p_len--;
     }
+    
+    decompressed_list = VBdecode(cur);
+    int size_pl = decompressed_list.size() / 2;
 
-    postingL = VBdecode(cur);
-
+    for (std::vector<unsigned int>::iterator it = decompressed_list.begin(); it != decompressed_list.end(); ++it) {
+        if (size_pl) {
+            result->doc_ids.push_back(*it);
+            size_pl--;
+        }
+        else {
+            result->freqs.push_back(*it);
+        }
+    }
+    ifile.close();
 }
-*/

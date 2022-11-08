@@ -13,14 +13,13 @@
 #define CONJUNCTIVE_MODE 0
 #define DISJUNCTIVE_MODE 1
 
-std::map<std::string, std::pair<unsigned long, size_t>> lexicon;
-
 // Doc table
 std::set<doc_entry> doc_table;
+
+std::map<std::string, std::pair<unsigned long, size_t>> lexicon;
 
 bool init_data_structures();
 
 bool execute_query(std::vector<std::string> &terms, unsigned int type);
-/*
-posting_list openList(std::string term, const std::map<std::string, std::pair<unsigned long, size_t>>& lexicon);
-*/
+
+void openList(std::string term, posting_list *result);

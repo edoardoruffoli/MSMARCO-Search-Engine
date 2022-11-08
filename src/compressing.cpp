@@ -24,11 +24,11 @@ unsigned long VBencode(unsigned int num, std::ofstream& ofile) {
 	return result.size();
 }
 
-std::vector<int> VBdecode(std::vector<char> &vec) {
+std::vector<unsigned int> VBdecode(std::vector<char> &vec) {
 	char c;
 	int num;
 	int p;
-	std::vector<int> result;
+	std::vector<unsigned int> result;
 	for (std::vector<char>::iterator it = vec.begin(); it != vec.end(); it++) {
 		c = *it;
 		std::bitset<8> byte(c);

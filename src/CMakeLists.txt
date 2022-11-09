@@ -6,7 +6,7 @@
 file(GLOB HEADER_LIST "${MSMARCO-Search-Engine_SOURCE_DIR}/include/MSMARCO-Search-Engine/*.hpp")
 
 # Make an automatic library - will be static or dynamic based on user setting
-add_library(msmarco_search_engine parsing.cpp merging.cpp io.cpp query.cpp compressing.cpp ${HEADER_LIST})
+add_library(msmarco_search_engine parsing.cpp merging.cpp io.cpp query.cpp compressing.cpp simple9.cpp ${HEADER_LIST})
 
 # We need this directory, and users of our library will need it too
 target_include_directories(msmarco_search_engine PUBLIC ../include)

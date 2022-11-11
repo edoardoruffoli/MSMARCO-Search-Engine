@@ -3,6 +3,13 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <list>
+
+struct term_entry {
+    int block_id;
+    std::string term;
+    std::list<std::pair<int, int>> posting_list;
+};
 
 // Posting list iterator
 struct posting_list {
@@ -15,6 +22,8 @@ struct posting_list {
     void closeList();
     void next();
     void nextGEQ(unsigned int d);
+    unsigned int getDocId();
+    unsigned int getFreq();
 };
 
 // Lexicon

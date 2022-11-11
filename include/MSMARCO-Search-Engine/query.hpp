@@ -16,5 +16,3 @@
 bool init_data_structures();
 
 bool execute_query(std::vector<std::string> &terms, unsigned int type);
-
-void openList(std::string term, posting_list *result);

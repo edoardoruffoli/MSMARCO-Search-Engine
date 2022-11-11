@@ -35,18 +35,18 @@ unsigned long write_inverted_index_record_compressed(std::ofstream& out, term_en
     // Save first position that will be used to store the freqs offset
     long first_byte = out.tellp();
 
-    // Writing dummy zeroes
+    // Clean first 4 bytes
     int tmp = 0;
     out.write(reinterpret_cast<const char *>(&tmp), sizeof(int));
 
-    //encode DocID
+    // Encode doc_id
     unsigned int num_bytes = 0;
     for (auto& entry : term_entry.posting_list)
         num_bytes += VBencode(unsigned(entry.first), out);
 
     unsigned int freqs_offset = num_bytes;
 
-    //encode frenquncy
+    // Encode frequency
     for (auto& entry : term_entry.posting_list)
         num_bytes += VBencode(unsigned(entry.second), out);
 
@@ -54,8 +54,8 @@ unsigned long write_inverted_index_record_compressed(std::ofstream& out, term_en
     out.seekp(first_byte);
     out.write(reinterpret_cast<const char *>(&freqs_offset), sizeof(int));
 
-    // Reposition file stream
-    out.seekp(first_byte + num_bytes);
+    // Reposition file stream to the next position
+    out.seekp(first_byte + num_bytes + sizeof(int));
 
     return num_bytes;
 }
@@ -70,10 +70,10 @@ void merge_blocks(const unsigned int n_blocks) {
     std::cout << "Number of blocks: " << n_blocks << "\n\n";
 
     //std::ofstream out_inverted_index("../tmp/uncompressed_inverted_index");
-    std::ofstream out_inverted_index("../tmp/uncompressed_inverted_index.bin", std::ios::binary);
+    std::ofstream out_inverted_index("../../output/inverted_index.bin", std::ios::binary);
     
     if (out_inverted_index.fail()) 
-        std::cout << "Error: cannot open uncompressed_inverted_index\n";
+        std::cout << "Error: cannot open inverted_index\n";
     
     std::string lexicon_file("../../output/lexicon.bin");
 
@@ -110,7 +110,6 @@ void merge_blocks(const unsigned int n_blocks) {
     unsigned long offset = 0;
     unsigned long len = 0;
 
-
     while (!min_heap.empty()) {
         term_entry cur = min_heap.top();
         min_heap.pop();
@@ -134,9 +133,8 @@ void merge_blocks(const unsigned int n_blocks) {
 
         // Writing
         //std::cout << "Writing Inverted Index record -> " << cur.term << '\n';
-        //write_inverted_index_record(out_inverted_index, cur);
-        //offset, length
         offset += len;
+        //lexicon[cur.term] = out_inverted_index.tellp();
         len = write_inverted_index_record_compressed(out_inverted_index, cur);
         lexicon[cur.term] = offset;
         //write_lexicon_record(out_lexicon, cur, offset);
@@ -147,9 +145,10 @@ void merge_blocks(const unsigned int n_blocks) {
     save_lexicon(lexicon, lexicon_file);
 
     // Remove intermediate files
-    for (unsigned int i = 1; i <= n_blocks; ++i) {
+/*    for (unsigned int i = 1; i <= n_blocks; ++i) {
         in_files[i-1].close();
         boost::filesystem::remove(boost::filesystem::path{"../tmp/intermediate_" + std::to_string(i)});
     }
     std::cout << "Removed intermediate files.\n";
+    */
 }

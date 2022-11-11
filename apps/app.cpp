@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
         std::cout << val[i] << " ";
     }
     std::cout << std::endl;
-    */
+    
     return 0;
 
 
@@ -79,10 +79,10 @@ int main(int argc, char* argv[]) {
     ifile.open("../tmp/uncompressed_inverted_index.bin", std::ios::binary);
     auto it = lexicon.find(term);
     unsigned long offset = it->second;
-    size_t p_len;
-    ifile.read(reinterpret_cast<char*>(&p_len), sizeof(size_t));
 
     ifile.seekg(offset);
+    size_t p_len = 0;
+    ifile.read(reinterpret_cast<char*>(&p_len), sizeof(size_t));
 
     while (p_len) {
         ifile.get(c);

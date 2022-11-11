@@ -32,14 +32,30 @@ void write_inverted_index_record(std::ofstream &out, term_entry &term_entry) {
 }
 
 unsigned long write_inverted_index_record_compressed(std::ofstream& out, term_entry& term_entry) {
+    // Save first position that will be used to store the freqs offset
+    long first_byte = out.tellp();
+
+    // Writing dummy zeroes
+    int tmp = 0;
+    out.write(reinterpret_cast<const char *>(&tmp), sizeof(int));
+
     //encode DocID
-    unsigned long num_bytes = 0;
+    unsigned int num_bytes = 0;
     for (auto& entry : term_entry.posting_list)
         num_bytes += VBencode(unsigned(entry.first), out);
+
+    unsigned int freqs_offset = num_bytes;
 
     //encode frenquncy
     for (auto& entry : term_entry.posting_list)
         num_bytes += VBencode(unsigned(entry.second), out);
+
+    // Write freqs offset at first 4 bytes
+    out.seekp(first_byte);
+    out.write(reinterpret_cast<const char *>(&freqs_offset), sizeof(int));
+
+    // Reposition file stream
+    out.seekp(first_byte + num_bytes);
 
     return num_bytes;
 }
@@ -88,7 +104,7 @@ void merge_blocks(const unsigned int n_blocks) {
     }
 
     // Lexicon data structure
-    std::map<std::string, std::pair<unsigned long, size_t>> lexicon;
+    std::map<std::string, unsigned long> lexicon;
 
     // Pointer to the posting list in the inverted index file
     unsigned long offset = 0;
@@ -122,7 +138,7 @@ void merge_blocks(const unsigned int n_blocks) {
         //offset, length
         offset += len;
         len = write_inverted_index_record_compressed(out_inverted_index, cur);
-        lexicon[cur.term] = std::make_pair(offset, len);
+        lexicon[cur.term] = offset;
         //write_lexicon_record(out_lexicon, cur, offset);
 
     }

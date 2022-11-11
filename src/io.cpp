@@ -1,6 +1,6 @@
 #include "MSMARCO-Search-Engine/io.hpp"
 
-bool save_lexicon(const std::map<std::string, std::pair<unsigned long, size_t>>& lexicon,
+bool save_lexicon(const std::map<std::string, unsigned long>& lexicon,
                 std::string &filename) {
     std::ofstream filestream(filename, std::ios::binary);
     if (filestream.fail()) {
@@ -13,7 +13,7 @@ bool save_lexicon(const std::map<std::string, std::pair<unsigned long, size_t>>&
     return true;
 }
 
-bool load_lexicon(std::map<std::string, std::pair<unsigned long, size_t>>* lexicon,
+bool load_lexicon(std::map<std::string, unsigned long>* lexicon,
                 std::string &filename) {
     std::ifstream filestream(filename, std::ios::binary);  
     if (filestream.fail()) {

@@ -16,7 +16,7 @@
 // Doc table
 std::set<doc_entry> doc_table;
 
-std::map<std::string, std::pair<unsigned long, size_t>> lexicon;
+std::map<std::string, unsigned long> lexicon;
 
 bool init_data_structures();
 

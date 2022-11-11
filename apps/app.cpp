@@ -1,19 +1,19 @@
 #include "MSMARCO-Search-Engine/io.hpp"
-//#include "MSMARCO-Search-Engine/compressing.hpp"
+#include "MSMARCO-Search-Engine/compressing.hpp"
 //#include "MSMARCO-Search-Engine/query.hpp"
-#include "MSMARCO-Search-Engine/simple9.hpp"
+//#include "MSMARCO-Search-Engine/simple9.hpp"
 
 
 int main(int argc, char* argv[]) {
     std::cout << "Reading" << std::endl;
-    std::map<std::string, std::pair<unsigned long, size_t>> lexicon;
+    std::map<std::string, unsigned long> lexicon;
     //std::set<doc_entry> doc_table;
     load_lexicon(&lexicon, std::string("../../output/lexicon.bin"));
 
     //************
     //test simple9
     //************
-
+    /*
     unsigned int result;
     std::vector<unsigned int> encodeTest0 = { 3, 4, 6, 8, 9, 10, 12};
     std::ofstream out_file("../tmp/simple9.bin", std::ios::binary);
@@ -24,6 +24,7 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < len; i++) {
         std::cout << val[i] << " ";
     }
+    */
     //if (result == 0x6fffffff)
     //    std::cout << "encode successfully Len : " << len << std::endl;
     //else
@@ -66,7 +67,6 @@ int main(int argc, char* argv[]) {
     //openList test
     //*************
 
-    /*
     std::string term = "applianc";
     posting_list ret;
 
@@ -78,8 +78,9 @@ int main(int argc, char* argv[]) {
 
     ifile.open("../tmp/uncompressed_inverted_index.bin", std::ios::binary);
     auto it = lexicon.find(term);
-    unsigned long offset = it->second.first;
-    size_t p_len = it->second.second;
+    unsigned long offset = it->second;
+    size_t p_len;
+    ifile.read(reinterpret_cast<char*>(&p_len), sizeof(size_t));
 
     ifile.seekg(offset);
 
@@ -91,7 +92,7 @@ int main(int argc, char* argv[]) {
     }
 
     decompressed_list = VBdecode(cur);
-    int size_pl = decompressed_list.size() / 2;
+    size_t size_pl = decompressed_list.size() / 2;
 
     for (std::vector<unsigned int>::iterator it = decompressed_list.begin(); it != decompressed_list.end(); ++it) {
          ret.doc_ids.push_back(*it);
@@ -109,6 +110,5 @@ int main(int argc, char* argv[]) {
     //    std::cout << ret.freqs[i] << ",";
     //}
     std::cout << std::endl;
-    */
     
 }

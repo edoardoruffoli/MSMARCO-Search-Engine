@@ -53,7 +53,7 @@ std::vector<unsigned int> VBdecode(std::vector<char> &vec) {
 void read_compressed_index(std::string filename) {
 	std::ifstream ifile;
 	ifile.open(filename, std::ios::binary);
-	std::map<std::string, std::pair<unsigned long, size_t>> lexicon;
+	std::map<std::string, unsigned long> lexicon;
 	std::string lexicon_file("../../output/lexicon.bin");
 
 	load_lexicon(&lexicon, lexicon_file);
@@ -67,14 +67,16 @@ void read_compressed_index(std::string filename) {
 	int p;
 	std::vector<char> cur;
 	//bool control = true;
-	for (std::map<std::string, std::pair<unsigned long, size_t>>::iterator it = lexicon.begin(); it != lexicon.end(); it++) {
+	for (std::map<std::string, unsigned long>::iterator it = lexicon.begin(); it != lexicon.end(); it++) {
 		//if (control) {
 		//	control = false;
 		//	continue;
 		//}
 		std::string term = it->first;
-		unsigned long offset = it->second.first;
-		size_t p_len = it->second.second;
+		unsigned long offset = it->second;
+		size_t p_len;
+        ifile.read(reinterpret_cast<char*>(&p_len), sizeof(size_t));
+
 		//std::cout << "Term : " << it->first << std::endl;
 		//std::cout << "Offset --> " << offset << std::endl;
 		//std::cout << "Len --> " << p_len << std::endl;

@@ -17,12 +17,12 @@ bool init_data_structures() {
 
 bool execute_query(std::vector<std::string> &terms, unsigned int mode) {
 
-    std::vector<posting_list> pls;
+    std::vector<posting_list*> pls;
     for (auto term : terms) {
 
         auto it = lexicon.find(term);
         if (it != lexicon.end()) {
-            //pl.push_back(openList(it->second));
+            //pls.push_back(openList(it->second));
         }
         else {
             std::cout << term << " not present in lexicon.\n";
@@ -63,10 +63,11 @@ void openList(std::string term, posting_list *result) {
     
     ifile.open("../tmp/uncompressed_inverted_index.bin", std::ios::binary);
     auto it = lexicon.find(term);
-    unsigned long offset = it->second.first;
-    size_t p_len = it->second.second;
-
+    unsigned long offset = it->second;
+    
     ifile.seekg(offset);
+    size_t p_len;
+    ifile.read(reinterpret_cast<char*>(&p_len), sizeof(size_t));
     
     while (p_len) {
         ifile.get(c);
@@ -76,7 +77,7 @@ void openList(std::string term, posting_list *result) {
     }
     
     decompressed_list = VBdecode(cur);
-    int size_pl = decompressed_list.size() / 2;
+    size_t size_pl = decompressed_list.size() / 2;
 
     for (std::vector<unsigned int>::iterator it = decompressed_list.begin(); it != decompressed_list.end(); ++it) {
         if (size_pl) {

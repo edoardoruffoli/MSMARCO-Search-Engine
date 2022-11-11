@@ -1,13 +1,18 @@
 #include "MSMARCO-Search-Engine/query.hpp"
 
+// Doc table
+std::set<doc_entry> _doc_table;
+
+std::map<std::string, unsigned long> _lexicon;
+
 bool init_data_structures() {
     std::cout << "Loading Lexicon and Document Table ...\n";
 
-    if(load_lexicon(&lexicon, std::string("../../output/lexicon.bin")) == false) {
+    if(load_lexicon(&_lexicon, std::string("../../output/lexicon.bin")) == false) {
         std::cout << "Error: cannot open lexicon.\n";
         return false;
     }
-    if(load_doc_table(&doc_table, std::string("../../output/doc_table.bin")) == false) {
+    if(load_doc_table(&_doc_table, std::string("../../output/doc_table.bin")) == false) {
         std::cout << "Error: cannot open document table.\n";
         return false;
     }
@@ -16,13 +21,18 @@ bool init_data_structures() {
 }
 
 bool execute_query(std::vector<std::string> &terms, unsigned int mode) {
-
     std::vector<posting_list*> pls;
     for (auto term : terms) {
 
-        auto it = lexicon.find(term);
-        if (it != lexicon.end()) {
-            //pls.push_back(openList(it->second));
+        auto it = _lexicon.find(term);
+        if (it != _lexicon.end()) {
+            posting_list *pl = new posting_list();
+            pl->openList(it->second);
+            pls.push_back(pl);
+
+            // Test
+            pl->next();
+            std::cout <<"TEST: " << pl->cur_doc_id << " " << pl->cur_freq << std::endl;;
         }
         else {
             std::cout << term << " not present in lexicon.\n";
@@ -48,45 +58,10 @@ bool execute_query(std::vector<std::string> &terms, unsigned int mode) {
     // Showing results
 
 
-    //for (auto pl : pls)
-        //closeList(pl);
+    for (auto pl : pls) {
+        pl->closeList();
+        delete pl;
+    }
 
     return true;
-}
-
-void openList(std::string term, posting_list *result) {
-    std::vector<char> cur;
-    std::vector<unsigned int> decompressed_list;
-    char c;
-
-    std::ifstream ifile;
-    
-    ifile.open("../tmp/uncompressed_inverted_index.bin", std::ios::binary);
-    auto it = lexicon.find(term);
-    unsigned long offset = it->second;
-    
-    ifile.seekg(offset);
-    size_t p_len;
-    ifile.read(reinterpret_cast<char*>(&p_len), sizeof(size_t));
-    
-    while (p_len) {
-        ifile.get(c);
-        cur.push_back(c);
-        offset++;
-        p_len--;
-    }
-    
-    decompressed_list = VBdecode(cur);
-    size_t size_pl = decompressed_list.size() / 2;
-
-    for (std::vector<unsigned int>::iterator it = decompressed_list.begin(); it != decompressed_list.end(); ++it) {
-        if (size_pl) {
-            result->doc_ids.push_back(*it);
-            size_pl--;
-        }
-        else {
-            result->freqs.push_back(*it);
-        }
-    }
-    ifile.close();
 }

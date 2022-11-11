@@ -31,16 +31,19 @@ void write_inverted_index_record(std::ofstream &out, term_entry &term_entry) {
     out << '\n';
 }
 
+std::ifstream in("../../output/inverted_index_test.bin", std::ios::binary);
 unsigned long write_inverted_index_record_compressed(std::ofstream& out, term_entry& term_entry) {
+    // Number of bytes written
+    unsigned int num_bytes = 0;
+
     // Save first position that will be used to store the freqs offset
     long first_byte = out.tellp();
-
+    
     // Clean first 4 bytes
     int tmp = 0;
-    out.write(reinterpret_cast<const char *>(&tmp), sizeof(int));
+    out.write(reinterpret_cast<const char*>(&tmp), sizeof(int));
 
     // Encode doc_id
-    unsigned int num_bytes = 0;
     for (auto& entry : term_entry.posting_list)
         num_bytes += VBencode(unsigned(entry.first), out);
 
@@ -50,12 +53,13 @@ unsigned long write_inverted_index_record_compressed(std::ofstream& out, term_en
     for (auto& entry : term_entry.posting_list)
         num_bytes += VBencode(unsigned(entry.second), out);
 
-    // Write freqs offset at first 4 bytes
+    // Write freqs_offset value at first 4 bytes
     out.seekp(first_byte);
-    out.write(reinterpret_cast<const char *>(&freqs_offset), sizeof(int));
+    out.write(reinterpret_cast<const char*>(&freqs_offset), sizeof(int));
+    num_bytes += sizeof(int);
 
     // Reposition file stream to the next position
-    out.seekp(first_byte + num_bytes + sizeof(int));
+    out.seekp(first_byte + num_bytes);
 
     return num_bytes;
 }
@@ -134,11 +138,10 @@ void merge_blocks(const unsigned int n_blocks) {
         // Writing
         //std::cout << "Writing Inverted Index record -> " << cur.term << '\n';
         offset += len;
-        //lexicon[cur.term] = out_inverted_index.tellp();
+        std::cout << offset << " = ";
         len = write_inverted_index_record_compressed(out_inverted_index, cur);
         lexicon[cur.term] = offset;
         //write_lexicon_record(out_lexicon, cur, offset);
-
     }
 
     // Write Lexicon on file

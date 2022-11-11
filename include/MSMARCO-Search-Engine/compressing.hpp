@@ -20,4 +20,5 @@
 
 unsigned long VBencode(unsigned int num, std::ofstream& ofile);
 std::vector<unsigned int> VBdecode(std::vector<char>& vec);
-void read_compressed_index(std::string filename);
+unsigned int VBdecode(std::ifstream& ifile);
+//void read_compressed_index(std::string filename);

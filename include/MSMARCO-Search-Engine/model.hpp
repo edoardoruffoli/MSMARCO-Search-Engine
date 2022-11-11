@@ -1,12 +1,20 @@
 #pragma once
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 
-// Posting lists
+// Posting list iterator
 struct posting_list {
-    std::vector<unsigned int> doc_ids;
-    std::vector<unsigned int> freqs;
+    std::ifstream f1;
+    std::ifstream f2;
+    unsigned int cur_doc_id;
+    unsigned int cur_freq;
+
+    bool openList(unsigned long offset);
+    void closeList();
+    void next();
+    void nextGEQ(unsigned int d);
 };
 
 // Lexicon

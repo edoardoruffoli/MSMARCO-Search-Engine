@@ -90,6 +90,6 @@ int main() {
 		std::cout << "result " << *it << std::endl;
 	}
 	*/
-    read_compressed_index("../tmp/uncompressed_inverted_index.bin");
+    //read_compressed_index("../tmp/uncompressed_inverted_index.bin");
 	return 0;
 }

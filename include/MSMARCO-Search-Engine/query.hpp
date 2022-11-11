@@ -13,11 +13,6 @@
 #define CONJUNCTIVE_MODE 0
 #define DISJUNCTIVE_MODE 1
 
-// Doc table
-std::set<doc_entry> doc_table;
-
-std::map<std::string, unsigned long> lexicon;
-
 bool init_data_structures();
 
 bool execute_query(std::vector<std::string> &terms, unsigned int type);

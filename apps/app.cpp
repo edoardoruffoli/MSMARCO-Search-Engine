@@ -76,13 +76,13 @@ int main(int argc, char* argv[]) {
 
     std::ifstream ifile;
 
-    ifile.open("../tmp/uncompressed_inverted_index.bin", std::ios::binary);
+    ifile.open("../../output/inverted_index.bin", std::ios::binary);
     auto it = lexicon.find(term);
     unsigned long offset = it->second;
 
     ifile.seekg(offset);
-    size_t p_len = 0;
-    ifile.read(reinterpret_cast<char*>(&p_len), sizeof(size_t));
+    unsigned int p_len = 0;
+    ifile.read(reinterpret_cast<char*>(&p_len), sizeof(int));
 
     while (p_len) {
         ifile.get(c);
@@ -95,7 +95,8 @@ int main(int argc, char* argv[]) {
     size_t size_pl = decompressed_list.size() / 2;
 
     for (std::vector<unsigned int>::iterator it = decompressed_list.begin(); it != decompressed_list.end(); ++it) {
-         ret.doc_ids.push_back(*it);
+        std::cout << *it << std::endl;
+         //ret.doc_ids.push_back(*it);
         //else {
         //    ret.freqs.push_back(decompressed_list[i]);
         //}
@@ -103,9 +104,9 @@ int main(int argc, char* argv[]) {
     ifile.close();
 
     std::cout << term << " ";
-    for (std::vector<unsigned int>::iterator it = ret.doc_ids.begin(); it != ret.doc_ids.end(); ++it) {
-        std::cout << *it << ",";
-    }
+//    for (std::vector<unsigned int>::iterator it = ret.doc_ids.begin(); it != ret.doc_ids.end(); ++it) {
+//        std::cout << *it << ",";
+//    }
     //for (int i : ret.freqs) {
     //    std::cout << ret.freqs[i] << ",";
     //}

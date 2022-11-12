@@ -19,7 +19,6 @@
 #include <boost/range/numeric.hpp>
 #include <boost/range/adaptor/map.hpp>
 
-#include "MSMARCO-Search-Engine/util.hpp"
 #include "MSMARCO-Search-Engine/io.hpp"
 #include "MSMARCO-Search-Engine/compressing.hpp"
 

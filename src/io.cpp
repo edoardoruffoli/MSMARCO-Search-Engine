@@ -1,6 +1,6 @@
 #include "MSMARCO-Search-Engine/io.hpp"
 
-bool save_lexicon(const std::map<std::string, unsigned long>& lexicon,
+bool save_lexicon(const std::map<std::string, lexicon_entry>& lexicon,
                 std::string &filename) {
     std::ofstream filestream(filename, std::ios::binary);
     if (filestream.fail()) {
@@ -13,7 +13,7 @@ bool save_lexicon(const std::map<std::string, unsigned long>& lexicon,
     return true;
 }
 
-bool load_lexicon(std::map<std::string, unsigned long>* lexicon,
+bool load_lexicon(std::map<std::string, lexicon_entry>* lexicon,
                 std::string &filename) {
     std::ifstream filestream(filename, std::ios::binary);  
     if (filestream.fail()) {
@@ -26,7 +26,7 @@ bool load_lexicon(std::map<std::string, unsigned long>* lexicon,
     return true;
 }
 
-bool save_doc_table(const std::set<doc_entry> &doc_table, std::string &filename) {
+bool save_doc_table(const std::map<unsigned int, doc_table_entry> &doc_table, std::string &filename) {
     std::ofstream filestream(filename, std::ios::binary);  
     if (filestream.fail()) 
         return false;
@@ -35,7 +35,7 @@ bool save_doc_table(const std::set<doc_entry> &doc_table, std::string &filename)
     return true;
 }
 
-bool load_doc_table(std::set<doc_entry> *doc_table, std::string &filename) {
+bool load_doc_table(std::map<unsigned int, doc_table_entry> *doc_table, std::string &filename) {
     std::ifstream filestream(filename, std::ios::binary);  
     if (filestream.fail()) 
         return false;

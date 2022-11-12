@@ -87,11 +87,11 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 
     unsigned int current_size = 0;
 	unsigned int block_num = 1;
-    unsigned long doc_id = 0;
+    unsigned int doc_id = 0;
 
     // std::map guarantees lexicographic ordering of the terms
 	std::map<std::string, std::list<std::pair<int, int>>> dictonary;
-    std::set<doc_entry> doc_table;
+    std::map<unsigned int, doc_table_entry> doc_table;
 
 	std::string loaded_content;
 	std::string doc_no;
@@ -124,8 +124,7 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 		}
 
         // Update document table with current document
-        //write_doc_table_record(out_doc_table, doc_no, doc_len);
-        doc_table.insert(doc_entry{doc_id, doc_no, doc_len});
+        doc_table[doc_id] = doc_table_entry{doc_no, doc_len};
 
         doc_id++;
 	}

@@ -17,10 +17,10 @@
 #include "MSMARCO-Search-Engine/model.hpp"
 
 
-bool save_lexicon(const std::map<std::string, unsigned long>& lexicon, std::string& filename);
+bool save_lexicon(const std::map<std::string, lexicon_entry>& lexicon, std::string& filename);
 
-bool load_lexicon(std::map<std::string, unsigned long>* lexicon, std::string& filename);
+bool load_lexicon(std::map<std::string, lexicon_entry>* lexicon, std::string& filename);
 
-bool save_doc_table(const std::set<doc_entry> &doc_table, std::string &filename);
+bool save_doc_table(const std::map<unsigned int, doc_table_entry> &doc_table, std::string &filename);
 
-bool load_doc_table(std::set<doc_entry> *doc_table, std::string &filename);
+bool load_doc_table(std::map<unsigned int, doc_table_entry>*doc_table, std::string &filename);

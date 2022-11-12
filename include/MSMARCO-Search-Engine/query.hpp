@@ -6,7 +6,10 @@
 #include <vector>
 #include <map>
 #include <sstream>
+#include <queue>
+#include <math.h> 
 
+#include "MSMARCO-Search-Engine/model.hpp"
 #include "MSMARCO-Search-Engine/io.hpp"
 #include "MSMARCO-Search-Engine/compressing.hpp"
 
@@ -15,4 +18,9 @@
 
 bool init_data_structures();
 
-bool execute_query(std::vector<std::string> &terms, unsigned int type);
+bool execute_query(std::vector<std::string> &terms, unsigned int type, unsigned int k);
+
+void conjunctive_query(std::priority_queue<std::pair<unsigned int, unsigned int>> &min_heap,
+                       std::vector<posting_list*> pls, unsigned int k);
+
+double TFIDF(unsigned int tf, unsigned int df, unsigned int N);

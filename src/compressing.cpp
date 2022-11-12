@@ -24,18 +24,20 @@ unsigned long VBencode(unsigned int num, std::ofstream& ofile) {
 	return result.size();
 }
 
-unsigned int VBdecode(std::ifstream& ifile) {
+unsigned int VBdecode(std::ifstream& ifile, unsigned int &n_bytes) {
     char c;
 	int num = 0;
 	int p = 0;
 
     ifile.get(c);
+    n_bytes++;
 	std::bitset<8> byte(c);
 	while (byte[7] == 1) {
 		byte.flip(7);
 		num += byte.to_ulong() * pow(128, p);
 		p++;
         ifile.get(c);
+        n_bytes++;
 		byte = std::bitset<8>(c);
 	}
 	num += (byte.to_ulong()) * pow(128, p);

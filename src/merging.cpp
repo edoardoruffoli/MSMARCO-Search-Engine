@@ -108,7 +108,7 @@ void merge_blocks(const unsigned int n_blocks) {
     }
 
     // Lexicon data structure
-    std::map<std::string, unsigned long> lexicon;
+    std::map<std::string, lexicon_entry> lexicon;
 
     // Pointer to the posting list in the inverted index file
     unsigned long offset = 0;
@@ -135,12 +135,15 @@ void merge_blocks(const unsigned int n_blocks) {
             cur.posting_list.splice(cur.posting_list.end(), cur2.posting_list);  // O(1)     
         } 
 
+        if (cur.term == "applianc") {
+            for (auto entry : cur.posting_list)
+                std::cout << " " << entry.first << "," << entry.second << '\n';
+        }
         // Writing
         //std::cout << "Writing Inverted Index record -> " << cur.term << '\n';
         offset += len;
-        std::cout << offset << " = ";
         len = write_inverted_index_record_compressed(out_inverted_index, cur);
-        lexicon[cur.term] = offset;
+        lexicon[cur.term] = {(unsigned int) cur.posting_list.size(), offset};
         //write_lexicon_record(out_lexicon, cur, offset);
     }
 

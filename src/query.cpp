@@ -5,6 +5,8 @@ std::map<unsigned int, doc_table_entry> doc_table;
 
 std::map<std::string, lexicon_entry> lexicon;
 
+double avg_doc_len;
+
 bool init_data_structures() {
     std::cout << "Loading Lexicon and Document Table ...\n";
 
@@ -16,6 +18,14 @@ bool init_data_structures() {
         std::cout << "Error: cannot open document table.\n";
         return false;
     }
+
+    // IF BM25 compute avg doc len
+    int sum = 0;
+    for (auto doc : doc_table) {
+        sum += doc.second.doc_len;
+    }
+    avg_doc_len = (double)sum/doc_table.size();
+
     printf("Done.\n");
     return true;
 }
@@ -32,12 +42,17 @@ double TFIDF(unsigned int tf, unsigned int df, unsigned int N) {
     return (1.0 + log10(tf))*log10((double)N/df);
 }
 
+double BM25(unsigned int tf, unsigned int df, unsigned int doc_len, unsigned int avg_doc_len, unsigned int N) {
+    double k1 = 1.2;
+    double b = 0.75;
+    return tf*log10((double)N/df)/(k1*((1-b)+b*((double)doc_len/avg_doc_len)) + tf);
+}
 
 // Min heap <doc_id, score>
 struct compare {
     bool operator()(std::pair<unsigned int, double> const& a, std::pair<unsigned int, double> const& b) const {
             if (a.second == b.second)
-                return a.first > b.first;
+                return a.first < b.first;
             return a.second > b.second;
     }
 };
@@ -56,10 +71,11 @@ void conjunctive_query(std::priority_queue<std::pair<unsigned int, double>,
         for (auto &pl : pls) {
             if (pl->getDocId() == cur_doc_id) {
                 unsigned int term_freq = pl->getFreq();
-                //unsigned int doc_len = doc_table[cur_doc_id]; // ONLY BM25
+                unsigned int doc_len = doc_table[cur_doc_id].doc_len; // ONLY BM25
                 unsigned int doc_freq = pl->doc_freq;
                 unsigned int N = (unsigned int) doc_table.size();   // O(1)
-                score += TFIDF(term_freq, doc_freq, N);
+                //score += TFIDF(term_freq, doc_freq, N);
+                score += BM25(term_freq, doc_freq, doc_len, avg_doc_len, N);
                 pl->next();
             }
         }

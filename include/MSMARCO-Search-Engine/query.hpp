@@ -23,6 +23,9 @@ bool execute_query(std::vector<std::string> &terms, unsigned int type, unsigned 
 void conjunctive_query(std::priority_queue<std::pair<unsigned int, unsigned int>> &min_heap,
                        std::vector<posting_list*> pls, unsigned int k);
 
+void disjunctive_query(std::priority_queue<std::pair<unsigned int, unsigned int>> &min_heap,
+                       std::vector<posting_list*> pls, unsigned int k);
+
 double TFIDF(unsigned int tf, unsigned int df, unsigned int N);
 
 double BM25(unsigned int tf, unsigned int df, unsigned int doc_len, unsigned avg_doc_len, unsigned int N);

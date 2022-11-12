@@ -62,6 +62,13 @@ void conjunctive_query(std::priority_queue<std::pair<unsigned int, double>,
                        std::vector<posting_list*> pls,
                        unsigned int k) {
 
+}
+
+void disjunctive_query(std::priority_queue<std::pair<unsigned int, double>, 
+                       std::vector<std::pair<unsigned int, double>>, compare> &min_heap,
+                       std::vector<posting_list*> pls,
+                       unsigned int k) {
+
     unsigned int cur_doc_id = get_min_doc_id(pls);
     unsigned int max_doc_id = std::numeric_limits<unsigned int>::max();
     int d = 0;
@@ -124,7 +131,7 @@ bool execute_query(std::vector<std::string> &terms, unsigned int mode, unsigned 
             conjunctive_query(min_heap, pls, k); 
             break;
         case DISJUNCTIVE_MODE:
-            //disjunctive_query(hp,lps,cnt,limit); 
+            disjunctive_query(min_heap, pls, k); 
             break;
     }
 

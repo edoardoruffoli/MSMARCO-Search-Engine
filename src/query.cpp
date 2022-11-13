@@ -76,16 +76,6 @@ double BM25(unsigned int tf, unsigned int df, unsigned int doc_len, unsigned int
     return tf*log10((double)N/df)/(k1*((1-b)+b*((double)doc_len/avg_doc_len)) + tf);
 }
 
-// Min heap <doc_id, score>
-struct compare {
-    bool operator()(std::pair<unsigned int, double> const& a, std::pair<unsigned int, double> const& b) const {
-            if (a.second == b.second)
-                return a.first < b.first;
-            return a.second > b.second;
-    }
-};
-
-
 void conjunctive_query(std::priority_queue<std::pair<unsigned int, double>, 
                        std::vector<std::pair<unsigned int, double>>, compare> &min_heap,
                        std::vector<posting_list*> pls,
@@ -128,7 +118,6 @@ void disjunctive_query(std::priority_queue<std::pair<unsigned int, double>,
 
     unsigned int cur_doc_id = get_min_doc_id(pls);
     unsigned int max_doc_id = std::numeric_limits<unsigned int>::max();
-    int d = 0;
 
     while(cur_doc_id != max_doc_id){
         double score = 0.0;

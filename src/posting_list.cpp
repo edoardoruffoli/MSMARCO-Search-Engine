@@ -43,8 +43,30 @@ void posting_list::next() {
     f1.seekg(this->doc_ids_offset);
 }
 
-void nextGEQ(unsigned int d) {
+/*
+Advances the itarator forward to the next posting with a docID
+greater than or equal to d.
+*/
+void posting_list::nextGEQ(unsigned int d) {
+    do {
+        if (this->doc_ids_offset == this->stop_offset) {
+            this->cur_doc_id = std::numeric_limits<unsigned int>::max();
+            this->cur_freq = std::numeric_limits<unsigned int>::max();
+            return;
+        }
 
+        unsigned int bytes = 0;
+        this->cur_doc_id = VBdecode(this->f1, bytes);
+        this->doc_ids_offset += bytes;
+
+        // Clean
+        bytes = 0;
+        this->f1.seekg(this->freqs_offset);
+        this->cur_freq = VBdecode(this->f1, bytes);
+        this->freqs_offset += bytes;
+
+        f1.seekg(this->doc_ids_offset);
+    } while (this->cur_doc_id < d);
 }
 
 unsigned int posting_list::getDocId() {

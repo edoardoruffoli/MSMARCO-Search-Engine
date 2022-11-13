@@ -16,6 +16,15 @@
 #define CONJUNCTIVE_MODE 0
 #define DISJUNCTIVE_MODE 1
 
+// Min heap <doc_id, score>
+struct compare {
+    bool operator()(std::pair<unsigned int, double> const& a, std::pair<unsigned int, double> const& b) const {
+        if (a.second == b.second)
+            return a.first < b.first;
+        return a.second > b.second;
+    }
+};
+
 bool init_data_structures();
 
 bool execute_query(std::vector<std::string> &terms, unsigned int type, unsigned int k);

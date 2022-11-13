@@ -37,11 +37,13 @@ struct lexicon_entry {
     unsigned int doc_freq;
     // unsigned int coll_freq;
     unsigned long offset;
+    double max_score;
 
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version) {
         ar & doc_freq;
         ar & offset;
+        ar& max_score;
     }
 };
 

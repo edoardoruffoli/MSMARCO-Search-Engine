@@ -69,6 +69,12 @@ void write_lexicon_record(std::ofstream &out, term_entry &term_entry, unsigned l
     out << '\n';
 }
 
+double BM25(unsigned int tf, unsigned int df, unsigned int doc_len, unsigned int avg_doc_len, unsigned int N) {
+    double k1 = 1.2;
+    double b = 0.75;
+    return tf * log10((double)N / df) / (k1 * ((1 - b) + b * ((double)doc_len / avg_doc_len)) + tf);
+}
+
 void merge_blocks(const unsigned int n_blocks) {
     std::cout << "Started Merging Phase: \n\n";
     std::cout << "Number of blocks: " << n_blocks << "\n\n";
@@ -110,9 +116,22 @@ void merge_blocks(const unsigned int n_blocks) {
     // Lexicon data structure
     std::map<std::string, lexicon_entry> lexicon;
 
+    std::map<unsigned int, doc_table_entry> doc_table;
+    load_doc_table(&doc_table, std::string("../../output/doc_table.bin"));
+
+    double avg_doc_len;
+    // IF BM25 compute avg doc len
+    int sum = 0;
+    for (auto doc : doc_table) {
+        sum += doc.second.doc_len;
+    }
+    avg_doc_len = (double)sum / doc_table.size();
+
     // Pointer to the posting list in the inverted index file
     unsigned long offset = 0;
     unsigned long len = 0;
+    double max_score = 0;
+    double bm25 = 0;
 
     while (!min_heap.empty()) {
         term_entry cur = min_heap.top();
@@ -135,15 +154,19 @@ void merge_blocks(const unsigned int n_blocks) {
             cur.posting_list.splice(cur.posting_list.end(), cur2.posting_list);  // O(1)     
         } 
 
-        if (cur.term == "applianc") {
-            for (auto entry : cur.posting_list)
-                std::cout << " " << entry.first << "," << entry.second << '\n';
+        for (auto entry : cur.posting_list) {
+            bm25 = BM25(entry.second, (unsigned int)cur.posting_list.size(), doc_table[entry.first].doc_len, avg_doc_len, (unsigned int)doc_table.size());
+            if (bm25 > max_score)
+                max_score = bm25;
         }
+
         // Writing
         //std::cout << "Writing Inverted Index record -> " << cur.term << '\n';
         offset += len;
         len = write_inverted_index_record_compressed(out_inverted_index, cur);
-        lexicon[cur.term] = {(unsigned int) cur.posting_list.size(), offset};
+        
+        //lexicon : [term, num_docs, offset inverted index, maxscore]
+        lexicon[cur.term] = {(unsigned int) cur.posting_list.size(), offset, max_score};
         //write_lexicon_record(out_lexicon, cur, offset);
     }
 

@@ -15,7 +15,6 @@
 #include <map>
 #include <sstream>
 
-#include "MSMARCO-Search-Engine/util.hpp"
 #include "MSMARCO-Search-Engine/io.hpp"
 
 static const int NUM_DATA_BITS = 28;

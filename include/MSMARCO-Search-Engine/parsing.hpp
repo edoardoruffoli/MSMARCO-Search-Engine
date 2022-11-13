@@ -29,10 +29,11 @@
 #include "MSMARCO-Search-Engine/model.hpp"
 #include "MSMARCO-Search-Engine/io.hpp"
 
-std::unordered_map<std::string, int> tokenize(const std::string content, bool flag, const char* stopwords_filename);
+std::unordered_map<std::string, int> tokenize(const std::string &content, bool flag, 
+                                              std::unordered_set<std::string> &stopwords);
 
 void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& dictonary,
-                  const std::unordered_map<std::string, int>& token_stream, int doc_id);
+                  const std::unordered_map<std::string, int>& token_stream, int doc_id, unsigned int &doc_len);
 
 void write_doc_table_record(std::ofstream &out, std::string &doc_no, unsigned int doc_len);
 

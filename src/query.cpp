@@ -38,6 +38,34 @@ unsigned int get_min_doc_id(std::vector<posting_list*> pls) {
     return min_doc_id;
 }
 
+bool get_conjunctive_doc_id(std::vector<posting_list*> pls) {
+    unsigned int min_doc_id = std::numeric_limits<unsigned int>::max();
+    bool find = false;
+    while (!find) {
+        auto prev = pls.begin();   
+        for (auto pl = pls.begin()+1; pl != pls.end(); pl++) {
+            if (((*prev)->cur_doc_id == min_doc_id) || ((*pl)->cur_doc_id == min_doc_id)) {
+                return false;
+            }
+            else if ((*prev)->cur_doc_id < (*pl)->cur_doc_id) {
+                (*prev)->next();
+                break;
+            }
+            else if ((*prev)->cur_doc_id > (*pl)->cur_doc_id) {
+                (*pl)->next();
+                break;
+            }
+            else {
+                prev = pl;
+                if (pl == pls.end() - 1) {
+                    find = true;
+                }
+            }
+        }
+    }
+    return true;
+}
+
 double TFIDF(unsigned int tf, unsigned int df, unsigned int N) {
     return (1.0 + log10(tf))*log10((double)N/df);
 }
@@ -57,12 +85,41 @@ struct compare {
     }
 };
 
+
 void conjunctive_query(std::priority_queue<std::pair<unsigned int, double>, 
                        std::vector<std::pair<unsigned int, double>>, compare> &min_heap,
                        std::vector<posting_list*> pls,
                        unsigned int k) {
 
+    bool find = get_conjunctive_doc_id(pls);
+
+    while (find) {
+        double score = 0.0;
+        unsigned int cur_doc_id;
+        for (auto& pl : pls) {
+            cur_doc_id = pl->getDocId();
+            unsigned int term_freq = pl->getFreq();
+            unsigned int doc_len = doc_table[cur_doc_id].doc_len; // ONLY BM25
+            unsigned int doc_freq = pl->doc_freq;
+            unsigned int N = (unsigned int)doc_table.size();   // O(1)
+            //score += TFIDF(term_freq, doc_freq, N);
+            score += BM25(term_freq, doc_freq, doc_len, avg_doc_len, N);
+            pl->next();
+        }
+        // SCORE OF A DOCUMENT
+        if (min_heap.size() >= k) {
+            if (min_heap.top().second > score) {
+                min_heap.pop();
+                min_heap.push(std::make_pair(cur_doc_id, score));
+            }
+        }
+        else {
+            min_heap.push(std::make_pair(cur_doc_id, score));
+        }
+        find = get_conjunctive_doc_id(pls);
+    }
 }
+
 
 void disjunctive_query(std::priority_queue<std::pair<unsigned int, double>, 
                        std::vector<std::pair<unsigned int, double>>, compare> &min_heap,

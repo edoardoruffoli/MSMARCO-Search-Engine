@@ -12,6 +12,13 @@ add_library(msmarco_search_engine
 target_include_directories(msmarco_search_engine PUBLIC ../include)
 
 #find_package(ZLIB)
+
+#OpenMP
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(msmarco_search_engine PUBLIC OpenMP::OpenMP_CXX ${llvm_libs})
+endif()
+
 include_directories(${ZLIB_INCLUDE_DIRS})
 target_link_libraries(msmarco_search_engine PUBLIC Boost::boost Boost::serialization Boost::filesystem Boost::iostreams ${ZLIB_LIBRARIES} Porter2)
 target_compile_features(msmarco_search_engine PUBLIC cxx_std_17)

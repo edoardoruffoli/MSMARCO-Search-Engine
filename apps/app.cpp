@@ -5,10 +5,10 @@
 
 
 int main(int argc, char* argv[]) {
-    std::cout << "Reading" << std::endl;
-    std::map<std::string, unsigned long> lexicon;
+    //std::cout << "Reading" << std::endl;
+    //std::map<std::string, unsigned long> lexicon;
     //std::set<doc_entry> doc_table;
-    load_lexicon(&lexicon, std::string("../../output/lexicon.bin"));
+    //load_lexicon(&lexicon, std::string("../../output/lexicon.bin"));
 
     //************
     //test simple9
@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
     //*************
     //openList test
     //*************
-
+    /*
     std::string term = "applianc";
     posting_list ret;
 
@@ -111,5 +111,5 @@ int main(int argc, char* argv[]) {
     //    std::cout << ret.freqs[i] << ",";
     //}
     std::cout << std::endl;
-    
+    */
 }

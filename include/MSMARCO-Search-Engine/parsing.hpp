@@ -26,6 +26,9 @@
 
 #include <Porter2.hpp>
 
+#include<boost/iostreams/stream.hpp>
+#include<boost/iostreams/device/mapped_file.hpp>
+
 #include "MSMARCO-Search-Engine/model.hpp"
 #include "MSMARCO-Search-Engine/io.hpp"
 
@@ -39,4 +42,4 @@ void write_doc_table_record(std::ofstream &out, std::string &doc_no, unsigned in
 
 void write_block_to_disk(std::map<std::string, std::list<std::pair<int, int>>>& dictionary, int block_num);
 
-void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char* stopwords_filename);
+void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char* stopwords_filename, unsigned int n_threads);

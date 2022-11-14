@@ -1,7 +1,7 @@
 #include "MSMARCO-Search-Engine/parsing.hpp"
 
 std::unordered_map<std::string, int> tokenize(const std::string &content, bool flag, 
-                                              std::unordered_set<std::string> &stopwords) {
+                                              std::set<std::string> &stopwords) {
 	//How to deal with empty page, malformed lines, malformed characters?
 	std::unordered_map<std::string, int> tokens;    // <term, term_freq>
 	boost::char_separator<char> sep(" \t\n");
@@ -29,7 +29,7 @@ std::unordered_map<std::string, int> tokenize(const std::string &content, bool f
 			continue;
 
 		if(flag) {
-			if (std::find(stopwords.begin(), stopwords.end(), token) != stopwords.end()) {
+			if (stopwords.find(token) != stopwords.end()) { //O(logN) using std::set
 				continue;
 			}
 			token = porter2::Stemmer{}.stem(token);
@@ -63,42 +63,46 @@ void write_block_to_disk(std::map<std::string, std::list<std::pair<int, int>>>& 
     f.close();
 }
 
-void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char* stopwords_filename) {
-    std::cout << "Started Parsing Phase: \n\n";
-	
-    std::ifstream f(in, std::ios_base::in | std::ios_base::binary);
-    // Check arguments validity
-    if (f.fail()) 
-        std::cout << "Error: input fail not valid.\n";
-    
-    if (BLOCK_SIZE == 0)
-        std::cout << "Error: block size not valid.\n";
+void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char* stopwords_filename, unsigned int n_threads) {
+	std::cout << "Started Parsing Phase: \n\n";
 
-    boost::iostreams::filtering_streambuf<boost::iostreams::input> inbuf;
-    inbuf.push(boost::iostreams::gzip_decompressor());
-    inbuf.push(f);
+	//std::ifstream f(in, std::ios_base::in | std::ios_base::binary);
+	// Check arguments validity
+	/*
+	if (f.fail())
+		std::cout << "Error: input fail not valid.\n";
 
-    //Convert streambuf to istream
-    std::istream instream(&inbuf);
-	
+	if (BLOCK_SIZE == 0)
+		std::cout << "Error: block size not valid.\n";
+	*/
+
+	boost::iostreams::stream<boost::iostreams::mapped_file_source> file;
+	boost::iostreams::filtering_streambuf<boost::iostreams::input> inbuf;
+	file.open(boost::iostreams::mapped_file_source(in));
+	inbuf.push(boost::iostreams::gzip_decompressor());
+	inbuf.push(file);
+
+	//Convert streambuf to istream
+	std::istream instream(&inbuf);
+
 	//std::ifstream instream(in); //read from examples.txt for debugging
-    // Document table output
-    std::string doc_table_filename("../../output/doc_table.bin");
+	// Document table output
+	std::string doc_table_filename("../../output/doc_table.bin");
 
-    unsigned int current_size = 0;
+	unsigned int current_size = 0;
 	unsigned int block_num = 1;
-    unsigned int doc_id = 0;
+	unsigned int doc_id = 0;
 
-    // std::map guarantees lexicographic ordering of the terms
+	// std::map guarantees lexicographic ordering of the terms
 	std::map<std::string, std::list<std::pair<int, int>>> dictonary;
-    std::map<unsigned int, doc_table_entry> doc_table;
+	std::map<unsigned int, doc_table_entry> doc_table;
 
 	std::string loaded_content;
 	std::string doc_no;
 	std::string text;
 
-    // Load stopwords
-    std::unordered_set<std::string> stopwords;
+	// Load stopwords
+	std::set<std::string> stopwords;
 
 	if (flag) {
 		std::ifstream is(stopwords_filename);
@@ -108,21 +112,24 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 		}
 	}
 
-    while (getline(instream, loaded_content)) {
-        //std::cout << "Processing doc_id: " << doc_id << std::endl;
+	while (getline(instream, loaded_content)) {
+		//#pragma omp task firstprivate(loaded_content)
+		//std::cout << omp_get_thread_num() << std::endl;
+		//std::cout << "Processing doc_id: " << doc_id << std::endl;
 
 		std::istringstream iss(loaded_content);
 		getline(iss, doc_no, '\t');
 		getline(iss, text, '\n');
-
+		std::cout << "Processing doc_id: " << doc_id << std::endl;
+				
 		std::unordered_map<std::string, int> tokens = tokenize(text, flag, stopwords);
 		//current_size += tokens.size();
-        current_size++; // ????
+		current_size++; // ????
 
-        // Compute document length
-        unsigned int doc_len;
+		// Compute document length
+		unsigned int doc_len;
 
-        // BSBI
+		// BSBI
 		if (current_size < BLOCK_SIZE) {
 			add_to_posting_list(dictonary, tokens, doc_id, doc_len);
 		}
@@ -134,11 +141,12 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 			add_to_posting_list(dictonary, tokens, doc_id, doc_len);
 		}
 
-        // Update document table with current document information
-        doc_table[doc_id] = doc_table_entry{doc_no, doc_len};
+		// Update document table with current document information
+		doc_table[doc_id] = doc_table_entry{doc_no, doc_len};
 
-        // Next doc_id
-        doc_id++;
+		// Next doc_id
+		doc_id++;
+				
 	}
 
     // Write last block

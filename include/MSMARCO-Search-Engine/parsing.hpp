@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <map>
 #include <sstream>
+#include <bitset>
 
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
@@ -32,8 +33,8 @@
 #include "MSMARCO-Search-Engine/model.hpp"
 #include "MSMARCO-Search-Engine/io.hpp"
 
-std::unordered_map<std::string, int> tokenize(const std::string &content, bool flag, 
-                                              std::unordered_set<std::string> &stopwords);
+void tokenize(const std::string &content, bool flag, std::unordered_set<std::string> &stopwords,
+                std::unordered_map<std::string, int> &tokens);
 
 void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& dictonary,
                   const std::unordered_map<std::string, int>& token_stream, int doc_id, unsigned int &doc_len);

@@ -9,7 +9,7 @@ add_library(msmarco_search_engine
                 compressing.cpp 
                 simple9.cpp ${HEADER_LIST})
 
-target_include_directories(msmarco_search_engine PUBLIC ../include)
+target_include_directories(msmarco_search_engine PUBLIC ../include ../thirdparty)
 
 #find_package(ZLIB)
 

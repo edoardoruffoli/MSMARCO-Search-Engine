@@ -1,7 +1,7 @@
 ﻿file(GLOB HEADER_LIST "${MSMARCO-Search-Engine_SOURCE_DIR}/include/MSMARCO-Search-Engine/*.hpp")
 
 add_library(msmarco_search_engine 
-                parsing.cpp 
+                parsing_parallel.cpp 
                 posting_list.cpp
                 merging.cpp 
                 io.cpp 

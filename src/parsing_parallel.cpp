@@ -4,14 +4,13 @@
 void tokenize(const std::string &content, bool flag, std::set<std::string> &stopwords, 
                                               std::unordered_map<std::string, int> &tokens) {
 	//How to deal with empty page, malformed lines, malformed characters?
-    std::unordered_map<std::string, int> output;
 
     typedef std::string::const_iterator iter;
     iter beg;
     bool in_token = false;
     for(std::string::const_iterator it = content.begin(), end = content.end(); it != end; ++it ) {
-       // if (ispunct(*it))
-       //     continue;
+        if (ispunct((unsigned char)*it))
+            continue;
         if(*it == '\t' || *it == ' ') {
             if(in_token) {
                 std::string token(beg, it);
@@ -22,7 +21,7 @@ void tokenize(const std::string &content, bool flag, std::set<std::string> &stop
                     }
                     token = porter2::Stemmer{}.stem(token);
                 }
-                output[token]++;
+                tokens[token]++;
                 in_token = false;
             }
         }
@@ -38,7 +37,7 @@ void tokenize(const std::string &content, bool flag, std::set<std::string> &stop
             if (stopwords.find(token) == stopwords.end())  //O(logN) using std::set
                 token = porter2::Stemmer{}.stem(token);
         }
-        output[token]++;    
+        tokens[token]++;
     }
 
     /*
@@ -86,8 +85,10 @@ void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& 
     }
 }
 
-void write_block_to_disk(std::map<std::string, std::list<std::pair<int, int>>>& dictionary, int block_num) {
-	std::ofstream f("../tmp/intermediate_" + std::to_string(block_num));
+void write_block_to_disk(std::map<std::string, std::list<std::pair<int, int>>>& dictionary, int block_num) {    
+    std::ofstream f("../tmp/intermediate_" + std::to_string(block_num));
+
+
 
 	if (f.fail()) 
         std::cout << "Error: not found intermediate file.\n";
@@ -109,19 +110,17 @@ void process_document(std::vector<std::string> documents, unsigned start_doc_id,
 	std::string text;
     std::map<std::string, std::list<std::pair<int, int>>> dictonary;
     std::cout << doc_id << " block_num:" << block_num << '\n';
-
     for (auto document : documents) {
         std::istringstream iss(document);
 		getline(iss, doc_no, '\t');
 		getline(iss, text, '\n');
 
-        if (block_num == 1)
-		    std::cout << "Processing doc_id: " << doc_id << std::endl;
+        //if (block_num == 1)
+		//    std::cout << "Processing doc_id: " << doc_id << std::endl;
 
         unsigned int doc_len;
         std::unordered_map<std::string, int> tokens;
         tokenize(text, flag, stopwords, tokens);
-
         add_to_posting_list(dictonary, tokens, doc_id, doc_len);
 
         doc_id++;
@@ -181,7 +180,7 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 	}
 
     // Constructs a thread pool with as many threads as available in the hardware.
-    BS::thread_pool pool(4);
+    BS::thread_pool pool(n_threads-1);
     std::vector<std::string> docs;
 
 	while (getline(instream, loaded_content)) {

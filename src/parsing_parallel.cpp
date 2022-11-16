@@ -4,78 +4,62 @@
 void tokenize(const std::string &content, bool flag, std::set<std::string> &stopwords, 
                                               std::unordered_map<std::string, int> &tokens) {
 	//How to deal with empty page, malformed lines, malformed characters?
-
+    
     typedef std::string::const_iterator iter;
-    iter beg;
-    bool in_token = false;
+    std::string token;
+
     for(std::string::const_iterator it = content.begin(), end = content.end(); it != end; ++it ) {
-        if (ispunct((unsigned char)*it))
+        if (ispunct((unsigned char)*it)) {
             continue;
+        }
         if(*it == '\t' || *it == ' ') {
-            if(in_token) {
-                std::string token(beg, it);
-                if(flag) {
-                    if (stopwords.find(token) != stopwords.end()) { //O(logN) using std::set
-                        in_token = false;
-                        continue;
-                    }
-                    token = porter2::Stemmer{}.stem(token);
+            if(flag) {
+                if (stopwords.find(token) != stopwords.end()) { //O(logN) using std::set
+                    token.clear();
+                    continue;
                 }
-                tokens[token]++;
-                in_token = false;
-            }
-        }
-        else if(!in_token ) {
-            std::tolower(*it);
-            beg = it;
-            in_token = true;
-        }
-    }
-    if(in_token) {
-        std::string token(beg, content.end());
-        if(flag) {
-            if (stopwords.find(token) == stopwords.end())  //O(logN) using std::set
                 token = porter2::Stemmer{}.stem(token);
+            }
+            tokens[token]++;
+            token.clear();
         }
-        tokens[token]++;
+        std::tolower(*it);
+        token.push_back(*it);
     }
-
+    
     /*
-
-	std::unordered_map<std::string, int> tokens;    // <term, term_freq>
-
     std::vector<std::string> strs;
     boost::split(strs, content, boost::is_any_of("\t "));
 
-	for (auto token : strs) {
+    for (auto token : strs) {
         // Remove punctuation
         token.erase(
-            std::remove_if(token.begin(), token.end(),[] (unsigned char c) { 
-                return ispunct(c); 
-            }),
+            std::remove_if(token.begin(), token.end(), [](unsigned char c) {
+                return ispunct(c);
+                }),
             token.end()
-        );
+                    );
 
         // To lower case
-        std::transform(token.begin(), token.end(), token.begin(), [](unsigned char c) { 
-            return std::tolower(c); 
-        });
+        std::transform(token.begin(), token.end(), token.begin(), [](unsigned char c) {
+            return std::tolower(c);
+            });
 
-		if (token.size() == 0)
-			continue;
+        if (token.size() == 0)
+            continue;
 
-		if(flag) {
-			if (stopwords.find(token) != stopwords.end()) { //O(logN) using std::set
-				continue;
-			}
-			token = porter2::Stemmer{}.stem(token);
+        if (flag) {
+            if (stopwords.find(token) != stopwords.end()) { //O(logN) using std::set
+                continue;
+            }
+            token = porter2::Stemmer{}.stem(token);
         }
-		tokens[token]++;
-	}
-
-	return tokens;
+        tokens[token]++;
+    }
     */
 }
+
+
 
 void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& dictonary,
                   const std::unordered_map<std::string, int>& token_stream, int doc_id, unsigned int &doc_len) {
@@ -100,7 +84,7 @@ void write_block_to_disk(std::map<std::string, std::list<std::pair<int, int>>>& 
     f.close();
 }
 
-void process_document(std::vector<std::string> documents, unsigned start_doc_id, unsigned int block_num, 
+void process_document(std::vector<std::string> &documents, unsigned start_doc_id, unsigned int block_num, 
                        std::set<std::string> &stopwords, bool flag) {
     unsigned int doc_id = start_doc_id;
 	std::string loaded_content;
@@ -126,6 +110,8 @@ void process_document(std::vector<std::string> documents, unsigned start_doc_id,
 		//doc_table[doc_id] = doc_table_entry{doc_no, doc_len};
     }
     write_block_to_disk(dictonary, block_num);
+    dictonary.clear();
+    documents[block_num - 1].clear();
 
 }
 
@@ -179,7 +165,9 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 
     // Constructs a thread pool with as many threads as available in the hardware.
     BS::thread_pool pool(n_threads-1);
-    std::vector<std::string> docs;
+    std::vector<std::vector<std::string>> docs;
+    std::vector<std::string> row;
+    docs.push_back(row);
 
 	while (getline(instream, loaded_content)) {
 		//std::cout << "Processing doc_id: " << doc_id << std::endl;
@@ -188,15 +176,18 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 
 		// BSBI
 		if (current_size < BLOCK_SIZE) {
-            docs.push_back(loaded_content);
+            docs[block_num-1].push_back(loaded_content);
             continue;
 		}
 		else {
-            pool.push_task(process_document, docs, doc_id, block_num, stopwords, flag);
+            pool.push_task(process_document, docs[block_num-1], doc_id, block_num, stopwords, flag);
             doc_id += BLOCK_SIZE;
 			block_num++;
             current_size = 0;
-			docs.clear(); // ??
+            std::vector<std::string> row;
+            docs.push_back(row);
+            if (block_num == 6)
+                break;
 		}
 	}
 

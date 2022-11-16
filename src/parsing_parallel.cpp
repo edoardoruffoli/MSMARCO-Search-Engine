@@ -88,8 +88,6 @@ void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& 
 void write_block_to_disk(std::map<std::string, std::list<std::pair<int, int>>>& dictionary, int block_num) {    
     std::ofstream f("../tmp/intermediate_" + std::to_string(block_num));
 
-
-
 	if (f.fail()) 
         std::cout << "Error: not found intermediate file.\n";
 

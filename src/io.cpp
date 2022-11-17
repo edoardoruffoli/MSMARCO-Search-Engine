@@ -26,7 +26,7 @@ bool load_lexicon(std::map<std::string, lexicon_entry>* lexicon,
     return true;
 }
 
-bool save_doc_table(const std::map<unsigned int, doc_table_entry> &doc_table, std::string &filename) {
+bool save_doc_table(const std::vector<doc_table_entry> &doc_table, std::string &filename) {
     std::ofstream filestream(filename, std::ios::binary);  
     if (filestream.fail()) 
         return false;

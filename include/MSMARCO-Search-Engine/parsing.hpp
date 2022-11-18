@@ -38,7 +38,7 @@
 void tokenize(const std::string &content, bool flag, std::unordered_set<std::string> &stopwords,
                 std::unordered_map<std::string, int> &tokens);
 
-void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& dictonary,
+void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& dictionary,
                   const std::unordered_map<std::string, int>& token_stream, int doc_id, unsigned int &doc_len);
 
 void write_doc_table_record(std::ofstream &out, std::string &doc_no, unsigned int doc_len);

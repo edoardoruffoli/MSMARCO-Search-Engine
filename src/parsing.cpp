@@ -48,20 +48,6 @@ void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& 
     }
 }
 
-void write_block_to_disk(std::map<std::string, std::list<std::pair<int, int>>>& dictionary, int block_num) {
-	std::ofstream f("../tmp/intermediate_" + std::to_string(block_num));
-
-	if (f.fail()) 
-        std::cout << "Error: not found intermediate file.\n";
-
-	for (auto& kv : dictionary) {
-		f << kv.first;
-		for (auto& i : kv.second)
-			f << ' ' << i.first << ' ' << i.second;
-		f << std::endl;
-	}
-    f.close();
-}
 
 void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char* stopwords_filename, unsigned int n_threads) {
 	std::cout << "Started Parsing Phase: \n\n";

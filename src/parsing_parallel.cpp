@@ -16,27 +16,12 @@ void tokenize(const std::string &content, const bool flag, const std::unordered_
     }
 }
 
-void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& dictonary,
+void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& dictionary,
                   const std::unordered_map<std::string, int>& token_stream, int doc_id, unsigned int &doc_len) {
 	for (const std::pair<std::string, int> term_doc : token_stream) {
-		dictonary[term_doc.first].push_back(std::make_pair(doc_id, term_doc.second));
+		dictionary[term_doc.first].push_back(std::make_pair(doc_id, term_doc.second));
         doc_len += term_doc.second;
     }
-}
-
-void write_block_to_disk(std::map<std::string, std::list<std::pair<int, int>>>& dictionary, int block_num) {    
-    std::ofstream f("../tmp/intermediate_" + std::to_string(block_num));
-
-	if (f.fail()) 
-        std::cout << "Error: not found intermediate file.\n";
-
-	for (auto& kv : dictionary) {
-		f << kv.first;
-		for (auto& i : kv.second)
-			f << ' ' << i.first << ' ' << i.second;
-		f << std::endl;
-	}
-    f.close();
 }
 
 void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id, unsigned int block_num, 
@@ -50,14 +35,13 @@ void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id,
     //boost::shared_mutex mutex;
 
     // Add typedef <std::map<std::string, std::list<std::pair<int, int>>>
-
-    auto process_block = [documents, start_doc_id, doc_table, flag, stopwords](const unsigned start, const unsigned end) 
+    auto process_block = [&documents, &doc_table, &dictionary, start_doc_id, flag, &stopwords]
+    (const unsigned start, const unsigned end) 
     {
         std::cout << "Launched Worker Thread, Interval: [" << start << "," << end << "]\n";
         std::string doc_no;
         std::string text;
         std::istringstream iss;
-        std::map<std::string, std::list<std::pair<int, int>>> dict;
         std::unordered_map<std::string, int> tokens;
         unsigned int doc_len;
                                 
@@ -66,35 +50,20 @@ void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id,
             getline(iss, doc_no, '\t');
             getline(iss, text, '\n');
             tokenize(text, flag, stopwords, tokens);
-            add_to_posting_list(dict, tokens, start_doc_id + i, doc_len);
+            add_to_posting_list(dictionary, tokens, start_doc_id + i, doc_len);
             tokens.clear();
             doc_table[start_doc_id + i].doc_len;
             doc_table[start_doc_id + i].doc_no;
         }
-        return dict;
     };
 
     // Parallel Processing of the docs
-    BS::multi_future<std::map<std::string, std::list<std::pair<int, int>>>> mf = pool.parallelize_loop(0, documents.size(),
-                            process_block);
+    pool.parallelize_loop(0, documents.size(), process_block).wait();
 
-    std::vector<std::map<std::string, std::list<std::pair<int, int>>>> totals = mf.get();
-    std::cout << "Ended Paralleling Processing: \n"; 
+    save_intermediate_inv_idx(dictionary, std::string("../tmp/intermediate_" + std::to_string(block_num)));
 
-    // Merge maps
-    for (auto output_dict : totals) {   // The output map are ordered
-        for (auto entry : output_dict) {
-            // If term does not exist create it otherwise concate the posting list
-            if (dictionary.find(entry.first) == dictionary.end()) {
-                dictionary[entry.first] = entry.second;
-            } else {
-                dictionary[entry.first].splice(dictionary[entry.first].end(), entry.second);
-            }
-        }
-   }
-
-    write_block_to_disk(dictionary, block_num);
     tmr.stop();
+    std::cout << "Ended Paralleling Processing: \n"; 
     std::cout << "The elapsed time was " << tmr.ms() << " ms.\n";
 }
 
@@ -104,15 +73,16 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 	if (BLOCK_SIZE == 0)
 		std::cout << "Error: block size not valid.\n";
 
-	boost::iostreams::stream<boost::iostreams::mapped_file_source> file;
+    boost::iostreams::stream<boost::iostreams::mapped_file_source> mapped_file_stream;
+	boost::iostreams::mapped_file_source mmap(in);
 	boost::iostreams::filtering_streambuf<boost::iostreams::input> inbuf;
-	file.open(boost::iostreams::mapped_file_source(in));
-    if (file.fail())
+    mapped_file_stream.open(mmap);
+    if (mapped_file_stream.fail())
 		std::cout << "Error: input fail not valid.\n";
     
     // Compressed reading
-	inbuf.push(boost::iostreams::gzip_decompressor());
-	inbuf.push(file);
+	//inbuf.push(boost::iostreams::gzip_decompressor());
+	inbuf.push(mapped_file_stream);
 
 	// Convert streambuf to istream
 	std::istream instream(&inbuf);
@@ -134,7 +104,7 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 	}
 
     // Constructs a thread pool with as many threads as available in the hardware.
-    BS::thread_pool pool;
+    BS::thread_pool pool(n_threads);
 
     // Stores a block of documents
     std::vector<std::string> block;
@@ -146,6 +116,9 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
     std::string loaded_content;
 
     // Blocked Sort Based Indexing
+    BS::timer tmr;
+    tmr.start();
+    
 	while (getline(instream, loaded_content)) {
 		current_size++;
         block.push_back(loaded_content);
@@ -164,6 +137,8 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
             block.clear();
 		}
 	}
+    tmr.stop();
+    std::cout << "The elapsed time was " << tmr.ms() << " ms.\n";
 
     // Write last block
     doc_table.resize(BLOCK_SIZE*block_num);

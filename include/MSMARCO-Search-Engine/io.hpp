@@ -11,12 +11,14 @@
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/set.hpp>
+#include <boost/serialization/list.hpp>
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/utility.hpp>
 #include <boost/serialization/export.hpp>
 
 #include "MSMARCO-Search-Engine/model.hpp"
 
+bool save_intermediate_inv_idx(std::map<std::string, std::list<std::pair<int, int>>>& dictionary, std::string &filename);
 
 bool save_lexicon(const std::map<std::string, lexicon_entry>& lexicon, std::string& filename);
 

@@ -3,7 +3,7 @@
 int main(int argc, char* argv[])
 {
 	unsigned int n_threads = 4;
-	const int BLOCK_SIZE = 100000;
+	const int BLOCK_SIZE = 500000;
 	const char* docfile = "../../collection.tar.gz";
 	//const char* docfile = "../../examples.txt";
 	const char* stopwords = "../../stopwords.txt";

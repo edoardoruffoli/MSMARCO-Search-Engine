@@ -1,19 +1,20 @@
 #include "MSMARCO-Search-Engine/parsing.hpp"
 #include "BS_thread_pool.hpp"
 
-void tokenize(const std::string &content, const bool flag, const std::unordered_set<std::string> &stopwords, 
+void tokenize(std::string &content, bool flag, const std::unordered_set<std::string> &stopwords, 
                                               std::unordered_map<std::string, int> &tokens) {
 	// How to deal with empty page, malformed lines, malformed characters?
-    auto iss = std::istringstream(content);
-    auto str = std::string{};
-
-    while (iss >> str) {
-        tokens[str]++;
+    size_t pos = 0;
+    std::string token;
+    std::string delimiter = " \t";
+    while ((pos = content.find(delimiter)) != std::string::npos) {
+        token = content.substr(0, pos);
+        content.erase(0, pos + delimiter.length());
+    }
         // replace spces
         // replace punct
         // lowecase
         // stopwords
-    }
 }
 
 void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& dictionary,
@@ -35,13 +36,14 @@ void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id,
     //boost::shared_mutex mutex;
 
     // Add typedef <std::map<std::string, std::list<std::pair<int, int>>>
-    auto process_block = [&documents, &doc_table, &dictionary, start_doc_id, flag, &stopwords]
+    auto process_block = [&documents, &doc_table, start_doc_id, flag, &stopwords]
     (const unsigned start, const unsigned end) 
     {
         std::cout << "Launched Worker Thread, Interval: [" << start << "," << end << "]\n";
         std::string doc_no;
         std::string text;
         std::istringstream iss;
+        std::map<std::string, std::list<std::pair<int, int>>> dict;
         std::unordered_map<std::string, int> tokens;
         unsigned int doc_len;
                                 
@@ -50,15 +52,31 @@ void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id,
             getline(iss, doc_no, '\t');
             getline(iss, text, '\n');
             tokenize(text, flag, stopwords, tokens);
-            add_to_posting_list(dictionary, tokens, start_doc_id + i, doc_len);
+            add_to_posting_list(dict, tokens, start_doc_id + i, doc_len);
             tokens.clear();
             doc_table[start_doc_id + i].doc_len;
             doc_table[start_doc_id + i].doc_no;
         }
+        return dict;
     };
 
     // Parallel Processing of the docs
-    pool.parallelize_loop(0, documents.size(), process_block).wait();
+    BS::multi_future<std::map<std::string, std::list<std::pair<int, int>>>> mf = pool.parallelize_loop(0, documents.size(),
+                            process_block);
+
+    std::vector<std::map<std::string, std::list<std::pair<int, int>>>> totals = mf.get();
+
+    // Merge maps
+    for (auto output_dict : totals) {   // The output map are ordered
+        for (auto entry : output_dict) {
+            // If term does not exist create it otherwise concate the posting list
+            if (dictionary.find(entry.first) == dictionary.end()) {
+                dictionary[entry.first] = entry.second;
+            } else {
+                dictionary[entry.first].splice(dictionary[entry.first].end(), entry.second);
+            }
+        }
+   }
 
     save_intermediate_inv_idx(dictionary, std::string("../tmp/intermediate_" + std::to_string(block_num)));
 
@@ -81,7 +99,7 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 		std::cout << "Error: input fail not valid.\n";
     
     // Compressed reading
-	//inbuf.push(boost::iostreams::gzip_decompressor());
+	inbuf.push(boost::iostreams::gzip_decompressor());
 	inbuf.push(mapped_file_stream);
 
 	// Convert streambuf to istream

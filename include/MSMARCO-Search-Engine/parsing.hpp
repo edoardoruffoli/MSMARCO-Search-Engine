@@ -35,7 +35,7 @@
 #include "MSMARCO-Search-Engine/model.hpp"
 #include "MSMARCO-Search-Engine/io.hpp"
 
-void tokenize(const std::string &content, bool flag, const std::unordered_set<std::string> &stopwords,
+void tokenize(std::string &content, bool flag, const std::unordered_set<std::string> &stopwords,
                 std::unordered_map<std::string, int> &tokens);
 
 void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& dictionary,

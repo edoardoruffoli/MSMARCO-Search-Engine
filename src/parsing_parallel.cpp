@@ -1,50 +1,19 @@
 #include "MSMARCO-Search-Engine/parsing.hpp"
 #include "BS_thread_pool.hpp"
 
-// https://tristanbrindle.com/posts/a-quicker-study-on-tokenising/
-template <class InputIt, class ForwardIt, class BinOp>
-void for_each_token(InputIt first, InputIt last,
-                    ForwardIt s_first, ForwardIt s_last,
-                    BinOp binary_op)
-{
-    while (first != last) {
-        const auto pos = find_first_of(first, last, s_first, s_last);
-        binary_op(first, pos);
-        if (pos == last) break;
-            first = next(pos);
-    }
-}
-
 void tokenize(const std::string &content, const bool flag, const std::unordered_set<std::string> &stopwords, 
                                               std::unordered_map<std::string, int> &tokens) {
 	// How to deal with empty page, malformed lines, malformed characters?
-    std::string delims = "\t ";
-    for_each_token(cbegin(content), cend(content), cbegin(delims), cend(delims), 
-                    [&tokens, flag, &stopwords] (auto first, auto second) 
-                    {
-                        if (first != second) {
-                            std::string token = std::string(first, second);
+    auto iss = std::istringstream(content);
+    auto str = std::string{};
 
-                            // Remove punctuation
-                            token.erase(
-                                std::remove_if(token.begin(), token.end(),[] (unsigned char c) { 
-                                    return ispunct(c); 
-                                }),
-                                token.end()
-                            );
-
-                            // To lower
-                            std::transform(token.begin(), token.end(), token.begin(), [](unsigned char c) {
-                                return std::tolower(c);
-                            });
-
-                            // Check if stopword and stem
-                            if (flag && stopwords.find(token) == stopwords.end()) 
-                                token = porter2::Stemmer{}.stem(token);
-
-                            tokens[token]++;
-                        }
-                    });
+    while (iss >> str) {
+        tokens[str]++;
+        // replace spces
+        // replace punct
+        // lowecase
+        // stopwords
+    }
 }
 
 void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& dictonary,
@@ -77,6 +46,8 @@ void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id,
     tmr.start();
     std::map<std::string, std::list<std::pair<int, int>>> dictionary;
     std::cout << "Starting doc_id: " << start_doc_id << " block_num:" << block_num << " num_docs: " << documents.size() << '\n';
+
+    //boost::shared_mutex mutex;
 
     // Add typedef <std::map<std::string, std::list<std::pair<int, int>>>
 

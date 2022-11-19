@@ -1,19 +1,23 @@
 #include "MSMARCO-Search-Engine/merging.hpp"
 
-bool read_record(std::ifstream &in, term_entry &term_entry) {
+bool read_record(std::istream &in, term_entry &term_entry) {
     if (in.eof())
         return false;
 
     std::string loaded_content;
 
     getline(in, loaded_content); // Controlli
+    
 	std::istringstream iss(loaded_content);
+    std::cout << loaded_content << std::endl;
 	getline(iss, term_entry.term, ' ');
 
     std::string docid;
 	while (getline(iss, docid, ' ')) {
         std::string freq;
         getline(iss, freq, ' ');
+        //if (docid == "64")
+        //std::cout << "docid: " << docid << " freq" << freq << "\n";
         term_entry.posting_list.push_back(std::make_pair(stoi(docid), stoi(freq)));
     }   
     return true;
@@ -99,33 +103,47 @@ void merge_blocks(const unsigned int n_blocks) {
     std::priority_queue<term_entry, std::vector<term_entry>, compare> min_heap;
 
     // Buffer pointers to the intermediate posting lists
-    std::vector<std::ifstream> in_files;
+    std::vector<std::istream*> in_files;
     for (unsigned int i = 1; i <= n_blocks; ++i) {
-        in_files.push_back(std::ifstream("../tmp/intermediate_" + std::to_string(i)));
-        if (in_files.back().fail()) {
+        boost::iostreams::stream<boost::iostreams::mapped_file_source> mapped_file_stream;
+        boost::iostreams::mapped_file_source mmap("../tmp/intermediate_" + std::to_string(i));
+
+        mapped_file_stream.open(mmap);
+        if (mapped_file_stream.fail())
+            std::cout << "Error: input fail not valid.\n";
+        
+        boost::iostreams::filtering_streambuf<boost::iostreams::input> *inbuf = new boost::iostreams::filtering_streambuf<boost::iostreams::input>();
+        (*inbuf).push(mapped_file_stream);
+        
+        // Convert streambuf to istream and push
+        in_files.push_back(new std::istream(inbuf));
+        if ((*in_files.back()).fail()) {
             std::cout << "Error: intermediate file of block " << std::to_string(i) << " not found.\n";
             continue;
         }
 
         term_entry tmp;
         tmp.block_id = i;
-        read_record(in_files.back(), tmp);
+        read_record(*in_files.back(), tmp);
         min_heap.push(tmp);
     }
 
     // Lexicon data structure
     std::map<std::string, lexicon_entry> lexicon;
 
-    std::map<unsigned int, doc_table_entry> doc_table;
+   /* std::vector<doc_table_entry> doc_table;
     load_doc_table(&doc_table, std::string("../../output/doc_table.bin"));
 
     double avg_doc_len;
     // IF BM25 compute avg doc len
     int sum = 0;
     for (auto doc : doc_table) {
-        sum += doc.second.doc_len;
+        sum += doc.doc_len;
     }
     avg_doc_len = (double)sum / doc_table.size();
+
+    // Free memory
+    doc_table.clear();*/
 
     // Pointer to the posting list in the inverted index file
     unsigned long offset = 0;
@@ -140,7 +158,7 @@ void merge_blocks(const unsigned int n_blocks) {
         // Update min heap by pushing the new top value of the current block
         term_entry tmp;
         tmp.block_id = cur.block_id;
-        read_record(in_files[tmp.block_id-1], tmp);
+        read_record(*in_files.at(tmp.block_id-1), tmp);
         min_heap.push(tmp);
 
         // Merge the posting lists of the same terms of the other blocks
@@ -148,20 +166,22 @@ void merge_blocks(const unsigned int n_blocks) {
             term_entry cur2 = min_heap.top();
             min_heap.pop();
             tmp.block_id = cur2.block_id;
-            if(read_record(in_files[cur2.block_id-1], tmp))
+            if(read_record(*in_files.at(cur2.block_id-1), tmp))
                 min_heap.push(tmp);     
 
             cur.posting_list.splice(cur.posting_list.end(), cur2.posting_list);  // O(1)     
         } 
 
+        /*
         for (auto entry : cur.posting_list) {
             bm25 = BM25(entry.second, (unsigned int)cur.posting_list.size(), doc_table[entry.first].doc_len, avg_doc_len, (unsigned int)doc_table.size());
             if (bm25 > max_score)
                 max_score = bm25;
         }
+        */
 
         // Writing
-        //std::cout << "Writing Inverted Index record -> " << cur.term << '\n';
+        std::cout << "Writing Inverted Index record -> " << cur.term << '\n';
         offset += len;
         len = write_inverted_index_record_compressed(out_inverted_index, cur);
         
@@ -180,4 +200,6 @@ void merge_blocks(const unsigned int n_blocks) {
     }
     std::cout << "Removed intermediate files.\n";
     */
+
+   // DELETE in_files
 }

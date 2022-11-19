@@ -19,10 +19,14 @@
 #include <boost/range/numeric.hpp>
 #include <boost/range/adaptor/map.hpp>
 
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/stream.hpp>
+#include <boost/iostreams/device/mapped_file.hpp>
+
 #include "MSMARCO-Search-Engine/io.hpp"
 #include "MSMARCO-Search-Engine/compressing.hpp"
 
-bool read_record(std::ifstream &in, term_entry &term_entry);
+bool read_record(std::istream &in, term_entry &term_entry);
 
 void write_inverted_index_record(std::ofstream &out, term_entry &term_entry);
 

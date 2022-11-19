@@ -26,11 +26,11 @@
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/algorithm/string/classification.hpp >
 
-
+#include "BS_thread_pool.hpp"
 #include <Porter2.hpp>
 
-#include<boost/iostreams/stream.hpp>
-#include<boost/iostreams/device/mapped_file.hpp>
+#include <boost/iostreams/stream.hpp>
+#include <boost/iostreams/device/mapped_file.hpp>
 
 #include "MSMARCO-Search-Engine/model.hpp"
 #include "MSMARCO-Search-Engine/io.hpp"

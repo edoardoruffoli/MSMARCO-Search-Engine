@@ -1,20 +1,38 @@
 #include "MSMARCO-Search-Engine/parsing.hpp"
-#include "BS_thread_pool.hpp"
 
 void tokenize(std::string &content, bool flag, const std::unordered_set<std::string> &stopwords, 
                                               std::unordered_map<std::string, int> &tokens) {
 	// How to deal with empty page, malformed lines, malformed characters?
     size_t pos = 0;
     std::string token;
-    std::string delimiter = " \t";
+    std::string delimiter = " ";
     while ((pos = content.find(delimiter)) != std::string::npos) {
         token = content.substr(0, pos);
         content.erase(0, pos + delimiter.length());
+        
+        // Remove spaces
+        remove(token.begin(), token.end(), ' ');
+
+        // Remove punctuation
+        token.erase(std::remove_if(token.begin(), token.end(), ispunct), token.end());
+
+        // To lower case
+        std::transform(token.begin(), token.end(), token.begin(), [](unsigned char c) { 
+            return std::tolower(c); 
+        });
+
+        // If token is empty continue
+		if (!token.size())
+			continue;
+
+        if(flag) {
+			if (stopwords.find(token) != stopwords.end()) {
+				continue;
+			}
+			token = porter2::Stemmer{}.stem(token);
+        }
+		tokens[token]++;
     }
-        // replace spces
-        // replace punct
-        // lowecase
-        // stopwords
 }
 
 void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& dictionary,
@@ -32,8 +50,6 @@ void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id,
     tmr.start();
     std::map<std::string, std::list<std::pair<int, int>>> dictionary;
     std::cout << "Starting doc_id: " << start_doc_id << " block_num:" << block_num << " num_docs: " << documents.size() << '\n';
-
-    //boost::shared_mutex mutex;
 
     // Add typedef <std::map<std::string, std::list<std::pair<int, int>>>
     auto process_block = [&documents, &doc_table, start_doc_id, flag, &stopwords]
@@ -54,7 +70,7 @@ void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id,
             tokenize(text, flag, stopwords, tokens);
             add_to_posting_list(dict, tokens, start_doc_id + i, doc_len);
             tokens.clear();
-            doc_table[start_doc_id + i].doc_len;
+            doc_table[start_doc_id + i].doc_len;    // ??? Concurrency
             doc_table[start_doc_id + i].doc_no;
         }
         return dict;
@@ -66,17 +82,18 @@ void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id,
 
     std::vector<std::map<std::string, std::list<std::pair<int, int>>>> totals = mf.get();
 
-    // Merge maps
-    for (auto output_dict : totals) {   // The output map are ordered
+    // Merge the output of each thread in the global map, since the outputs are ordered, we can simply 
+    // concate them to the global dict
+    for (auto output_dict : totals) {
         for (auto entry : output_dict) {
             // If term does not exist create it otherwise concate the posting list
             if (dictionary.find(entry.first) == dictionary.end()) {
                 dictionary[entry.first] = entry.second;
             } else {
-                dictionary[entry.first].splice(dictionary[entry.first].end(), entry.second);
+                dictionary[entry.first].splice(dictionary[entry.first].end(), entry.second);    // O(1)
             }
         }
-   }
+    }
 
     save_intermediate_inv_idx(dictionary, std::string("../tmp/intermediate_" + std::to_string(block_num)));
 
@@ -87,7 +104,6 @@ void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id,
 
 void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char* stopwords_filename, unsigned int n_threads) {
 	std::cout << "Started Parsing Phase: \n\n";
-
 	if (BLOCK_SIZE == 0)
 		std::cout << "Error: block size not valid.\n";
 
@@ -119,9 +135,10 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 		std::string word;
 		while (std::getline(is, word))
 			stopwords.insert(word);
+        std::cout << "Stopwords file loaded.\n";
 	}
 
-    // Constructs a thread pool with as many threads as available in the hardware.
+    // Constructs a worker threads pool 
     BS::thread_pool pool(n_threads);
 
     // Stores a block of documents
@@ -133,10 +150,11 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 	unsigned int doc_id = 0;
     std::string loaded_content;
 
-    // Blocked Sort Based Indexing
+    // Timer
     BS::timer tmr;
     tmr.start();
-    
+
+    // Blocked Sort Based Indexing   
 	while (getline(instream, loaded_content)) {
 		current_size++;
         block.push_back(loaded_content);
@@ -155,8 +173,6 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
             block.clear();
 		}
 	}
-    tmr.stop();
-    std::cout << "The elapsed time was " << tmr.ms() << " ms.\n";
 
     // Write last block
     doc_table.resize(BLOCK_SIZE*block_num);
@@ -166,5 +182,7 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
     // Write document table
     save_doc_table(doc_table, doc_table_filename);
 
-	//inbuf.close();
+    std::cout << "Ended Parsing Phase: \n\n";
+    tmr.stop();
+    std::cout << "The elapsed time was " << tmr.ms() << " ms.\n";
 }

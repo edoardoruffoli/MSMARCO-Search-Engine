@@ -1,7 +1,7 @@
 #include "MSMARCO-Search-Engine/query.hpp"
 
 // Doc table
-std::map<unsigned int, doc_table_entry> doc_table;
+std::vector<doc_table_entry> doc_table;
 
 std::map<std::string, lexicon_entry> lexicon;
 
@@ -22,7 +22,7 @@ bool init_data_structures() {
     // IF BM25 compute avg doc len
     int sum = 0;
     for (auto doc : doc_table) {
-        sum += doc.second.doc_len;
+        sum += doc.doc_len;
     }
     avg_doc_len = (double)sum/doc_table.size();
 

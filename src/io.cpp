@@ -55,7 +55,7 @@ bool save_doc_table(const std::vector<doc_table_entry> &doc_table, std::string &
     return true;
 }
 
-bool load_doc_table(std::map<unsigned int, doc_table_entry> *doc_table, std::string &filename) {
+bool load_doc_table(std::vector<doc_table_entry> *doc_table, std::string &filename) {
     std::ifstream filestream(filename, std::ios::binary);  
     if (filestream.fail()) 
         return false;

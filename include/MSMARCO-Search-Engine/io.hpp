@@ -26,4 +26,4 @@ bool load_lexicon(std::map<std::string, lexicon_entry>* lexicon, std::string& fi
 
 bool save_doc_table(const std::vector<doc_table_entry> &doc_table, std::string &filename);
 
-bool load_doc_table(std::map<unsigned int, doc_table_entry>*doc_table, std::string &filename);
+bool load_doc_table(std::vector<doc_table_entry>*doc_table, std::string &filename);

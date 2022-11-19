@@ -51,8 +51,10 @@ void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id,
     std::map<std::string, std::list<std::pair<int, int>>> dictionary;
     std::cout << "Starting doc_id: " << start_doc_id << " block_num:" << block_num << " num_docs: " << documents.size() << '\n';
 
+    std::mutex doc_table_mutex;
+
     // Add typedef <std::map<std::string, std::list<std::pair<int, int>>>
-    auto process_block = [&documents, &doc_table, start_doc_id, flag, &stopwords]
+    auto process_block = [&documents, &doc_table, &doc_table_mutex, start_doc_id, flag, &stopwords]
     (const unsigned start, const unsigned end) 
     {
         std::cout << "Launched Worker Thread, Interval: [" << start << "," << end << "]\n";
@@ -70,8 +72,10 @@ void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id,
             tokenize(text, flag, stopwords, tokens);
             add_to_posting_list(dict, tokens, start_doc_id + i, doc_len);
             tokens.clear();
+            doc_table_mutex.lock();
             doc_table[start_doc_id + i].doc_len;    // ??? Concurrency
             doc_table[start_doc_id + i].doc_no;
+            doc_table_mutex.unlock();
         }
         return dict;
     };

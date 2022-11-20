@@ -5,14 +5,31 @@ bool posting_list::openList(unsigned long offset) {
 
     this->f1.open("../../output/inverted_index.bin", std::ios::binary);
 
-    // Decode freqs offset
-    unsigned int tmp;
+    // Decode skip pointers list size
+    unsigned int skip_pointers_list_size;
     this->f1.seekg(offset);
-    this->f1.read(reinterpret_cast<char*>(&tmp), sizeof(int));
+    this->f1.read(reinterpret_cast<char*>(&skip_pointers_list_size), sizeof(int));
 
-    this->stop_offset = offset + tmp + sizeof(int);
+    // Decode array skip pointers
+    unsigned int num_bytes_skip_pointers_list = 0;
+    for (unsigned int i=0; i<skip_pointers_list_size; i++) {
+        skip_pointer cur_skip_pointer;
+
+        // Decode the current block max doc_id
+        cur_skip_pointer.max_doc_id = VBdecode(this->f1, num_bytes_skip_pointers_list);
+    
+        // Decode the current block doc_id offset
+        cur_skip_pointer.doc_id_offset = VBdecode(this->f1, num_bytes_skip_pointers_list);
+
+        // Decode the current block freqs offset
+        cur_skip_pointer.freqs_offset = VBdecode(this->f1, num_bytes_skip_pointers_list);
+
+        this->skip_pointers.push_back(cur_skip_pointer);
+    }
+
+    this->doc_ids_offset = offset + sizeof(int) + num_bytes_skip_pointers_list;
     this->freqs_offset = this->stop_offset;
-    this->doc_ids_offset = offset + sizeof(int);
+    this->stop_offset = offset + tmp + sizeof(int);
 
     // Init
     next();

@@ -2,7 +2,7 @@
 
 
 void VBencode(unsigned int num, std::vector<uint8_t> &result) {
-	std::vector<uint8_t> result;
+    result.clear();
 	uint8_t b;
 	while (num >= 128) {
 		int a = num % 128;

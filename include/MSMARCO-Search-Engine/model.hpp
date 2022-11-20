@@ -11,10 +11,18 @@ struct term_entry {
     std::list<std::pair<int, int>> posting_list;
 };
 
+struct skip_pointer {
+    unsigned int max_doc_id;
+    unsigned int doc_id_offset;
+    unsigned int freqs_offset;
+};
+
 // Posting list iterator
 struct posting_list {
     std::ifstream f1;
 
+    std::vector<skip_pointer> skip_pointers;
+    
     unsigned long doc_ids_offset;
     unsigned long freqs_offset;
     unsigned long stop_offset;

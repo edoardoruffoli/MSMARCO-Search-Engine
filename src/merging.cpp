@@ -19,74 +19,89 @@ bool read_record(std::ifstream &in, term_entry &term_entry) {
     return true;
 }
 
-void write_inverted_index_record(std::ofstream &out, term_entry &term_entry) {
-    out << term_entry.term << ' ';
-	for (auto& entry : term_entry.posting_list) {
-		out << entry.first << ',';
-	}
-    out << ' ';
-    for (auto& entry : term_entry.posting_list) {
-		out << entry.second << ',';
-	}
-    out << '\n';
-}
-
-/*
-    for (std::vector<uint8_t>::iterator it = result.begin(); it != result.end(); it++) {
-        ofile.write(reinterpret_cast<const char*>(&(*it)), 1);
-    }
-*/
 unsigned long write_inverted_index_record_compressed(std::ofstream& out, term_entry& term_entry) {
-    // Number of bytes written
-    unsigned int num_bytes = 0;
+    // Compute skip pointer block size
+    unsigned int block_size = sqrt(term_entry.posting_list.size());
 
-    // Save first position that will be used to store the freqs offset
+    // Vector to store the VB representation of the doc_id and freqs
+    std::vector<uint8_t> VB_doc_ids;    
+    std::vector<uint8_t> VB_freqs;
+
+    // Skip first 4 bytes, they are needed to store the number of elements of the skipping pointers list
+    unsigned int num_skip_pointers;
     long first_byte = out.tellp();
     
     // Clean first 4 bytes
     int tmp = 0;
     out.write(reinterpret_cast<const char*>(&tmp), sizeof(int));
-
-    // Encode doc_id
-    unsigned int block_interval = sqrt(term_entry.posting_list.size());
-    unsigned int skip_pointers = term_entry.posting_list.size() / block_interval;
-    for (int i = 0; i < skip_pointers * 2; i++) {
-        out.write(reinterpret_cast<const char*>(&tmp), sizeof(int));
-    }
-
+   
+    // Start counting the bytes required to encode the doc_ids
     std::vector<uint8_t> bytes;
     unsigned int cur_block = 0;
     for (auto& entry : term_entry.posting_list) {
-        cur_block++;
-        if (cur_block == block_interval) {
-            cur_block = 0;
+        if (cur_block == block_size) {
+            // Write the max doc_id of the current block, that is the prev iteration doc_id, stored in bytes variable
+            for (std::vector<uint8_t>::iterator it = bytes.begin(); it != bytes.end(); it++) {
+                out.write(reinterpret_cast<const char*>(&(*it)), 1);
+            }
 
+            // Write the doc_id offset of the current block
+            VBencode(VB_doc_ids.size(), bytes);
+            for (std::vector<uint8_t>::iterator it = bytes.begin(); it != bytes.end(); it++) {
+                out.write(reinterpret_cast<const char*>(&(*it)), 1);
+            }
+
+            cur_block = 0;
         }
+
+        // Add encoding of the current doc_id
         VBencode(unsigned(entry.first), bytes);
-        num_bytes = bytes.size();
+        VB_doc_ids.insert(VB_doc_ids.end(), bytes.begin(), bytes.end());
+
+        cur_block++;
     }
 
+    cur_block = 0;
+    for (auto& entry : term_entry.posting_list) {
+        if (cur_block == block_size) {
+            // Write the freqs offset of the current block
+            VBencode(VB_doc_ids.size() + VB_freqs.size(), bytes);
+            for (std::vector<uint8_t>::iterator it = bytes.begin(); it != bytes.end(); it++) {
+                out.write(reinterpret_cast<const char*>(&(*it)), 1);
+            }
 
-    unsigned int freqs_offset = num_bytes;
+            cur_block = 0;
+        }
+        // Add encoding of the current freq
+        VBencode(unsigned(entry.second), bytes);
+        VB_freqs.insert(VB_freqs.end(), bytes.begin(), bytes.end());
 
-    // Encode frequency
-    for (auto& entry : term_entry.posting_list)
-        num_bytes += VBencode(unsigned(entry.second), out);
+        cur_block++;
+    }
 
-    // Write freqs_offset value at first 4 bytes
+    num_skip_pointers = cur_block;
+
+    // Write the doc_ids represented in VB previously computed
+    for (std::vector<uint8_t>::iterator it = VB_doc_ids.begin(); it != VB_doc_ids.end(); it++) {
+        out.write(reinterpret_cast<const char*>(&(*it)), 1);
+    }
+
+    // Write the freqs represented in VB previously computed
+    for (std::vector<uint8_t>::iterator it = VB_freqs.begin(); it != VB_freqs.end(); it++) {
+        out.write(reinterpret_cast<const char*>(&(*it)), 1);
+    }
+
+    // Save current position
+    long last_byte = out.tellp();
+
+    // Write skip_pointers_list size at first 4 bytes
     out.seekp(first_byte);
-    out.write(reinterpret_cast<const char*>(&freqs_offset), sizeof(int));
-    num_bytes += sizeof(int);
+    out.write(reinterpret_cast<const char*>(&num_skip_pointers), sizeof(int));
 
     // Reposition file stream to the next position
-    out.seekp(first_byte + num_bytes);
+    out.seekp(last_byte);
 
-    return num_bytes;
-}
-
-void write_lexicon_record(std::ofstream &out, term_entry &term_entry, unsigned long offset) {
-    out << term_entry.term << ' ' << offset << ' ' << term_entry.posting_list.size();
-    out << '\n';
+    return last_byte - first_byte;
 }
 
 double BM25(unsigned int tf, unsigned int df, unsigned int doc_len, unsigned int avg_doc_len, unsigned int N) {
@@ -119,21 +134,8 @@ void merge_blocks(const unsigned int n_blocks) {
     std::priority_queue<term_entry, std::vector<term_entry>, compare> min_heap;
 
     // Buffer pointers to the intermediate posting lists
-    //std::vector<std::istream*> in_files;
     std::vector<std::ifstream> in_files;
     for (unsigned int i = 1; i <= n_blocks; ++i) {
-        //boost::iostreams::stream<boost::iostreams::mapped_file_source> mapped_file_stream;
-        //boost::iostreams::mapped_file_source mmap("../tmp/intermediate_" + std::to_string(i));
-
-        //mapped_file_stream.open(mmap);
-        //if (mapped_file_stream.fail())
-        //    std::cout << "Error: input fail not valid.\n";
-        
-        //boost::iostreams::filtering_streambuf<boost::iostreams::input> *inbuf = new boost::iostreams::filtering_streambuf<boost::iostreams::input>();
-        //(*inbuf).push(mapped_file_stream);
-        
-        // Convert streambuf to istream and push
-        //in_files.push_back(new std::istream(inbuf));
         in_files.push_back(std::ifstream("../tmp/intermediate_" + std::to_string(i)));
         if ((in_files.back()).fail()) {
             std::cout << "Error: intermediate file of block " << std::to_string(i) << " not found.\n";

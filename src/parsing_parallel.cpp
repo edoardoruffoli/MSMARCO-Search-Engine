@@ -124,8 +124,8 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 	inbuf.push(mapped_file_stream);
 
 	// Convert streambuf to istream
-	//std::istream instream(&inbuf);
-    std::ifstream instream(in);
+	std::istream instream(&inbuf);
+    //std::ifstream instream(in);
 
 	// Document table output
 	std::string doc_table_filename("../../output/doc_table.bin");

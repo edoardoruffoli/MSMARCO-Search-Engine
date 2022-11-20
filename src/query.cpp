@@ -20,10 +20,12 @@ bool init_data_structures() {
     }
 
     // IF BM25 compute avg doc len
-    int sum = 0;
+    unsigned int sum = 0;
     for (auto doc : doc_table) {
+        //std::cout << doc.doc_len << std::endl;
         sum += doc.doc_len;
     }
+    std::cout << sum << std::endl;  //è negativo!!!
     avg_doc_len = (double)sum/doc_table.size();
 
     printf("Done.\n");
@@ -128,6 +130,7 @@ void disjunctive_query(std::priority_queue<std::pair<unsigned int, double>,
                 unsigned int doc_freq = pl->doc_freq;
                 unsigned int N = (unsigned int) doc_table.size();   // O(1)
                 //score += TFIDF(term_freq, doc_freq, N);
+                //std::cout << doc_len << " " << avg_doc_len << std::endl;
                 score += BM25(term_freq, doc_freq, doc_len, avg_doc_len, N);
                 pl->next();
             }

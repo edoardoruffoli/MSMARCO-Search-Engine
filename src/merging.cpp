@@ -1,6 +1,6 @@
 #include "MSMARCO-Search-Engine/merging.hpp"
 
-bool read_record(std::istream &in, term_entry &term_entry) {
+bool read_record(std::ifstream &in, term_entry &term_entry) {
     if (in.eof())
         return false;
 
@@ -9,15 +9,11 @@ bool read_record(std::istream &in, term_entry &term_entry) {
     getline(in, loaded_content); // Controlli
     
 	std::istringstream iss(loaded_content);
-    std::cout << loaded_content << std::endl;
 	getline(iss, term_entry.term, ' ');
-
     std::string docid;
 	while (getline(iss, docid, ' ')) {
         std::string freq;
         getline(iss, freq, ' ');
-        //if (docid == "64")
-        //std::cout << "docid: " << docid << " freq" << freq << "\n";
         term_entry.posting_list.push_back(std::make_pair(stoi(docid), stoi(freq)));
     }   
     return true;
@@ -103,28 +99,30 @@ void merge_blocks(const unsigned int n_blocks) {
     std::priority_queue<term_entry, std::vector<term_entry>, compare> min_heap;
 
     // Buffer pointers to the intermediate posting lists
-    std::vector<std::istream*> in_files;
+    //std::vector<std::istream*> in_files;
+    std::vector<std::ifstream> in_files;
     for (unsigned int i = 1; i <= n_blocks; ++i) {
-        boost::iostreams::stream<boost::iostreams::mapped_file_source> mapped_file_stream;
-        boost::iostreams::mapped_file_source mmap("../tmp/intermediate_" + std::to_string(i));
+        //boost::iostreams::stream<boost::iostreams::mapped_file_source> mapped_file_stream;
+        //boost::iostreams::mapped_file_source mmap("../tmp/intermediate_" + std::to_string(i));
 
-        mapped_file_stream.open(mmap);
-        if (mapped_file_stream.fail())
-            std::cout << "Error: input fail not valid.\n";
+        //mapped_file_stream.open(mmap);
+        //if (mapped_file_stream.fail())
+        //    std::cout << "Error: input fail not valid.\n";
         
-        boost::iostreams::filtering_streambuf<boost::iostreams::input> *inbuf = new boost::iostreams::filtering_streambuf<boost::iostreams::input>();
-        (*inbuf).push(mapped_file_stream);
+        //boost::iostreams::filtering_streambuf<boost::iostreams::input> *inbuf = new boost::iostreams::filtering_streambuf<boost::iostreams::input>();
+        //(*inbuf).push(mapped_file_stream);
         
         // Convert streambuf to istream and push
-        in_files.push_back(new std::istream(inbuf));
-        if ((*in_files.back()).fail()) {
+        //in_files.push_back(new std::istream(inbuf));
+        in_files.push_back(std::ifstream("../tmp/intermediate_" + std::to_string(i)));
+        if ((in_files.back()).fail()) {
             std::cout << "Error: intermediate file of block " << std::to_string(i) << " not found.\n";
             continue;
         }
 
         term_entry tmp;
         tmp.block_id = i;
-        read_record(*in_files.back(), tmp);
+        read_record(in_files.back(), tmp);
         min_heap.push(tmp);
     }
 
@@ -158,7 +156,7 @@ void merge_blocks(const unsigned int n_blocks) {
         // Update min heap by pushing the new top value of the current block
         term_entry tmp;
         tmp.block_id = cur.block_id;
-        read_record(*in_files.at(tmp.block_id-1), tmp);
+        read_record(in_files.at(tmp.block_id-1), tmp);
         min_heap.push(tmp);
 
         // Merge the posting lists of the same terms of the other blocks
@@ -166,7 +164,7 @@ void merge_blocks(const unsigned int n_blocks) {
             term_entry cur2 = min_heap.top();
             min_heap.pop();
             tmp.block_id = cur2.block_id;
-            if(read_record(*in_files.at(cur2.block_id-1), tmp))
+            if(read_record(in_files.at(cur2.block_id-1), tmp))
                 min_heap.push(tmp);     
 
             cur.posting_list.splice(cur.posting_list.end(), cur2.posting_list);  // O(1)     
@@ -181,7 +179,7 @@ void merge_blocks(const unsigned int n_blocks) {
         */
 
         // Writing
-        std::cout << "Writing Inverted Index record -> " << cur.term << '\n';
+        //std::cout << "Writing Inverted Index record -> " << cur.term << '\n';
         offset += len;
         len = write_inverted_index_record_compressed(out_inverted_index, cur);
         

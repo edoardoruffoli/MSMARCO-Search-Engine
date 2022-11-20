@@ -37,6 +37,7 @@ void tokenize(std::string &content, bool flag, const std::unordered_set<std::str
 
 void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& dictionary,
                   const std::unordered_map<std::string, int>& token_stream, int doc_id, unsigned int &doc_len) {
+    doc_len = 0;
 	for (const std::pair<std::string, int> term_doc : token_stream) {
 		dictionary[term_doc.first].push_back(std::make_pair(doc_id, term_doc.second));
         doc_len += term_doc.second;
@@ -63,7 +64,7 @@ void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id,
         std::istringstream iss;
         std::map<std::string, std::list<std::pair<int, int>>> dict;
         std::unordered_map<std::string, int> tokens;
-        unsigned int doc_len;
+        unsigned int doc_len = 0;
                                 
         for (unsigned int i = start; i < end; i++) {
             iss = std::istringstream(documents[i]);
@@ -73,12 +74,13 @@ void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id,
             add_to_posting_list(dict, tokens, start_doc_id + i, doc_len);
             tokens.clear();
             doc_table_mutex.lock();
-            doc_table[start_doc_id + i].doc_len;    // ??? Concurrency
-            doc_table[start_doc_id + i].doc_no;
+            doc_table[start_doc_id + i].doc_len = doc_len;    // ??? Concurrency
+            doc_table[start_doc_id + i].doc_no = doc_no;
             doc_table_mutex.unlock();
         }
         return dict;
     };
+    
 
     // Parallel Processing of the docs
     BS::multi_future<std::map<std::string, std::list<std::pair<int, int>>>> mf = pool.parallelize_loop(0, documents.size(),

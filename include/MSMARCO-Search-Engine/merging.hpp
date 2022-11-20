@@ -26,7 +26,7 @@
 #include "MSMARCO-Search-Engine/io.hpp"
 #include "MSMARCO-Search-Engine/compressing.hpp"
 
-bool read_record(std::istream &in, term_entry &term_entry);
+bool read_record(std::ifstream &in, term_entry &term_entry);
 
 void write_inverted_index_record(std::ofstream &out, term_entry &term_entry);
 

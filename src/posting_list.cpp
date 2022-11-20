@@ -27,7 +27,7 @@ bool posting_list::openList(unsigned long offset) {
     }
 
     this->doc_ids_offset = offset + sizeof(int) + num_bytes_skip_pointers_list;
-    this->freqs_offset = offset + sizeof(int) + num_bytes_skip_pointers_list + this->skip_pointers[0].doc_id_offset;
+    this->freqs_offset = offset + sizeof(int) + num_bytes_skip_pointers_list + this->skip_pointers[0].freqs_offset;
     this->stop_offset = this->freqs_offset;
 
     // Init

@@ -19,93 +19,111 @@ bool read_record(std::ifstream &in, term_entry &term_entry) {
     return true;
 }
 
+
 unsigned long write_inverted_index_record_compressed(std::ofstream& out, term_entry& term_entry) {
+    if (term_entry.term == "mind")
+        std::cout << "CWICHVI"<< std::endl;
+    
+    unsigned int num_bytes_written = 0;
+
     // Compute skip pointer block size
     unsigned int block_size = sqrt(term_entry.posting_list.size());
+    unsigned int n_block = 0;
 
     // Vector to store the VB representation of the doc_id and freqs
     std::vector<uint8_t> VB_doc_ids;    
     std::vector<uint8_t> VB_freqs;
 
-    // Skip first 4 bytes, they are needed to store the number of elements of the skipping pointers list
+    std::vector<std::vector<uint8_t>> VB_block_max_doc_ids;
+    std::vector<std::vector<uint8_t>> VB_block_offset_doc_ids;
+    std::vector<std::vector<uint8_t>> VB_block_offset_freqs;
+
     unsigned int num_skip_pointers;
-    long first_byte = out.tellp();
-    
-    // Clean first 4 bytes
-    int tmp = 0;
-    out.write(reinterpret_cast<const char*>(&tmp), sizeof(int));
    
     // Start counting the bytes required to encode the doc_ids
     std::vector<uint8_t> bytes;
-    unsigned int cur_block = 0;
+    unsigned int cur_block_count = 0;
     unsigned int offset = 0;
-    for (auto& entry : term_entry.posting_list) {
-        if (cur_block == block_size) {
-            // Write the max doc_id of the current block, that is the prev iteration doc_id, stored in bytes variable
-            for (std::vector<uint8_t>::iterator it = bytes.begin(); it != bytes.end(); it++) {
-                out.write(reinterpret_cast<const char*>(&(*it)), 1);
-            }
-
-            // Write the doc_id offset of the current block
-            VBencode(offset, bytes);
-            for (std::vector<uint8_t>::iterator it = bytes.begin(); it != bytes.end(); it++) {
-                out.write(reinterpret_cast<const char*>(&(*it)), 1);
-            }
-
-            // Update offset
-            offset = VB_doc_ids.size();
-
-            cur_block = 0;
-        }
-
+    for (auto& entry : term_entry.posting_list) {   
         // Add encoding of the current doc_id
         VBencode(unsigned(entry.first), bytes);
         VB_doc_ids.insert(VB_doc_ids.end(), bytes.begin(), bytes.end());
-        cur_block++;
+        cur_block_count++;
+
+        if (cur_block_count == block_size) {
+            // Store the max doc_id of the current block, that is the prev iteration doc_id, stored in bytes variable
+            VB_block_max_doc_ids.push_back(bytes);
+
+            // Store the doc_id offset of the current block
+            VBencode(offset, bytes);
+            VB_block_offset_doc_ids.push_back(bytes);
+
+            // Update offset
+            offset = VB_doc_ids.size();
+            n_block++;
+            cur_block_count = 0;
+        }
     }
 
-    cur_block = 0;
+    cur_block_count = 0;
     offset = 0;
     for (auto& entry : term_entry.posting_list) {
-        if (cur_block == block_size) {
-            // Write the freqs offset of the current block
-            VBencode(VB_doc_ids.size() + offset, bytes);
-            for (std::vector<uint8_t>::iterator it = bytes.begin(); it != bytes.end(); it++) {
-                out.write(reinterpret_cast<const char*>(&(*it)), 1);
-            }
-            offset = VB_freqs.size();
-            cur_block = 0;
-        }
         // Add encoding of the current freq
         VBencode(unsigned(entry.second), bytes);
         VB_freqs.insert(VB_freqs.end(), bytes.begin(), bytes.end());
+        cur_block_count++;
 
-        cur_block++;
+        if (cur_block_count == block_size) {
+            // Write the freqs offset of the current block
+            VBencode(VB_doc_ids.size() + offset, bytes);
+            VB_block_offset_freqs.push_back(bytes);
+
+            offset = VB_freqs.size();
+            cur_block_count = 0;
+        }
     }
 
-    num_skip_pointers = cur_block;
+    num_skip_pointers = n_block;
+
+    // Write the skip pointers size
+    out.write(reinterpret_cast<const char*>(&num_skip_pointers), sizeof(int));
+    num_bytes_written += sizeof(int);
+
+    // Write the skip pointers list
+    for (unsigned int i=0; i<VB_block_max_doc_ids.size(); i++) {
+
+        // Write max doc_id
+        for (std::vector<uint8_t>::iterator it=VB_block_max_doc_ids[i].begin(); it!=VB_block_max_doc_ids[i].end();it++) {
+            out.write(reinterpret_cast<const char*>(&(*it)), 1);
+            num_bytes_written++;
+        }
+        
+        // Write block offset doc_ids
+        for (std::vector<uint8_t>::iterator it=VB_block_offset_doc_ids[i].begin(); it!=VB_block_offset_doc_ids[i].end();it++) {
+            out.write(reinterpret_cast<const char*>(&(*it)), 1);
+            num_bytes_written++;
+        }
+
+        // Write block offset freqs
+        for (std::vector<uint8_t>::iterator it=VB_block_offset_freqs[i].begin(); it!=VB_block_offset_freqs[i].end();it++) {
+            out.write(reinterpret_cast<const char*>(&(*it)), 1);
+            num_bytes_written++;
+        }
+    }
 
     // Write the doc_ids represented in VB previously computed
     for (std::vector<uint8_t>::iterator it = VB_doc_ids.begin(); it != VB_doc_ids.end(); it++) {
         out.write(reinterpret_cast<const char*>(&(*it)), 1);
+        num_bytes_written++;
     }
 
     // Write the freqs represented in VB previously computed
     for (std::vector<uint8_t>::iterator it = VB_freqs.begin(); it != VB_freqs.end(); it++) {
         out.write(reinterpret_cast<const char*>(&(*it)), 1);
+        num_bytes_written++;
     }
 
-    // Save current position
-    long last_byte = out.tellp();
-
-    // Write skip_pointers_list size at first 4 bytes
-    out.seekp(first_byte);
-    out.write(reinterpret_cast<const char*>(&num_skip_pointers), sizeof(int));
-
-    // Reposition file stream to the next position
-    out.seekp(last_byte);
-
-    return last_byte - first_byte;
+    return num_bytes_written;
 }
 
 double BM25(unsigned int tf, unsigned int df, unsigned int doc_len, unsigned int avg_doc_len, unsigned int N) {

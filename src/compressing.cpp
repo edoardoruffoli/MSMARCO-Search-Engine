@@ -1,7 +1,7 @@
 #include "MSMARCO-Search-Engine/compressing.hpp"
 
 
-unsigned long VBencode(unsigned int num, std::ofstream& ofile) {
+void VBencode(unsigned int num, std::vector<uint8_t> &result) {
 	std::vector<uint8_t> result;
 	uint8_t b;
 	while (num >= 128) {
@@ -16,12 +16,6 @@ unsigned long VBencode(unsigned int num, std::ofstream& ofile) {
 	std::bitset<8> byte(a);
 	b = byte.to_ulong();
 	result.push_back(b);
-
-	for (std::vector<uint8_t>::iterator it = result.begin(); it != result.end(); it++) {
-		ofile.write(reinterpret_cast<const char*>(&(*it)), 1);
-	}
-
-	return result.size();
 }
 
 unsigned int VBdecode(std::ifstream& ifile, unsigned int &n_bytes) {

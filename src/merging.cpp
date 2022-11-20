@@ -31,7 +31,11 @@ void write_inverted_index_record(std::ofstream &out, term_entry &term_entry) {
     out << '\n';
 }
 
-std::ifstream in("../../output/inverted_index_test.bin", std::ios::binary);
+/*
+    for (std::vector<uint8_t>::iterator it = result.begin(); it != result.end(); it++) {
+        ofile.write(reinterpret_cast<const char*>(&(*it)), 1);
+    }
+*/
 unsigned long write_inverted_index_record_compressed(std::ofstream& out, term_entry& term_entry) {
     // Number of bytes written
     unsigned int num_bytes = 0;
@@ -44,8 +48,24 @@ unsigned long write_inverted_index_record_compressed(std::ofstream& out, term_en
     out.write(reinterpret_cast<const char*>(&tmp), sizeof(int));
 
     // Encode doc_id
-    for (auto& entry : term_entry.posting_list)
-        num_bytes += VBencode(unsigned(entry.first), out);
+    unsigned int block_interval = sqrt(term_entry.posting_list.size());
+    unsigned int skip_pointers = term_entry.posting_list.size() / block_interval;
+    for (int i = 0; i < skip_pointers * 2; i++) {
+        out.write(reinterpret_cast<const char*>(&tmp), sizeof(int));
+    }
+
+    std::vector<uint8_t> bytes;
+    unsigned int cur_block = 0;
+    for (auto& entry : term_entry.posting_list) {
+        cur_block++;
+        if (cur_block == block_interval) {
+            cur_block = 0;
+
+        }
+        VBencode(unsigned(entry.first), bytes);
+        num_bytes = bytes.size();
+    }
+
 
     unsigned int freqs_offset = num_bytes;
 

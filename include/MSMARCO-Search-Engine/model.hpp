@@ -43,7 +43,6 @@ struct posting_list {
 // Lexicon
 struct lexicon_entry {
     unsigned int doc_freq;
-    // unsigned int coll_freq;
     unsigned long offset;
     double max_score;
 
@@ -51,7 +50,7 @@ struct lexicon_entry {
     void serialize(Archive & ar, const unsigned int version) {
         ar & doc_freq;
         ar & offset;
-        ar& max_score;
+        ar & max_score;
     }
 };
 

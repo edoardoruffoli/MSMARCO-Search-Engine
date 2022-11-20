@@ -126,12 +126,6 @@ unsigned long write_inverted_index_record_compressed(std::ofstream& out, term_en
     return num_bytes_written;
 }
 
-double BM25(unsigned int tf, unsigned int df, unsigned int doc_len, unsigned int avg_doc_len, unsigned int N) {
-    double k1 = 1.2;
-    double b = 0.75;
-    return tf * log10((double)N / df) / (k1 * ((1 - b) + b * ((double)doc_len / avg_doc_len)) + tf);
-}
-
 void merge_blocks(const unsigned int n_blocks) {
     std::cout << "Started Merging Phase: \n\n";
     std::cout << "Number of blocks: " << n_blocks << "\n\n";
@@ -173,7 +167,7 @@ void merge_blocks(const unsigned int n_blocks) {
     // Lexicon data structure
     std::map<std::string, lexicon_entry> lexicon;
 
-   /* std::vector<doc_table_entry> doc_table;
+    std::vector<doc_table_entry> doc_table;
     load_doc_table(&doc_table, std::string("../../output/doc_table.bin"));
 
     double avg_doc_len;
@@ -183,9 +177,6 @@ void merge_blocks(const unsigned int n_blocks) {
         sum += doc.doc_len;
     }
     avg_doc_len = (double)sum / doc_table.size();
-
-    // Free memory
-    doc_table.clear();*/
 
     // Pointer to the posting list in the inverted index file
     unsigned long offset = 0;
@@ -214,13 +205,14 @@ void merge_blocks(const unsigned int n_blocks) {
             cur.posting_list.splice(cur.posting_list.end(), cur2.posting_list);  // O(1)     
         } 
 
-        /*
+        // Compute upper bound score
         for (auto entry : cur.posting_list) {
-            bm25 = BM25(entry.second, (unsigned int)cur.posting_list.size(), doc_table[entry.first].doc_len, avg_doc_len, (unsigned int)doc_table.size());
+            bm25 = BM25(entry.second, (unsigned int)cur.posting_list.size(), 
+                        doc_table[entry.first].doc_len, avg_doc_len, 
+                        (unsigned int)doc_table.size());
             if (bm25 > max_score)
                 max_score = bm25;
         }
-        */
 
         // Writing
         //std::cout << "Writing Inverted Index record -> " << cur.term << '\n';

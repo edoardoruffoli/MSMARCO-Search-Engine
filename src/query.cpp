@@ -25,7 +25,7 @@ bool init_data_structures() {
         //std::cout << doc.doc_len << std::endl;
         sum += doc.doc_len;
     }
-    std::cout << sum << std::endl;  //è negativo!!!
+    std::cout << sum << std::endl;  //ï¿½ negativo!!!
     avg_doc_len = (double)sum/doc_table.size();
 
     printf("Done.\n");
@@ -66,16 +66,6 @@ bool get_conjunctive_doc_id(std::vector<posting_list*> pls) {
         }
     }
     return true;
-}
-
-double TFIDF(unsigned int tf, unsigned int df, unsigned int N) {
-    return (1.0 + log10(tf))*log10((double)N/df);
-}
-
-double BM25(unsigned int tf, unsigned int df, unsigned int doc_len, unsigned int avg_doc_len, unsigned int N) {
-    double k1 = 1.2;
-    double b = 0.75;
-    return tf*log10((double)N/df)/(k1*((1-b)+b*((double)doc_len/avg_doc_len)) + tf);
 }
 
 void conjunctive_query(std::priority_queue<std::pair<unsigned int, double>, 
@@ -151,7 +141,91 @@ void disjunctive_query(std::priority_queue<std::pair<unsigned int, double>,
     }
 }
 
+double BM25(unsigned int tf, unsigned int df, unsigned int doc_len, unsigned int avg_doc_len, unsigned int N) {
+    double k1 = 1.2;
+    double b = 0.75;
+    return tf * log10((double)N / df) / (k1 * ((1 - b) + b * ((double)doc_len / avg_doc_len)) + tf);
+}
+
+void disjunctive_query_max_score(std::priority_queue<std::pair<unsigned int, double>, 
+                                std::vector<std::pair<unsigned int, double>>, compare> &min_heap,
+                                std::vector<posting_list*> &pls,
+                                std::vector<double> &max_scores,
+                                unsigned int k) {
+
+    std::vector<double> upper_bounds(max_scores.size(), 0);
+    upper_bounds[0] = max_scores[0];
+    for (unsigned int i = 1; i < upper_bounds.size(); i++) {
+        upper_bounds[i] = upper_bounds[i-1] + max_scores[i];
+    }
+
+    double teta = 0;
+    unsigned int pivot = 0;
+    unsigned int cur_doc_id = get_min_doc_id(pls);
+    unsigned int max_doc_id = std::numeric_limits<unsigned int>::max();
+
+    while (pivot < pls.size() && cur_doc_id != max_doc_id) {
+        double score = 0;
+        unsigned int next_doc_id = std::numeric_limits<unsigned int>::max();
+
+        // Essential lists
+        for (unsigned int i = pivot; i < pls.size(); i++) {
+            if (pls[i]->getDocId() == cur_doc_id) {
+                unsigned int term_freq = pls[i]->getFreq();
+                unsigned int doc_len = doc_table[cur_doc_id].doc_len; // ONLY BM25
+                unsigned int doc_freq = pls[i]->doc_freq;
+                unsigned int N = (unsigned int) doc_table.size();   // O(1)
+                //score += TFIDF(term_freq, doc_freq, N);
+                //std::cout << doc_len << " " << avg_doc_len << std::endl;
+                score += BM25(term_freq, doc_freq, doc_len, avg_doc_len, N);
+                pls[i]->next();
+            }
+            if (pls[i]->getDocId() < next_doc_id) {
+                next_doc_id = pls[i]->getDocId();
+            }
+        }
+
+        // Non essential lists
+        for (int i = pivot-1; i >= 0; i--) {
+            if (score + upper_bounds[i] <= teta)
+                break;
+            pls[i]->nextGEQ(cur_doc_id);
+            if (pls[i]->getDocId() == cur_doc_id) {
+                unsigned int term_freq = pls[i]->getFreq();
+                unsigned int doc_len = doc_table[cur_doc_id].doc_len; // ONLY BM25
+                unsigned int doc_freq = pls[i]->doc_freq;
+                unsigned int N = (unsigned int) doc_table.size();   // O(1)
+                //score += TFIDF(term_freq, doc_freq, N);
+                //std::cout << doc_len << " " << avg_doc_len << std::endl;
+                score += BM25(term_freq, doc_freq, doc_len, avg_doc_len, N);
+            }
+        }
+
+        if (min_heap.size() >= k) {
+            if (min_heap.top().second > score) {
+                min_heap.pop();
+                min_heap.push(std::make_pair(cur_doc_id, score));
+
+                teta = min_heap.top().second;
+                while (pivot < pls.size() && upper_bounds[pivot] <= teta)
+                    pivot++;
+            }
+        }
+        else {
+            min_heap.push(std::make_pair(cur_doc_id, score));
+            teta = min_heap.top().second;
+
+            while (pivot < pls.size() && upper_bounds[pivot] <= teta)
+                pivot++;
+        }
+        cur_doc_id = next_doc_id;
+    }
+}
+
 bool execute_query(std::vector<std::string> &terms, unsigned int mode, unsigned int k) {
+    std::cout << "Executing query\n";
+    boost::chrono::high_resolution_clock::time_point t1 = boost::chrono::high_resolution_clock::now();
+
     std::vector<posting_list*> pls;
     for (auto term : terms) {
 
@@ -175,6 +249,12 @@ bool execute_query(std::vector<std::string> &terms, unsigned int mode, unsigned 
         return false;
     }
 
+    // Vector of max score one per query term
+    std::vector<double> max_scores;
+    for (auto &term : terms) {
+        max_scores.push_back(lexicon[term].max_score);
+    }
+
     switch(mode){
         case CONJUNCTIVE_MODE:
             conjunctive_query(min_heap, pls, k); 
@@ -182,7 +262,13 @@ bool execute_query(std::vector<std::string> &terms, unsigned int mode, unsigned 
         case DISJUNCTIVE_MODE:
             disjunctive_query(min_heap, pls, k); 
             break;
+        case DISJUNCTIVE_MODE_MAX_SCORE:
+            disjunctive_query_max_score(min_heap, pls, max_scores, k); 
+            break;
     }
+
+    boost::chrono::high_resolution_clock::time_point t2 = boost::chrono::high_resolution_clock::now();
+    std::cout << "The elapsed time was " << boost::chrono::duration_cast<boost::chrono::nanoseconds>(t2-t1) << " ns.\n";
 
     // Showing results
     std::vector<std::pair<unsigned int, double>> results;

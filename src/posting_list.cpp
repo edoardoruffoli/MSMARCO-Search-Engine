@@ -60,17 +60,28 @@ void posting_list::next() {
 }
 
 /*
-Advances the itarator forward to the next posting with a docID
+Advances the iterator forward to the next posting with a docID
 greater than or equal to d.
 */
 void posting_list::nextGEQ(unsigned int d) {
-    do {
-        if (this->doc_ids_offset == this->stop_offset) {
-            this->cur_doc_id = std::numeric_limits<unsigned int>::max();
-            this->cur_freq = std::numeric_limits<unsigned int>::max();
-            return;
-        }
+    // Find the block
+    unsigned block_idx;
+    for (block_idx = 0; block_idx < this->skip_pointers.size(); block_idx++) {
+        if (this->skip_pointers[block_idx].max_doc_id >= d)
+            break;
+    }
 
+    if (block_idx == this->skip_pointers.size()) {
+        this->cur_doc_id = std::numeric_limits<unsigned int>::max();
+        this->cur_freq = std::numeric_limits<unsigned int>::max();
+        return;
+    }
+
+    this->doc_ids_offset = skip_pointers[block_idx].doc_id_offset;
+    this->freqs_offset = skip_pointers[block_idx].freqs_offset;
+
+    // Scan the list until I find the doc_id greater or equal
+    do {
         unsigned int bytes = 0;
         this->cur_doc_id = VBdecode(this->f1, bytes);
         this->doc_ids_offset += bytes;

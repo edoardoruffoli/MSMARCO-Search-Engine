@@ -7,20 +7,15 @@ add_library(msmarco_search_engine
                 io.cpp 
                 query.cpp 
                 compressing.cpp 
-                simple9.cpp ${HEADER_LIST})
+                scoring_functions.cpp
+                 ${HEADER_LIST})
 
 target_include_directories(msmarco_search_engine PUBLIC ../include ../thirdparty)
 
 #find_package(ZLIB)
 
-#OpenMP
-find_package(OpenMP)
-if(OpenMP_CXX_FOUND)
-    target_link_libraries(msmarco_search_engine PUBLIC OpenMP::OpenMP_CXX ${llvm_libs})
-endif()
-
 include_directories(${ZLIB_INCLUDE_DIRS})
-target_link_libraries(msmarco_search_engine PUBLIC Boost::boost Boost::serialization Boost::filesystem Boost::iostreams ${ZLIB_LIBRARIES} Porter2)
+target_link_libraries(msmarco_search_engine PUBLIC Boost::boost Boost::chrono Boost::serialization Boost::filesystem Boost::iostreams ${ZLIB_LIBRARIES} Porter2)
 target_compile_features(msmarco_search_engine PUBLIC cxx_std_17)
 
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tmp)

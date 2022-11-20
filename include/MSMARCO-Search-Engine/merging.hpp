@@ -25,6 +25,7 @@
 
 #include "MSMARCO-Search-Engine/io.hpp"
 #include "MSMARCO-Search-Engine/compressing.hpp"
+#include "MSMARCO-Search-Engine/scoring_functions.hpp"
 
 bool read_record(std::ifstream &in, term_entry &term_entry);
 

@@ -14,7 +14,7 @@ void tokenize(std::string &content, bool flag, const std::unordered_set<std::str
         remove(token.begin(), token.end(), ' ');
 
         // Remove punctuation
-        token.erase(std::remove_if(token.begin(), token.end(), ispunct), token.end());
+        //token.erase(std::remove_if(token.begin(), token.end(), ispunct), token.end());
 
         // To lower case
         std::transform(token.begin(), token.end(), token.begin(), [](unsigned char c) { 
@@ -80,7 +80,6 @@ void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id,
         }
         return dict;
     };
-    
 
     // Parallel Processing of the docs
     BS::multi_future<std::map<std::string, std::list<std::pair<int, int>>>> mf = pool.parallelize_loop(0, documents.size(),
@@ -125,7 +124,8 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 	inbuf.push(mapped_file_stream);
 
 	// Convert streambuf to istream
-	std::istream instream(&inbuf);
+	//std::istream instream(&inbuf);
+    std::ifstream instream(in);
 
 	// Document table output
 	std::string doc_table_filename("../../output/doc_table.bin");

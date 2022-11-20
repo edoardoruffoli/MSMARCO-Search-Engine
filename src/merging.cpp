@@ -38,6 +38,7 @@ unsigned long write_inverted_index_record_compressed(std::ofstream& out, term_en
     // Start counting the bytes required to encode the doc_ids
     std::vector<uint8_t> bytes;
     unsigned int cur_block = 0;
+    unsigned int offset = 0;
     for (auto& entry : term_entry.posting_list) {
         if (cur_block == block_size) {
             // Write the max doc_id of the current block, that is the prev iteration doc_id, stored in bytes variable
@@ -46,10 +47,13 @@ unsigned long write_inverted_index_record_compressed(std::ofstream& out, term_en
             }
 
             // Write the doc_id offset of the current block
-            VBencode(VB_doc_ids.size(), bytes);
+            VBencode(offset, bytes);
             for (std::vector<uint8_t>::iterator it = bytes.begin(); it != bytes.end(); it++) {
                 out.write(reinterpret_cast<const char*>(&(*it)), 1);
             }
+
+            // Update offset
+            offset = VB_doc_ids.size();
 
             cur_block = 0;
         }
@@ -57,19 +61,19 @@ unsigned long write_inverted_index_record_compressed(std::ofstream& out, term_en
         // Add encoding of the current doc_id
         VBencode(unsigned(entry.first), bytes);
         VB_doc_ids.insert(VB_doc_ids.end(), bytes.begin(), bytes.end());
-
         cur_block++;
     }
 
     cur_block = 0;
+    offset = 0;
     for (auto& entry : term_entry.posting_list) {
         if (cur_block == block_size) {
             // Write the freqs offset of the current block
-            VBencode(VB_doc_ids.size() + VB_freqs.size(), bytes);
+            VBencode(VB_doc_ids.size() + offset, bytes);
             for (std::vector<uint8_t>::iterator it = bytes.begin(); it != bytes.end(); it++) {
                 out.write(reinterpret_cast<const char*>(&(*it)), 1);
             }
-
+            offset = VB_freqs.size();
             cur_block = 0;
         }
         // Add encoding of the current freq

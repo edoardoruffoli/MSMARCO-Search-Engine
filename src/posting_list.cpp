@@ -2,7 +2,6 @@
 #include "MSMARCO-Search-Engine/model.hpp"
     
 bool posting_list::openList(unsigned long offset) {
-
     this->f1.open("../../output/inverted_index.bin", std::ios::binary);
 
     // Decode skip pointers list size
@@ -28,8 +27,8 @@ bool posting_list::openList(unsigned long offset) {
     }
 
     this->doc_ids_offset = offset + sizeof(int) + num_bytes_skip_pointers_list;
-    this->freqs_offset = this->stop_offset;
-    this->stop_offset = offset + tmp + sizeof(int);
+    this->freqs_offset = offset + sizeof(int) + num_bytes_skip_pointers_list + this->skip_pointers[0].doc_id_offset;
+    this->stop_offset = this->freqs_offset;
 
     // Init
     next();

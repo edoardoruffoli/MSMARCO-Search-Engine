@@ -141,12 +141,6 @@ void disjunctive_query(std::priority_queue<std::pair<unsigned int, double>,
     }
 }
 
-double BM25(unsigned int tf, unsigned int df, unsigned int doc_len, unsigned int avg_doc_len, unsigned int N) {
-    double k1 = 1.2;
-    double b = 0.75;
-    return tf * log10((double)N / df) / (k1 * ((1 - b) + b * ((double)doc_len / avg_doc_len)) + tf);
-}
-
 void disjunctive_query_max_score(std::priority_queue<std::pair<unsigned int, double>, 
                                 std::vector<std::pair<unsigned int, double>>, compare> &min_heap,
                                 std::vector<posting_list*> &pls,

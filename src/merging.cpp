@@ -20,10 +20,7 @@ bool read_record(std::ifstream &in, term_entry &term_entry) {
 }
 
 
-unsigned long write_inverted_index_record_compressed(std::ofstream& out, term_entry& term_entry) {
-    if (term_entry.term == "mind")
-        std::cout << "CWICHVI"<< std::endl;
-    
+unsigned long write_inverted_index_record_compressed(std::ofstream& out, term_entry& term_entry) {    
     unsigned int num_bytes_written = 0;
 
     // Compute skip pointer block size
@@ -86,8 +83,11 @@ unsigned long write_inverted_index_record_compressed(std::ofstream& out, term_en
     num_skip_pointers = n_block;
 
     // Write the skip pointers size
-    out.write(reinterpret_cast<const char*>(&num_skip_pointers), sizeof(int));
-    num_bytes_written += sizeof(int);
+    VBencode(num_skip_pointers, bytes);
+    for (std::vector<uint8_t>::iterator it = bytes.begin(); it != bytes.end(); it++) {
+        out.write(reinterpret_cast<const char*>(&(*it)), 1);
+        num_bytes_written++;
+    }
 
     // Write the skip pointers list
     for (unsigned int i=0; i<VB_block_max_doc_ids.size(); i++) {

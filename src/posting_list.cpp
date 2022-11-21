@@ -6,11 +6,12 @@ bool posting_list::openList(unsigned long offset) {
 
     // Decode skip pointers list size
     unsigned int skip_pointers_list_size;
-    this->f1.seekg(offset);
-    this->f1.read(reinterpret_cast<char*>(&skip_pointers_list_size), sizeof(int));
-
-    // Decode array skip pointers
     unsigned int num_bytes_skip_pointers_list = 0;
+    this->f1.seekg(offset);
+
+    skip_pointers_list_size = VBdecode(this->f1, num_bytes_skip_pointers_list);
+    std::cout << skip_pointers_list_size << std::endl;
+    // Decode array skip pointers
     for (unsigned int i=0; i<skip_pointers_list_size; i++) {
         skip_pointer cur_skip_pointer;
 
@@ -26,8 +27,8 @@ bool posting_list::openList(unsigned long offset) {
         this->skip_pointers.push_back(cur_skip_pointer);
     }
 
-    this->doc_ids_offset = offset + sizeof(int) + num_bytes_skip_pointers_list;
-    this->freqs_offset = offset + sizeof(int) + num_bytes_skip_pointers_list + this->skip_pointers[0].freqs_offset;
+    this->doc_ids_offset = offset + num_bytes_skip_pointers_list;
+    this->freqs_offset = offset + num_bytes_skip_pointers_list + this->skip_pointers[0].freqs_offset;
     this->stop_offset = this->freqs_offset;
 
     // Init

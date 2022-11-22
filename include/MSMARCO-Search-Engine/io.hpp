@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <unordered_set>
 
 #include <boost/filesystem.hpp>
 #include <boost/archive/binary_iarchive.hpp>

@@ -14,7 +14,7 @@ void tokenize(std::string &content, bool flag, const std::unordered_set<std::str
         remove(token.begin(), token.end(), ' ');
 
         // Remove punctuation
-        //token.erase(std::remove_if(token.begin(), token.end(), ispunct), token.end());
+        token.erase(std::remove_if(token.begin(), token.end(), ispunct), token.end());
 
         // To lower case
         std::transform(token.begin(), token.end(), token.begin(), [](unsigned char c) { 

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <math.h> 
 
 double TFIDF(unsigned int tf, unsigned int df, unsigned int N);

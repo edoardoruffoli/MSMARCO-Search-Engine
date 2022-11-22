@@ -25,7 +25,7 @@ bool init_data_structures() {
         //std::cout << doc.doc_len << std::endl;
         sum += doc.doc_len;
     }
-    std::cout << sum << std::endl;  //� negativo!!!
+    std::cout << sum << std::endl;  //negativo!!!
     avg_doc_len = (double)sum/doc_table.size();
 
     printf("Done.\n");
@@ -84,8 +84,8 @@ void conjunctive_query(std::priority_queue<std::pair<unsigned int, double>,
             unsigned int doc_len = doc_table[cur_doc_id].doc_len; // ONLY BM25
             unsigned int doc_freq = pl->doc_freq;
             unsigned int N = (unsigned int)doc_table.size();   // O(1)
-            score += TFIDF(term_freq, doc_freq, N);
-            //score += BM25(term_freq, doc_freq, doc_len, avg_doc_len, N);
+            //score += TFIDF(term_freq, doc_freq, N);
+            score += BM25(term_freq, doc_freq, doc_len, avg_doc_len, N);
             pl->next();
         }
         // SCORE OF A DOCUMENT
@@ -119,9 +119,9 @@ void disjunctive_query(std::priority_queue<std::pair<unsigned int, double>,
                 unsigned int doc_len = doc_table[cur_doc_id].doc_len; // ONLY BM25
                 unsigned int doc_freq = pl->doc_freq;
                 unsigned int N = (unsigned int) doc_table.size();   // O(1)
-                score += TFIDF(term_freq, doc_freq, N);
+                //score += TFIDF(term_freq, doc_freq, N);
                 //std::cout << doc_len << " " << avg_doc_len << std::endl;
-                //score += BM25(term_freq, doc_freq, doc_len, avg_doc_len, N);
+                score += BM25(term_freq, doc_freq, doc_len, avg_doc_len, N);
                 pl->next();
             }
         }
@@ -169,9 +169,9 @@ void disjunctive_query_max_score(std::priority_queue<std::pair<unsigned int, dou
                 unsigned int doc_len = doc_table[cur_doc_id].doc_len; // ONLY BM25
                 unsigned int doc_freq = pls[i]->doc_freq;
                 unsigned int N = (unsigned int) doc_table.size();   // O(1)
-                score += TFIDF(term_freq, doc_freq, N);
+                //score += TFIDF(term_freq, doc_freq, N);
                 //std::cout << doc_len << " " << avg_doc_len << std::endl;
-                //score += BM25(term_freq, doc_freq, doc_len, avg_doc_len, N);
+                score += BM25(term_freq, doc_freq, doc_len, avg_doc_len, N);
                 pls[i]->next();
             }
             if (pls[i]->getDocId() < next_doc_id) {
@@ -189,9 +189,9 @@ void disjunctive_query_max_score(std::priority_queue<std::pair<unsigned int, dou
                 unsigned int doc_len = doc_table[cur_doc_id].doc_len; // ONLY BM25
                 unsigned int doc_freq = pls[i]->doc_freq;
                 unsigned int N = (unsigned int) doc_table.size();   // O(1)
-                score += TFIDF(term_freq, doc_freq, N);
+                //score += TFIDF(term_freq, doc_freq, N);
                 //std::cout << doc_len << " " << avg_doc_len << std::endl;
-                //score += BM25(term_freq, doc_freq, doc_len, avg_doc_len, N);
+                score += BM25(term_freq, doc_freq, doc_len, avg_doc_len, N);
             }
         }
 
@@ -251,10 +251,13 @@ bool execute_query(std::vector<std::string> &terms, unsigned int mode, unsigned 
 
     switch(mode){
         case CONJUNCTIVE_MODE:
-            conjunctive_query(min_heap, pls, k); 
+            if(pls.size() != 1)
+                conjunctive_query(min_heap, pls, k); 
+            else
+                disjunctive_query(min_heap, pls, k);
             break;
         case DISJUNCTIVE_MODE:
-            disjunctive_query(min_heap, pls, k); 
+            disjunctive_query(min_heap, pls, k);
             break;
         case DISJUNCTIVE_MODE_MAX_SCORE:
             disjunctive_query_max_score(min_heap, pls, max_scores, k); 

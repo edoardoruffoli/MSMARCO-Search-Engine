@@ -1,13 +1,31 @@
 #include "MSMARCO-Search-Engine/compressing.hpp"
 #include "MSMARCO-Search-Engine/model.hpp"
-    
+
+//#include <boost/iostreams/stream.hpp>
+//#include <boost/iostreams/device/mapped_file.hpp>
+//#include <boost/iostreams/filtering_streambuf.hpp>
+
 bool posting_list::openList(unsigned long offset) {
+    //boost::iostreams::stream<boost::iostreams::mapped_file_source> mapped_file_stream;
+    //boost::iostreams::mapped_file_source mmap("../../output/inverted_index.bin");
+    //boost::iostreams::filtering_streambuf<boost::iostreams::input> inbuf;
+    //mapped_file_stream.open(mmap);
+    //if (mapped_file_stream.fail())
+    //    std::cout << "Error: input fail not valid.\n";
+
+    //inbuf.push(mapped_file_stream);
+
+    // Convert streambuf to istream
+    //std::istream instream(&inbuf);
+
     this->f1.open("../../output/inverted_index.bin", std::ios::binary);
 
     // Decode skip pointers list size
     unsigned int skip_pointers_list_size;
     unsigned int num_bytes_skip_pointers_list = 0;
     this->f1.seekg(offset);
+    
+    //instream.seekg(offset);
 
     skip_pointers_list_size = VBdecode(this->f1, num_bytes_skip_pointers_list);
     std::cout << skip_pointers_list_size << std::endl;

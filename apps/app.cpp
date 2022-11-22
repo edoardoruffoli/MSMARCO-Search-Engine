@@ -37,7 +37,7 @@ bool load_stopwords(std::unordered_set<std::string>& stopwords, std::string& fil
 void query_tokenize(std::string& content, std::vector<std::string>& tokens) {
     size_t pos = 0;
     std::string token;
-    std::string delimiter = " "; //non vede l'ultima parola \n
+    std::string delimiter = " ";
     while ((pos = content.find(delimiter)) != std::string::npos) {
         token = content.substr(0, pos);
         content.erase(0, pos + delimiter.length());
@@ -84,9 +84,14 @@ static void merge(std::ostream& out) {
 
 static void query(std::ostream& out, std::string& query, int mode, int k) {
     Clear();
-    std::vector<std::string> query_terms;
-    query_tokenize(query, query_terms);
-    execute_query(query_terms, mode, k);
+    if (mode < 4) {
+        std::vector<std::string> query_terms;
+        query_tokenize(query, query_terms);
+        execute_query(query_terms, mode, k);
+    }
+    else {
+        out << "Wrong query type!\n";
+    }
 }
 
 int main(int argc, char* argv[]){

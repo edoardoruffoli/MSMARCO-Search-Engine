@@ -1,29 +1,28 @@
 #include "MSMARCO-Search-Engine/parsing.hpp"
+#include <regex>
 
 void tokenize(std::string &content, bool flag, const std::unordered_set<std::string> &stopwords, 
                                               std::unordered_map<std::string, int> &tokens) {
 	// How to deal with empty page, malformed lines, malformed characters?
-    size_t pos = 0;
-    std::string token;
-    std::string delimiter = " ";
-    while ((pos = content.find(delimiter)) != std::string::npos) {
-        token = content.substr(0, pos);
-        content.erase(0, pos + delimiter.length());
-        
-        // Remove spaces
-        remove(token.begin(), token.end(), ' ');
+    std::regex re("[ \t]");
+    //the '-1' is what makes the regex split (-1 := what was not matched)
+    std::sregex_token_iterator first{content.begin(), content.end(), re, -1}, last;
+    std::vector<std::string> v{first, last};
+
+    for (auto token : v) {
+		if (!token.size())
+			continue;
 
         // Remove punctuation
         token.erase(std::remove_if(token.begin(), token.end(), ispunct), token.end());
+        
+		if (!token.size())
+			continue;
 
         // To lower case
         std::transform(token.begin(), token.end(), token.begin(), [](unsigned char c) { 
             return std::tolower(c); 
         });
-
-        // If token is empty continue
-		if (!token.size())
-			continue;
 
         if(flag) {
 			if (stopwords.find(token) != stopwords.end()) {

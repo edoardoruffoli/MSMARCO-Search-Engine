@@ -263,7 +263,7 @@ bool execute_query(std::vector<std::string> &terms, unsigned int mode, unsigned 
     }
 
     boost::chrono::high_resolution_clock::time_point t2 = boost::chrono::high_resolution_clock::now();
-    std::cout << "The elapsed time was " << boost::chrono::duration_cast<boost::chrono::nanoseconds>(t2-t1) << " ns.\n";
+    std::cout << "The elapsed time was " << boost::chrono::duration_cast<boost::chrono::milliseconds>(t2-t1) << ".\n";
 
     // Showing results
     std::vector<std::pair<unsigned int, double>> results;

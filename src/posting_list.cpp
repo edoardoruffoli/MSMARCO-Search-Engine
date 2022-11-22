@@ -28,7 +28,6 @@ bool posting_list::openList(unsigned long offset) {
     //instream.seekg(offset);
 
     skip_pointers_list_size = VBdecode(this->f1, num_bytes_skip_pointers_list);
-    std::cout << skip_pointers_list_size << std::endl;
     // Decode array skip pointers
     for (unsigned int i=0; i<skip_pointers_list_size; i++) {
         skip_pointer cur_skip_pointer;

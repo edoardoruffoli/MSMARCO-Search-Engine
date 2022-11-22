@@ -73,7 +73,7 @@ static void parse(std::ostream& out, int block_size) {
     parse(docfile, block_size, true, stopwords, n_threads);
 }
 
-static void merge(std::ostream& out, std::string& query) {
+static void merge(std::ostream& out) {
     Clear();
     unsigned int n_blocks = 0;
     while (boost::filesystem::exists("../tmp/intermediate_" + std::to_string(n_blocks + 1))) {

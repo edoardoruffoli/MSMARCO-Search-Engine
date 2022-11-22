@@ -22,10 +22,8 @@ bool init_data_structures() {
     // IF BM25 compute avg doc len
     unsigned int sum = 0;
     for (auto doc : doc_table) {
-        //std::cout << doc.doc_len << std::endl;
         sum += doc.doc_len;
     }
-    std::cout << sum << std::endl;  //negativo!!!
     avg_doc_len = (double)sum/doc_table.size();
 
     printf("Done.\n");

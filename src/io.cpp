@@ -40,7 +40,6 @@ bool load_lexicon(std::map<std::string, lexicon_entry>* lexicon,
     }
     boost::archive::binary_iarchive archive(filestream);
     archive >> *lexicon;
-    std::cout << "Lexicon read!" << std::endl;
     filestream.close();
     return true;
 }

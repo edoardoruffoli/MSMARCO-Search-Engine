@@ -69,13 +69,12 @@ void query_tokenize(std::string& content, std::vector<std::string>& tokens) {
     std::cout << tokens.size() << std::endl;
 }
 
-static void parse(std::ostream& out) {
+static void parse(std::ostream& out, int block_size) {
     Clear();
     unsigned int n_threads = std::thread::hardware_concurrency() - 1;
-    const int BLOCK_SIZE = 2000000;
     const char* docfile = "../../collection.tar.gz";
     const char* stopwords = "../../stopwords.txt";
-    parse(docfile, BLOCK_SIZE, true, stopwords, n_threads);
+    parse(docfile, block_size, true, stopwords, n_threads);
 }
 
 static void merge(std::ostream& out, std::string& query) {
@@ -103,8 +102,11 @@ int main(int argc, char* argv[]){
     auto rootMenu = std::make_unique<cli::Menu>("MSMARCO-Search-Engine");
     rootMenu->Insert(
         "p",
-        query,
-        "Parsing the documents list and generate the intermediate posting lists");
+        parse,
+        "Parsing the documents list and generate the intermediate posting lists\n"
+        "\n<******************************************>"
+        "\n<int> -> Size of the intermediate blocks"
+        "\n<******************************************>\n");
     rootMenu->Insert(
         "m",
         merge,

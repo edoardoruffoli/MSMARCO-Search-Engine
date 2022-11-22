@@ -88,7 +88,7 @@ void conjunctive_query(std::priority_queue<std::pair<unsigned int, double>,
         }
         // SCORE OF A DOCUMENT
         if (min_heap.size() >= k) {
-            if (min_heap.top().second > score) {
+            if (min_heap.top().second < score) {
                 min_heap.pop();
                 min_heap.push(std::make_pair(cur_doc_id, score));
             }
@@ -125,7 +125,7 @@ void disjunctive_query(std::priority_queue<std::pair<unsigned int, double>,
         }
         // SCORE OF A DOCUMENT
         if (min_heap.size() >= k) {
-            if (min_heap.top().second > score) {
+            if (min_heap.top().second < score) {
                 min_heap.pop();
                 min_heap.push(std::make_pair(cur_doc_id, score));
             }
@@ -194,7 +194,7 @@ void disjunctive_query_max_score(std::priority_queue<std::pair<unsigned int, dou
         }
 
         if (min_heap.size() >= k) {
-            if (min_heap.top().second > score) {
+            if (min_heap.top().second < score) {
                 min_heap.pop();
                 min_heap.push(std::make_pair(cur_doc_id, score));
 

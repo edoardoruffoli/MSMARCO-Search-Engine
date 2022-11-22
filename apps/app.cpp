@@ -20,7 +20,6 @@ void Clear()
 }
 
 bool load_stopwords(std::unordered_set<std::string>& stopwords, std::string& filename) {
-
     std::ifstream filestream(filename);
     if (filestream.fail()) {
         std::cout << "Fail stopwords read!" << std::endl;
@@ -30,14 +29,12 @@ bool load_stopwords(std::unordered_set<std::string>& stopwords, std::string& fil
     std::string word;
     while (std::getline(filestream, word))
         stopwords.insert(word);
-    std::cout << "Stopwords file loaded.\n";
 
     filestream.close();
     return true;
 }
 
 void query_tokenize(std::string& content, std::vector<std::string>& tokens) {
-    std::cout << content << std::endl;
     size_t pos = 0;
     std::string token;
     std::string delimiter = " "; //non vede l'ultima parola \n
@@ -66,7 +63,6 @@ void query_tokenize(std::string& content, std::vector<std::string>& tokens) {
         token = porter2::Stemmer{}.stem(token);
         tokens.push_back(token);
     }
-    std::cout << tokens.size() << std::endl;
 }
 
 static void parse(std::ostream& out, int block_size) {
@@ -94,37 +90,36 @@ static void query(std::ostream& out, std::string& query, int mode, int k) {
 }
 
 int main(int argc, char* argv[]){
-    if (!init_data_structures() && !load_stopwords(stopwords, std::string("../../stopwords.txt"))) {
+    if ((!init_data_structures()) || (!load_stopwords(stopwords, std::string("../../stopwords.txt")))) {
         std::cout << "Failed to load data structures.\n";
-        return 0;
+        return 1;
     }
-
     auto rootMenu = std::make_unique<cli::Menu>("MSMARCO-Search-Engine");
     rootMenu->Insert(
         "p",
         parse,
         "Parsing the documents list and generate the intermediate posting lists\n"
-        "\n<******************************************>"
-        "\n<int> -> Size of the intermediate blocks"
-        "\n<******************************************>\n");
+        "         <------------------------------------------>\n"
+        "         <int> -> Size of the intermediate blocks\n"
+        "         <------------------------------------------>\n");
     rootMenu->Insert(
         "m",
         merge,
         "Merging of the itermediate posting lists and create the compressed inverted index");
 
-    auto subMenu = std::make_unique<cli::Menu>("Queries");
+    auto subMenu = std::make_unique<cli::Menu>("queries");
     subMenu->Insert(
         "q",
         query,
-        "\n<******************************************>"
-        "\n<string> -> Query text: \"example of a query\""
-        "\n\n<int> -> Type of query : "
-        "\n 0->CONJUNCTIVE_MODE"
-        "\n 1->DISJUNCTIVE_MODE"
-        "\n 2->CONJUNCTIVE_MODE_MAX_SCORE"
-        "\n 3->DISJUNCTIVE_MODE_MAX_SCORE"
-        "\n\n<int> -> Top k results"
-        "\n<******************************************>\n");
+        "\n    <------------------------------------------>\n"
+        "    <string> -> Query text: \"example of a query\"\n\n"
+        "    <int> -> Type of query :\n"
+        "    0 : CONJUNCTIVE_MODE\n"
+        "    1 : DISJUNCTIVE_MODE\n"
+        "    2 : CONJUNCTIVE_MODE_MAX_SCORE\n"
+        "    3 : DISJUNCTIVE_MODE_MAX_SCORE\n\n"
+        "    <int> -> Top k results\n"
+        "    <------------------------------------------>\n");
 
     rootMenu->Insert(std::move(subMenu));
     cli::Cli cli(std::move(rootMenu));

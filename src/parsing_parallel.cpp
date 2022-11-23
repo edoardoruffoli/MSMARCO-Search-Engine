@@ -181,7 +181,7 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 	}
 
     // Write last block
-    doc_table.resize(BLOCK_SIZE*block_num);
+    doc_table.resize(current_size);
     BSBI_Invert(block, doc_id, block_num, pool, doc_table, stopwords, flag);
     block.clear();
 

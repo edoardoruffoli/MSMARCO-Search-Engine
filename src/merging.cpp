@@ -197,6 +197,7 @@ void merge_blocks(const unsigned int n_blocks) {
         while (!min_heap.empty() && min_heap.top().term == cur.term) {
             term_entry cur2 = min_heap.top();
             min_heap.pop();
+            tmp = {};
             tmp.block_id = cur2.block_id;
             tmp.posting_list.clear();
             if(read_record(in_files.at(cur2.block_id-1), tmp))

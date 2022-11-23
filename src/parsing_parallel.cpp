@@ -58,7 +58,7 @@ void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id,
     auto process_block = [&documents, &doc_table, &doc_table_mutex, start_doc_id, flag, &stopwords]
     (const unsigned start, const unsigned end) 
     {
-        std::cout << "Launched Worker Thread, Interval: [" << start << "," << end << "]\n";
+        //std::cout << "Launched Worker Thread, Interval: [" << start << "," << end << "]\n";
         std::string doc_no;
         std::string text;
         std::istringstream iss;
@@ -170,8 +170,7 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 		}
 		else {
             // Init next BLOCK_SIZE values in order to let the threads acces them
-            doc_table.resize(BLOCK_SIZE*block_num);
-            std::cout << doc_table.size() << "\n";
+            doc_table.resize(BLOCK_SIZE * block_num);
             BSBI_Invert(block, doc_id, block_num, pool, doc_table, stopwords, flag);
             doc_id += BLOCK_SIZE;
 			block_num++;
@@ -181,7 +180,7 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 	}
 
     // Write last block
-    doc_table.resize(BLOCK_SIZE*block_num);
+    doc_table.resize(BLOCK_SIZE * (block_num - 1) + current_size);
     BSBI_Invert(block, doc_id, block_num, pool, doc_table, stopwords, flag);
     block.clear();
 

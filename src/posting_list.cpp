@@ -1,16 +1,19 @@
 #include "MSMARCO-Search-Engine/compressing.hpp"
 #include "MSMARCO-Search-Engine/model.hpp"
-    
+
+
 bool posting_list::openList(unsigned long offset) {
+
     this->f1.open("../../output/inverted_index.bin", std::ios::binary);
 
     // Decode skip pointers list size
     unsigned int skip_pointers_list_size;
-    this->f1.seekg(offset);
-    this->f1.read(reinterpret_cast<char*>(&skip_pointers_list_size), sizeof(int));
-
-    // Decode array skip pointers
     unsigned int num_bytes_skip_pointers_list = 0;
+    this->f1.seekg(offset);
+    
+    skip_pointers_list_size = VBdecode(this->f1, num_bytes_skip_pointers_list);
+    
+    // Decode array skip pointers
     for (unsigned int i=0; i<skip_pointers_list_size; i++) {
         skip_pointer cur_skip_pointer;
 
@@ -26,8 +29,8 @@ bool posting_list::openList(unsigned long offset) {
         this->skip_pointers.push_back(cur_skip_pointer);
     }
 
-    this->doc_ids_offset = offset + sizeof(int) + num_bytes_skip_pointers_list;
-    this->freqs_offset = offset + sizeof(int) + num_bytes_skip_pointers_list + this->skip_pointers[0].freqs_offset;
+    this->doc_ids_offset = offset + num_bytes_skip_pointers_list;
+    this->freqs_offset = offset + num_bytes_skip_pointers_list + this->skip_pointers[0].freqs_offset;
     this->stop_offset = this->freqs_offset;
 
     // Init
@@ -49,7 +52,8 @@ void posting_list::next() {
     unsigned int bytes = 0;
     this->cur_doc_id = VBdecode(this->f1, bytes);
     this->doc_ids_offset += bytes;
-
+    if (this->cur_doc_id == 85998)
+        std::cout << "HERE" << std::endl;
     // Clean
     bytes = 0;
     this->f1.seekg(this->freqs_offset);

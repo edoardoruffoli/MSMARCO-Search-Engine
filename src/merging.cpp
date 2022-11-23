@@ -130,7 +130,6 @@ void merge_blocks(const unsigned int n_blocks) {
     std::cout << "Started Merging Phase: \n\n";
     std::cout << "Number of blocks: " << n_blocks << "\n\n";
 
-    //std::ofstream out_inverted_index("../tmp/uncompressed_inverted_index");
     std::ofstream out_inverted_index("../../output/inverted_index.bin", std::ios::binary);
     
     if (out_inverted_index.fail()) 
@@ -187,7 +186,7 @@ void merge_blocks(const unsigned int n_blocks) {
     while (!min_heap.empty()) {
         term_entry cur = min_heap.top();
         min_heap.pop();
-        
+
         // Update min heap by pushing the new top value of the current block
         term_entry tmp;
         tmp.block_id = cur.block_id;
@@ -199,6 +198,7 @@ void merge_blocks(const unsigned int n_blocks) {
             term_entry cur2 = min_heap.top();
             min_heap.pop();
             tmp.block_id = cur2.block_id;
+            tmp.posting_list.clear();
             if(read_record(in_files.at(cur2.block_id-1), tmp))
                 min_heap.push(tmp);     
 
@@ -217,11 +217,10 @@ void merge_blocks(const unsigned int n_blocks) {
         // Writing
         //std::cout << "Writing Inverted Index record -> " << cur.term << '\n';
         offset += len;
-        len = write_inverted_index_record_compressed(out_inverted_index, cur);
+        write_inverted_index_record_compressed(out_inverted_index, cur);
         
         //lexicon : [term, num_docs, offset inverted index, maxscore]
         lexicon[cur.term] = {(unsigned int) cur.posting_list.size(), offset, max_score};
-        //write_lexicon_record(out_lexicon, cur, offset);
     }
 
     // Write Lexicon on file
@@ -236,4 +235,16 @@ void merge_blocks(const unsigned int n_blocks) {
     */
 
    // DELETE in_files
+}
+
+void write_inverted_index_record(std::ofstream &out, term_entry &term_entry) {
+    out << term_entry.term << ' ';
+	for (auto& entry : term_entry.posting_list) {
+		out << entry.first << ',';
+	}
+    out << ' ';
+    for (auto& entry : term_entry.posting_list) {
+		out << entry.second << ',';
+	}
+    out << '\n';
 }

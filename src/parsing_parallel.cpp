@@ -1,5 +1,4 @@
 #include "MSMARCO-Search-Engine/parsing.hpp"
-#include <regex>
 
 void tokenize(std::string &content, bool flag, const std::unordered_set<std::string> &stopwords, 
                                               std::unordered_map<std::string, int> &tokens) {

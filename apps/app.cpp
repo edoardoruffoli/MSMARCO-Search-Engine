@@ -5,8 +5,10 @@
 #include <cli/cli.h>
 #include <cli/clifilesession.h>
 #include <Porter2.hpp>
+#include <regex>
 
 std::unordered_set<std::string> stopwords;
+bool loaded_data = false;
 
 void Clear()
 {
@@ -35,27 +37,27 @@ bool load_stopwords(std::unordered_set<std::string>& stopwords, std::string& fil
 }
 
 void query_tokenize(std::string& content, std::vector<std::string>& tokens) {
-    size_t pos = 0;
-    std::string token;
-    std::string delimiter = " ";
-    while ((pos = content.find(delimiter)) != std::string::npos) {
-        token = content.substr(0, pos);
-        content.erase(0, pos + delimiter.length());
 
-        // Remove spaces
-        remove(token.begin(), token.end(), ' ');
+    // How to deal with empty page, malformed lines, malformed characters?
+    std::regex re("[ \t]");
+    //the '-1' is what makes the regex split (-1 := what was not matched)
+    std::sregex_token_iterator first{ content.begin(), content.end(), re, -1 }, last;
+    std::vector<std::string> v{ first, last };
+
+    for (auto token : v) {
+        if (!token.size())
+            continue;
 
         // Remove punctuation
         token.erase(std::remove_if(token.begin(), token.end(), ispunct), token.end());
+
+        if (!token.size())
+            continue;
 
         // To lower case
         std::transform(token.begin(), token.end(), token.begin(), [](unsigned char c) {
             return std::tolower(c);
             });
-
-        // If token is empty continue
-        if (!token.size())
-            continue;
 
         if (stopwords.find(token) != stopwords.end()) {
             continue;
@@ -83,6 +85,13 @@ static void merge(std::ostream& out) {
 }
 
 static void query(std::ostream& out, std::string& query, int mode, int k) {
+    if (!loaded_data) {
+        if ((!init_data_structures()) || (!load_stopwords(stopwords, std::string("../../stopwords.txt")))) {
+            std::cout << "Failed to load data structures.\n";
+            return;
+        }
+        loaded_data = true;
+    }
     Clear();
     if (mode < 4) {
         std::vector<std::string> query_terms;
@@ -95,25 +104,8 @@ static void query(std::ostream& out, std::string& query, int mode, int k) {
 }
 
 int main(int argc, char* argv[]){
-    if ((!init_data_structures()) || (!load_stopwords(stopwords, std::string("../../stopwords.txt")))) {
-        std::cout << "Failed to load data structures.\n";
-        return 1;
-    }
     auto rootMenu = std::make_unique<cli::Menu>("MSMARCO-Search-Engine");
     rootMenu->Insert(
-        "p",
-        parse,
-        "Parsing the documents list and generate the intermediate posting lists\n"
-        "         <------------------------------------------>\n"
-        "         <int> -> Size of the intermediate blocks\n"
-        "         <------------------------------------------>\n");
-    rootMenu->Insert(
-        "m",
-        merge,
-        "Merging of the itermediate posting lists and create the compressed inverted index");
-
-    auto subMenu = std::make_unique<cli::Menu>("queries");
-    subMenu->Insert(
         "q",
         query,
         "\n    <------------------------------------------>\n"
@@ -125,6 +117,20 @@ int main(int argc, char* argv[]){
         "    3 : DISJUNCTIVE_MODE_MAX_SCORE\n\n"
         "    <int> -> Top k results\n"
         "    <------------------------------------------>\n");
+
+    auto subMenu = std::make_unique<cli::Menu>("build_index");
+    subMenu->Insert(
+        "p",
+        parse,
+        "Parsing the documents list and generate the intermediate posting lists\n"
+        "         <------------------------------------------>\n"
+        "         <int> -> Size of the intermediate blocks\n"
+        "         <------------------------------------------>\n");
+    subMenu->Insert(
+        "m",
+        merge,
+        "Merging of the itermediate posting lists and create the compressed inverted index");
+
 
     rootMenu->Insert(std::move(subMenu));
     cli::Cli cli(std::move(rootMenu));

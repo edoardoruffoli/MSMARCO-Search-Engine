@@ -10,6 +10,7 @@
 #include <map>
 #include <sstream>
 #include <bitset>
+#include <regex>
 
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string/case_conv.hpp>

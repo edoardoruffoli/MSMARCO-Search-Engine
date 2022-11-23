@@ -170,7 +170,7 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 		}
 		else {
             // Init next BLOCK_SIZE values in order to let the threads acces them
-            doc_table.resize(BLOCK_SIZE*block_num);
+            doc_table.resize(current_size);
             std::cout << doc_table.size() << "\n";
             BSBI_Invert(block, doc_id, block_num, pool, doc_table, stopwords, flag);
             doc_id += BLOCK_SIZE;

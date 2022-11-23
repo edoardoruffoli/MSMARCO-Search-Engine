@@ -36,39 +36,6 @@ bool load_stopwords(std::unordered_set<std::string>& stopwords, std::string& fil
     return true;
 }
 
-void query_tokenize(std::string& content, std::vector<std::string>& tokens) {
-
-    // How to deal with empty page, malformed lines, malformed characters?
-    std::regex re("[ \t]");
-    //the '-1' is what makes the regex split (-1 := what was not matched)
-    std::sregex_token_iterator first{ content.begin(), content.end(), re, -1 }, last;
-    std::vector<std::string> v{ first, last };
-
-    for (auto token : v) {
-        if (!token.size())
-            continue;
-
-        // Remove punctuation
-        token.erase(std::remove_if(token.begin(), token.end(), [](unsigned char c) {
-            return std::ispunct(c);
-            }), token.end());
-
-        if (!token.size())
-            continue;
-
-        // To lower case
-        std::transform(token.begin(), token.end(), token.begin(), [](unsigned char c) {
-            return std::tolower(c);
-            });
-
-        if (stopwords.find(token) != stopwords.end()) {
-            continue;
-        }
-        token = porter2::Stemmer{}.stem(token);
-        tokens.push_back(token);
-    }
-}
-
 static void parse(std::ostream& out, int block_size) {
     Clear();
     unsigned int n_threads = std::thread::hardware_concurrency() - 1;
@@ -84,6 +51,7 @@ static void merge(std::ostream& out) {
         n_blocks++;
     }
     merge_blocks(n_blocks);
+    loaded_data = false;
 }
 
 static void query(std::ostream& out, std::string& query, int mode, int k) {
@@ -97,7 +65,12 @@ static void query(std::ostream& out, std::string& query, int mode, int k) {
     Clear();
     if (mode < 4) {
         std::vector<std::string> query_terms;
-        query_tokenize(query, query_terms);
+        std::unordered_map<std::string, int> tokens;
+
+        tokenize(query, true, stopwords, tokens);
+        for (auto kv : tokens) {
+            query_terms.push_back(kv.first);
+        }
         execute_query(query_terms, mode, k);
     }
     else {

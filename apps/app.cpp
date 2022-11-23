@@ -49,7 +49,9 @@ void query_tokenize(std::string& content, std::vector<std::string>& tokens) {
             continue;
 
         // Remove punctuation
-        token.erase(std::remove_if(token.begin(), token.end(), ispunct), token.end());
+        token.erase(std::remove_if(token.begin(), token.end(), [](unsigned char c) {
+            return std::ispunct(c);
+            }), token.end());
 
         if (!token.size())
             continue;

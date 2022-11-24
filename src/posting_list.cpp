@@ -52,8 +52,7 @@ void posting_list::next() {
     unsigned int bytes = 0;
     this->cur_doc_id = VBdecode(this->f1, bytes);
     this->doc_ids_offset += bytes;
-    if (this->cur_doc_id == 85998)
-        std::cout << "HERE" << std::endl;
+
     // Clean
     bytes = 0;
     this->f1.seekg(this->freqs_offset);

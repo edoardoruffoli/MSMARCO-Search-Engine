@@ -11,17 +11,16 @@ void tokenize(std::string &content, bool flag, const std::unordered_set<std::str
     for (auto token : v) {
 		if (!token.size())
 			continue;
-
         // Remove punctuation
         token.erase(std::remove_if(token.begin(), token.end(), [](unsigned char c) {
-            return std::ispunct(c);
+            return (std::ispunct(c) || !std::isalpha(c));
             }), token.end());
         
 		if (!token.size())
 			continue;
 
         // To lower case
-        std::transform(token.begin(), token.end(), token.begin(), [](unsigned char c) { 
+        std::transform(token.begin(), token.end(), token.begin(), [](unsigned char c) {
             return std::tolower(c); 
         });
 
@@ -29,7 +28,7 @@ void tokenize(std::string &content, bool flag, const std::unordered_set<std::str
 			if (stopwords.find(token) != stopwords.end()) {
 				continue;
 			}
-			token = porter2::Stemmer{}.stem(token);
+            token = porter2::Stemmer{}.stem(token);
         }
 		tokens[token]++;
     }

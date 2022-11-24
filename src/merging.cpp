@@ -218,7 +218,7 @@ void merge_blocks(const unsigned int n_blocks) {
         // Writing
         //std::cout << "Writing Inverted Index record -> " << cur.term << '\n';
         offset += len;
-        write_inverted_index_record_compressed(out_inverted_index, cur);
+        len = write_inverted_index_record_compressed(out_inverted_index, cur);
         
         //lexicon : [term, num_docs, offset inverted index, maxscore]
         lexicon[cur.term] = {(unsigned int) cur.posting_list.size(), offset, max_score};

@@ -24,7 +24,7 @@ bool posting_list::openList(unsigned long offset) {
 
         this->skip_pointers.push_back(cur_skip_pointer);
     }
-
+    this->base_offset = offset;
     this->doc_ids_offset = offset + num_bytes_skip_pointers_list;
     this->freqs_offset = offset + num_bytes_skip_pointers_list + this->skip_pointers[0].freqs_offset;
     this->stop_offset = this->freqs_offset;
@@ -76,9 +76,10 @@ void posting_list::nextGEQ(unsigned int d) {
         return;
     }
 
-    this->doc_ids_offset = skip_pointers[block_idx].doc_id_offset;
-    this->freqs_offset = skip_pointers[block_idx].freqs_offset;
+    this->doc_ids_offset = this->base_offset + skip_pointers[block_idx].doc_id_offset;
+    this->freqs_offset = this->base_offset + skip_pointers[block_idx].freqs_offset;
 
+    this->f1.seekg(this->doc_ids_offset);
     // Scan the list until I find the doc_id greater or equal
     do {
         unsigned int bytes = 0;
@@ -91,7 +92,7 @@ void posting_list::nextGEQ(unsigned int d) {
         this->cur_freq = VBdecode(this->f1, bytes);
         this->freqs_offset += bytes;
 
-        f1.seekg(this->doc_ids_offset);
+        this->f1.seekg(this->doc_ids_offset);
     } while (this->cur_doc_id < d);
 }
 

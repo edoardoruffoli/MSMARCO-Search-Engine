@@ -10,4 +10,6 @@ int main(int argc, char* argv[])
         std::cout << "SUCCESS\n";
     if (execute_query(query_terms, DISJUNCTIVE_MODE_MAX_SCORE, 10))
         std::cout << "SUCCESS\n";
+    if (execute_query(query_terms, CONJUNCTIVE_MODE, 10))
+        std::cout << "SUCCESS\n";
 }

@@ -24,6 +24,7 @@ struct posting_list {
     std::vector<skip_pointer> skip_pointers;
     unsigned int skip_pointers_list_size;
     
+    unsigned long base_offset;
     unsigned long doc_ids_offset;
     unsigned long freqs_offset;
     unsigned long stop_offset;

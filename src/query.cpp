@@ -106,12 +106,14 @@ void conjunctive_query(std::priority_queue<std::pair<unsigned int, double>,
     std::vector<posting_list*> pls,
     unsigned int k) {
 
+    unsigned int max_doc_id = std::numeric_limits<unsigned int>::max();
     unsigned int cur_doc_id = pls[0]->getDocId();
     unsigned int i = 1;
+    while (cur_doc_id != max_doc_id) {
 
-    while (cur_doc_id != std::numeric_limits<unsigned int>::max()) {
         while (i < pls.size()) {
             pls[i]->nextGEQ(cur_doc_id);
+            //std::cout << pls[i]->getDocId() << std::endl;
             if (pls[i]->getDocId() > cur_doc_id) {
                 pls[0]->nextGEQ(pls[i]->getDocId());
                 if (pls[0]->getDocId() > pls[i]->getDocId()) {

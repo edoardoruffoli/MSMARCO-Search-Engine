@@ -6,7 +6,8 @@ bool read_record(std::ifstream &in, term_entry &term_entry) {
 
     std::string loaded_content;
 
-    getline(in, loaded_content); // Controlli
+    if (!getline(in, loaded_content))
+        return false;
     
 	std::istringstream iss(loaded_content);
 	getline(iss, term_entry.term, ' ');
@@ -41,7 +42,7 @@ unsigned long write_inverted_index_record_compressed(std::ofstream& out, term_en
     std::vector<uint8_t> bytes;
     unsigned int cur_block_count = 0;
     unsigned int offset = 0;
-    for (auto& entry : term_entry.posting_list) {   
+    for (auto& entry : term_entry.posting_list) {  
         // Add encoding of the current doc_id
         VBencode(unsigned(entry.first), bytes);
         VB_doc_ids.insert(VB_doc_ids.end(), bytes.begin(), bytes.end());
@@ -57,9 +58,14 @@ unsigned long write_inverted_index_record_compressed(std::ofstream& out, term_en
 
             // Update offset
             offset = VB_doc_ids.size();
-            n_block++;
             cur_block_count = 0;
         }
+    }
+    if (cur_block_count > 0) {
+        VB_block_max_doc_ids.push_back(bytes);
+        VBencode(offset, bytes);
+        VB_block_offset_doc_ids.push_back(bytes);
+        n_block++;
     }
 
     cur_block_count = 0;
@@ -79,6 +85,12 @@ unsigned long write_inverted_index_record_compressed(std::ofstream& out, term_en
             cur_block_count = 0;
         }
     }
+    if (cur_block_count > 0) {
+        VBencode(VB_doc_ids.size() + offset, bytes);
+        VB_block_offset_freqs.push_back(bytes);
+        n_block++;
+    }
+
 
     // Write the skip pointers list
     for (unsigned int i=0; i<VB_block_max_doc_ids.size(); i++) {
@@ -181,8 +193,8 @@ void merge_blocks(const unsigned int n_blocks) {
         // Update min heap by pushing the new top value of the current block
         term_entry tmp;
         tmp.block_id = cur.block_id;
-        read_record(in_files.at(tmp.block_id-1), tmp);
-        min_heap.push(tmp);
+        if (read_record(in_files.at(tmp.block_id-1), tmp))
+            min_heap.push(tmp);
 
         // Merge the posting lists of the same terms of the other blocks
         while (!min_heap.empty() && min_heap.top().term == cur.term) {
@@ -210,6 +222,7 @@ void merge_blocks(const unsigned int n_blocks) {
         //std::cout << "Writing Inverted Index record -> " << cur.term << '\n';
         offset += len;
         len = write_inverted_index_record_compressed(out_inverted_index, cur);
+        //write_inverted_index_record(out_inverted_index, cur);
         
         //lexicon : [term, num_docs, offset inverted index, maxscore]
         lexicon[cur.term] = {(unsigned int) cur.posting_list.size(), offset, max_score};

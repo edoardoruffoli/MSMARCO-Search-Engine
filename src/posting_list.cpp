@@ -63,6 +63,9 @@ Advances the iterator forward to the next posting with a docID
 greater than or equal to d.
 */
 void posting_list::nextGEQ(unsigned int d) {
+    if (this->cur_doc_id >= d)
+        return;
+
     // Find the block
     unsigned block_idx;
     for (block_idx = 0; block_idx < this->skip_pointers.size(); block_idx++) {
@@ -76,8 +79,8 @@ void posting_list::nextGEQ(unsigned int d) {
         return;
     }
 
-    this->doc_ids_offset = this->base_offset + skip_pointers[block_idx].doc_id_offset;
-    this->freqs_offset = this->base_offset + skip_pointers[block_idx].freqs_offset;
+    this->doc_ids_offset = this->base_offset + this->skip_pointers_list_size + skip_pointers[block_idx].doc_id_offset;
+    this->freqs_offset = this->base_offset + this->skip_pointers_list_size + skip_pointers[block_idx].freqs_offset;
 
     this->f1.seekg(this->doc_ids_offset);
     // Scan the list until I find the doc_id greater or equal

@@ -11,11 +11,11 @@ void tokenize(std::string &content, bool flag, const std::unordered_set<std::str
     for (auto token : v) {
 		if (!token.size())
 			continue;
-        // Remove punctuation
+        // Remove punctuation and non ASCII
         token.erase(std::remove_if(token.begin(), token.end(), [](unsigned char c) {
-            return (std::ispunct(c) || !std::isalpha(c));
+            return (!(c>=0 && c <128) || std::ispunct(c));
             }), token.end());
-        
+
 		if (!token.size())
 			continue;
 
@@ -169,7 +169,7 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 		}
 		else {
             // Init next BLOCK_SIZE values in order to let the threads acces them
-            doc_table.resize(BLOCK_SIZE * block_num);
+            doc_table.resize(doc_table.size() + block.size());
             BSBI_Invert(block, doc_id, block_num, pool, doc_table, stopwords, flag);
             doc_id += BLOCK_SIZE;
 			block_num++;
@@ -179,7 +179,7 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 	}
 
     // Write last block
-    doc_table.resize(BLOCK_SIZE * (block_num - 1) + current_size);
+    doc_table.resize(doc_table.size() + block.size());
     BSBI_Invert(block, doc_id, block_num, pool, doc_table, stopwords, flag);
     block.clear();
 

@@ -13,7 +13,7 @@ void tokenize(std::string &content, bool flag, const std::unordered_set<std::str
 			continue;
         // Remove punctuation and non ASCII
         token.erase(std::remove_if(token.begin(), token.end(), [](unsigned char c) {
-            return (!(c>=0 && c <128) || std::ispunct(c));
+            return (!(c>='0' && c <= '9') && !isalpha(c));
             }), token.end());
 
 		if (!token.size())

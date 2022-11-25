@@ -275,18 +275,19 @@ bool execute_query(std::vector<std::string> &terms, unsigned int mode, unsigned 
     boost::chrono::high_resolution_clock::time_point t1 = boost::chrono::high_resolution_clock::now();
 
     std::vector<posting_list*> pls;
-    for (auto term : terms) {
+    for (unsigned int i = 0; i < terms.size(); i++) {
 
-        auto it = lexicon.find(term);
+        auto it = lexicon.find(terms[i]);
         if (it != lexicon.end()) {
             posting_list *pl = new posting_list();
-            pl->skip_pointers_list_size = ceil(it->second.doc_freq/sqrt(it->second.doc_freq)); //Rounding up
+            pl->skip_pointers_list_size = ceil(sqrt(it->second.doc_freq)); //Rounding up
             pl->openList(it->second.offset);
             pl->doc_freq = it->second.doc_freq;
             pls.push_back(pl);
         }
         else {
-            std::cout << term << " not present in lexicon.\n";
+            std::cout << terms[i] << " not present in lexicon.\n";
+            terms.erase(terms.begin() + i);
         }
     }
 

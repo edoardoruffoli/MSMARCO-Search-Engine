@@ -13,7 +13,6 @@
 [submodule "thirdparty/cli"]
 	path = thirdparty/cli
 	url = https://github.com/daniele77/cli
-
 [submodule "thirdparty/stxxl"]
 	path = thirdparty/stxxl
-	url = https://github.com/nomonosound/stxxl
+	url = https://github.com/mrfransis/stxxl

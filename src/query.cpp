@@ -280,7 +280,7 @@ bool execute_query(std::vector<std::string> &terms, unsigned int mode, unsigned 
         auto it = lexicon.find(terms[i]);
         if (it != lexicon.end()) {
             posting_list *pl = new posting_list();
-            pl->skip_pointers_list_size = ceil(sqrt(it->second.doc_freq)); //Rounding up
+            pl->n_skip_pointers = ceil(sqrt(it->second.doc_freq)); //Rounding up
             pl->openList(it->second.offset);
             pl->doc_freq = it->second.doc_freq;
             pls.push_back(pl);

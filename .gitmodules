@@ -16,4 +16,4 @@
 
 [submodule "thirdparty/stxxl"]
 	path = thirdparty/stxxl
-	url = https://github.com/stxxl/stxxl
+	url = https://github.com/nomonosound/stxxl

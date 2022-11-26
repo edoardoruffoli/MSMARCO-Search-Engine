@@ -4,6 +4,6 @@
   GIT_TAG v2.13.6)
 FetchContent_MakeAvailable(catch)
 
-add_executable(testlib tokenizer_test.cpp)
+add_executable(testlib compressing_test.cpp)
 target_link_libraries(testlib PRIVATE msmarco_search_engine Catch2::Catch2)
 add_test(NAME testlibtest COMMAND testlib)

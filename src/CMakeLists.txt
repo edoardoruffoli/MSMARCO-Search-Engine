@@ -13,10 +13,9 @@ add_library(msmarco_search_engine
 target_include_directories(msmarco_search_engine PUBLIC ../include ../thirdparty)
 
 #find_package(ZLIB)
-
 include_directories(${ZLIB_INCLUDE_DIRS})
-include_directories(${STXXL_INCLUDE_DIRS})
-target_link_libraries(msmarco_search_engine PUBLIC Boost::boost Boost::chrono Boost::serialization Boost::filesystem Boost::iostreams ${ZLIB_LIBRARIES} Porter2 cli ${STXXL_LIBRARIES})
+
+target_link_libraries(msmarco_search_engine PUBLIC Boost::boost Boost::chrono Boost::serialization Boost::filesystem Boost::iostreams ${ZLIB_LIBRARIES} Porter2 cli ${STXXL_LIB})
 target_compile_features(msmarco_search_engine PUBLIC cxx_std_17)
 
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tmp)

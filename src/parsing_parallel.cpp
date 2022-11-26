@@ -107,6 +107,16 @@ void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id,
 }
 
 void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char* stopwords_filename, unsigned int n_threads) {
+    //Test
+    
+    typedef stxxl::VECTOR_GENERATOR<int>::result vector;
+    vector my_vector;
+    for (int i = 0; i < 1024 * 1024; i++)
+    {
+        my_vector.push_back(i);
+    }
+    
+
 	std::cout << "Started Parsing Phase: \n\n";
 	if (BLOCK_SIZE == 0)
 		std::cout << "Error: block size not valid.\n";

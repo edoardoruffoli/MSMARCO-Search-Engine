@@ -19,5 +19,5 @@
 
 void VBencode(unsigned int num, std::vector<uint8_t>& result);
 std::vector<unsigned int> VBdecode(std::vector<char>& vec);
-unsigned int VBdecode(std::ifstream& ifile, unsigned int &n_bytes);
+unsigned int VBdecode(std::istream& ifile, unsigned int &n_bytes);
 //void read_compressed_index(std::string filename);

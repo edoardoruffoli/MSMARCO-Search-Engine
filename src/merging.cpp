@@ -21,28 +21,31 @@ bool read_record(std::ifstream &in, term_entry &term_entry) {
 }
 
 
-unsigned long write_inverted_index_record_compressed(std::ofstream& out, term_entry& term_entry) {    
+unsigned long write_inverted_index_record_compressed(std::ostream& out, term_entry& term_entry) {  
+    // Keeps the count of the number of bytes written on file  
     unsigned int num_bytes_written = 0;
 
     // Compute skip pointer block size
     unsigned int block_size = sqrt(term_entry.posting_list.size());
-    unsigned int n_block = 0;
 
-    // Vector to store the VB representation of the doc_id and freqs
+    // Vectors to store the VB representation of the doc_id and freqs
     std::vector<uint8_t> VB_doc_ids;    
     std::vector<uint8_t> VB_freqs;
 
+    // Vectors to store the VB representation of skip pointers
     std::vector<std::vector<uint8_t>> VB_block_max_doc_ids;
     std::vector<std::vector<uint8_t>> VB_block_offset_doc_ids;
     std::vector<std::vector<uint8_t>> VB_block_offset_freqs;
 
-    unsigned int num_skip_pointers;
-   
-    // Start counting the bytes required to encode the doc_ids
-    std::vector<uint8_t> bytes;
+    // Keeps the count of the number of elements in the current block
     unsigned int cur_block_count = 0;
+
     unsigned int offset = 0;
+    std::vector<uint8_t> bytes;
+    
+    // First process the doc_ids
     for (auto& entry : term_entry.posting_list) {  
+
         // Add encoding of the current doc_id
         VBencode(unsigned(entry.first), bytes);
         VB_doc_ids.insert(VB_doc_ids.end(), bytes.begin(), bytes.end());
@@ -56,20 +59,24 @@ unsigned long write_inverted_index_record_compressed(std::ofstream& out, term_en
             VBencode(offset, bytes);
             VB_block_offset_doc_ids.push_back(bytes);
 
-            // Update offset
+            // Update offset, the start offset of the next block is equal to the current size of VB_doc_ids
             offset = VB_doc_ids.size();
+
+            // Restart the element in block counter
             cur_block_count = 0;
         }
     }
+
+    // The last block may contain a number of elements < BLOCK_SIZE
     if (cur_block_count > 0) {
         VB_block_max_doc_ids.push_back(bytes);
         VBencode(offset, bytes);
         VB_block_offset_doc_ids.push_back(bytes);
-        n_block++;
     }
 
     cur_block_count = 0;
     offset = 0;
+    // Process the freqs
     for (auto& entry : term_entry.posting_list) {
         // Add encoding of the current freq
         VBencode(unsigned(entry.second), bytes);
@@ -88,25 +95,20 @@ unsigned long write_inverted_index_record_compressed(std::ofstream& out, term_en
     if (cur_block_count > 0) {
         VBencode(VB_doc_ids.size() + offset, bytes);
         VB_block_offset_freqs.push_back(bytes);
-        n_block++;
     }
-
 
     // Write the skip pointers list
     for (unsigned int i=0; i<VB_block_max_doc_ids.size(); i++) {
-
         // Write max doc_id
         for (std::vector<uint8_t>::iterator it=VB_block_max_doc_ids[i].begin(); it!=VB_block_max_doc_ids[i].end();it++) {
             out.write(reinterpret_cast<const char*>(&(*it)), 1);
             num_bytes_written++;
         }
-        
         // Write block offset doc_ids
         for (std::vector<uint8_t>::iterator it=VB_block_offset_doc_ids[i].begin(); it!=VB_block_offset_doc_ids[i].end();it++) {
             out.write(reinterpret_cast<const char*>(&(*it)), 1);
             num_bytes_written++;
         }
-
         // Write block offset freqs
         for (std::vector<uint8_t>::iterator it=VB_block_offset_freqs[i].begin(); it!=VB_block_offset_freqs[i].end();it++) {
             out.write(reinterpret_cast<const char*>(&(*it)), 1);
@@ -133,7 +135,7 @@ void merge_blocks(const unsigned int n_blocks) {
     std::cout << "Started Merging Phase: \n\n";
     std::cout << "Number of blocks: " << n_blocks << "\n\n";
 
-    std::ofstream out_inverted_index("../../output/inverted_index.bin", std::ios::binary);
+    std::ofstream out_inverted_index("../../output/inverted_index.bin", std::ios::binary | std::ios::out | std::ios::app);
     
     if (out_inverted_index.fail()) 
         std::cout << "Error: cannot open inverted_index\n";

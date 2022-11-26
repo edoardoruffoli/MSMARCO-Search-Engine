@@ -18,7 +18,7 @@ void VBencode(unsigned int num, std::vector<uint8_t> &result) {
 	result.push_back(b);
 }
 
-unsigned int VBdecode(std::ifstream& ifile, unsigned int &n_bytes) {
+unsigned int VBdecode(std::istream& ifile, unsigned int &n_bytes) {
     char c;
 	int num = 0;
 	int p = 0;

@@ -4,13 +4,13 @@
 
 bool posting_list::openList(unsigned long offset) {
 
-    this->f1.open("../../output/inverted_index.bin", std::ios::binary);
+    this->f1.open("../../output/inverted_index.bin", std::ios::binary | std::ios::in);
 
     unsigned int num_bytes_skip_pointers_list = 0;
     this->f1.seekg(offset);
     
     // Decode array skip pointers
-    for (unsigned int i=0; i<this->skip_pointers_list_size; i++) {
+    for (unsigned int i=0; i<this->n_skip_pointers; i++) {
         skip_pointer cur_skip_pointer;
 
         // Decode the current block max doc_id
@@ -25,6 +25,7 @@ bool posting_list::openList(unsigned long offset) {
         this->skip_pointers.push_back(cur_skip_pointer);
     }
     this->base_offset = offset;
+    this->skip_pointers_list_size = num_bytes_skip_pointers_list;
     this->doc_ids_offset = offset + num_bytes_skip_pointers_list;
     this->freqs_offset = offset + num_bytes_skip_pointers_list + this->skip_pointers[0].freqs_offset;
     this->stop_offset = this->freqs_offset;

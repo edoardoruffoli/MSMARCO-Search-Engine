@@ -23,7 +23,7 @@ bool read_record(std::ifstream &in, term_entry &term_entry) {
 
 unsigned long write_inverted_index_record_compressed(std::ostream& out, term_entry& term_entry) {  
     // Keeps the count of the number of bytes written on file  
-    unsigned int num_bytes_written = 0;
+    unsigned long num_bytes_written = 0;
 
     // Compute skip pointer block size
     unsigned int block_size = sqrt(term_entry.posting_list.size());
@@ -58,7 +58,6 @@ unsigned long write_inverted_index_record_compressed(std::ostream& out, term_ent
             // Store the doc_id offset of the current block
             VBencode(offset, bytes);
             VB_block_offset_doc_ids.push_back(bytes);
-
             // Update offset, the start offset of the next block is equal to the current size of VB_doc_ids
             offset = VB_doc_ids.size();
 
@@ -99,6 +98,8 @@ unsigned long write_inverted_index_record_compressed(std::ostream& out, term_ent
 
     // Write the skip pointers list
     for (unsigned int i=0; i<VB_block_max_doc_ids.size(); i++) {
+        if (term_entry.term == "aziz" && i == 0)
+            std::cout << out.tellp() << "\n";
         // Write max doc_id
         for (std::vector<uint8_t>::iterator it=VB_block_max_doc_ids[i].begin(); it!=VB_block_max_doc_ids[i].end();it++) {
             out.write(reinterpret_cast<const char*>(&(*it)), 1);
@@ -135,7 +136,7 @@ void merge_blocks(const unsigned int n_blocks) {
     std::cout << "Started Merging Phase: \n\n";
     std::cout << "Number of blocks: " << n_blocks << "\n\n";
 
-    std::ofstream out_inverted_index("../../output/inverted_index.bin", std::ios::binary | std::ios::out | std::ios::app);
+    std::ofstream out_inverted_index("../../output/inverted_index.bin", std::ios::binary | std::ios::out);
     
     if (out_inverted_index.fail()) 
         std::cout << "Error: cannot open inverted_index\n";
@@ -223,6 +224,8 @@ void merge_blocks(const unsigned int n_blocks) {
         // Writing
         //std::cout << "Writing Inverted Index record -> " << cur.term << '\n';
         offset += len;
+        if (cur.term == "aziz")
+            std::cout << offset << std::endl;
         len = write_inverted_index_record_compressed(out_inverted_index, cur);
         //write_inverted_index_record(out_inverted_index, cur);
         

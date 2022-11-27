@@ -339,3 +339,90 @@ bool execute_query(std::vector<std::string> &terms, unsigned int mode, unsigned 
 
     return true;
 }
+
+void query_evaluation(std::string& topics, std::string& result, const std::unordered_set<std::string>& stopwords, unsigned int mode, unsigned int k) {
+    std::cout << "Executing queries\n";
+
+    std::ifstream instream(topics);
+    std::ofstream outstream(result);
+    std::string loaded_content;
+
+    //Execution of input queries
+    while (getline(instream, loaded_content)) {
+        std::vector<std::string> terms;
+        std::unordered_map<std::string, int> tokens;
+        std::istringstream iss;
+        std::string query_id;
+        std::string text;
+
+        iss = std::istringstream(loaded_content);
+        getline(iss, query_id, '\t');
+        getline(iss, text, '\n');
+
+        tokenize(text, true, stopwords, tokens);
+        for (auto kv : tokens) {
+            terms.push_back(kv.first);
+        }
+        std::vector<posting_list*> pls;
+        for (unsigned int i = 0; i < terms.size(); i++) {
+
+            auto it = lexicon.find(terms[i]);
+            if (it != lexicon.end()) {
+                posting_list* pl = new posting_list();
+                pl->n_skip_pointers = ceil((double)it->second.doc_freq / ((unsigned int)sqrt(it->second.doc_freq))); //Rounding up
+                pl->openList(it->second.offset);
+                pl->doc_freq = it->second.doc_freq;
+                pls.push_back(pl);
+            }
+            else {
+                std::cout << terms[i] << " not present in lexicon.\n";
+                terms.erase(terms.begin() + i);
+            }
+        }
+
+        std::priority_queue<std::pair<unsigned int, double>,
+            std::vector<std::pair<unsigned int, double>>, compare> min_heap;
+
+        if (pls.size() == 0) {
+            std::cout << "No terms found.\n";
+        }
+
+        // Vector of max score one per query term
+        std::vector<double> max_scores;
+        for (auto& term : terms) {
+            max_scores.push_back(lexicon[term].max_score);
+        }
+
+        switch (mode) {
+        case CONJUNCTIVE_MODE:
+            conjunctive_query(min_heap, pls, k);
+            break;
+        case DISJUNCTIVE_MODE:
+            disjunctive_query(min_heap, pls, k);
+            break;
+        case DISJUNCTIVE_MODE_MAX_SCORE:
+            disjunctive_query_max_score(min_heap, pls, max_scores, k);
+            break;
+        }
+
+        std::vector<std::pair<unsigned int, double>> results;
+        while (!min_heap.empty()) {
+            std::pair<unsigned int, double> tmp = min_heap.top();
+            min_heap.pop();
+            results.push_back(tmp);
+        }
+
+        //Save results
+        for (int i = results.size() - 1; i >= 0; i--) {
+            outstream << query_id << " " << "Q0" << " " << results[i].first << " " << results.size() - i << " " << results[i].second << " " << "STANDARD" << std::endl;
+        }
+
+        for (auto pl : pls) {
+            pl->closeList();
+        }
+        
+    }
+    instream.close();
+    outstream.close();
+
+}

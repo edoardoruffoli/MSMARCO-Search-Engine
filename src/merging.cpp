@@ -224,8 +224,6 @@ void merge_blocks(const unsigned int n_blocks) {
         // Writing
         //std::cout << "Writing Inverted Index record -> " << cur.term << '\n';
         offset += len;
-        if (cur.term == "aziz")
-            std::cout << offset << std::endl;
         len = write_inverted_index_record_compressed(out_inverted_index, cur);
         //write_inverted_index_record(out_inverted_index, cur);
         

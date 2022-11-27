@@ -106,20 +106,36 @@ void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id,
     std::cout << "The elapsed time was " << tmr.ms() << " ms.\n";
 }
 
-void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char* stopwords_filename, unsigned int n_threads) {
+#if defined _WIN32
+int getMemoryUsed() {
+    //Memory usage
+    MEMORYSTATUSEX statex;
+    statex.dwLength = sizeof(statex);
+    GlobalMemoryStatusEx(&statex);
+    return statex.dwMemoryLoad;
+}
+#elif defined (__LINUX__) || defined(__gnu_linux__) || defined(__linux__)
+int getMemoryUsed() {
+    long long totalPhysMem = memInfo.totalram;
+    totalPhysMem *= memInfo.mem_unit;
+    long long physMemUsed = memInfo.totalram - memInfo.freeram;
+    physMemUsed *= memInfo.mem_unit
+    return (physMemUsed/ totalPhysMem)*100
+}
+#endif
+
+void parse(const char* in, bool flag, const char* stopwords_filename, unsigned int n_threads) {
     //Test
-    
+    /*
     typedef stxxl::VECTOR_GENERATOR<int>::result vector;
     vector my_vector;
     for (int i = 0; i < 1024 * 1024; i++)
     {
         my_vector.push_back(i);
     }
-    
+    */
 
 	std::cout << "Started Parsing Phase: \n\n";
-	if (BLOCK_SIZE == 0)
-		std::cout << "Error: block size not valid.\n";
 
     boost::iostreams::stream<boost::iostreams::mapped_file_source> mapped_file_stream;
 	boost::iostreams::mapped_file_source mmap(in);
@@ -165,23 +181,24 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 	unsigned int doc_id = 0;
     std::string loaded_content;
 
+
     // Timer
     BS::timer tmr;
     tmr.start();
 
     // Blocked Sort Based Indexing   
 	while (getline(instream, loaded_content)) {
-		current_size++;
+        current_size++;
         block.push_back(loaded_content);
 
-		if (current_size < BLOCK_SIZE) {
+		if (getMemoryUsed() < 61) {
             continue;
 		}
 		else {
             // Init next BLOCK_SIZE values in order to let the threads acces them
             doc_table.resize(doc_table.size() + block.size());
             BSBI_Invert(block, doc_id, block_num, pool, doc_table, stopwords, flag);
-            doc_id += BLOCK_SIZE;
+            doc_id += current_size;
 			block_num++;
             current_size = 0;
             block.clear();

@@ -78,6 +78,25 @@ static void query(std::ostream& out, std::string& query, int mode, int k) {
     }
 }
 
+static void eval(std::ostream& out, int mode, int k) {
+    if (!loaded_data) {
+        if ((!init_data_structures()) || (!load_stopwords(stopwords, std::string("../../stopwords.txt")))) {
+            std::cout << "Failed to load data structures.\n";
+            return;
+        }
+        loaded_data = true;
+    }
+    Clear();
+    if (mode < 4) {
+        std::string topics = "../../queries.dev.small.tsv";
+        std::string results = "../../output/results.test";
+        query_evaluation(topics, results, stopwords, mode, k);
+    }
+    else {
+        out << "Wrong query type!\n";
+    }
+}
+
 int main(int argc, char* argv[]){
     auto rootMenu = std::make_unique<cli::Menu>("MSMARCO-Search-Engine");
     rootMenu->Insert(
@@ -92,7 +111,19 @@ int main(int argc, char* argv[]){
         "    3 : DISJUNCTIVE_MODE_MAX_SCORE\n\n"
         "    <int> -> Top k results\n"
         "    <------------------------------------------>\n");
-
+    rootMenu->Insert(
+        "e",
+        eval,
+        "\n    <------------------------------------------>\n"
+        "    Evaluation of the system, create the results.test file\n"
+        "    <string> -> Query text: \"example of a query\"\n\n"
+        "    <int> -> Type of query :\n"
+        "    0 : CONJUNCTIVE_MODE\n"
+        "    1 : DISJUNCTIVE_MODE\n"
+        "    2 : CONJUNCTIVE_MODE_MAX_SCORE\n"
+        "    3 : DISJUNCTIVE_MODE_MAX_SCORE\n\n"
+        "    <int> -> Top k results\n"
+        "    <------------------------------------------>\n");
     auto subMenu = std::make_unique<cli::Menu>("build_index");
     subMenu->Insert(
         "p",

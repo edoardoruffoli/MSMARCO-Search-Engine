@@ -3,7 +3,7 @@
 void tokenize(std::string &content, bool flag, const std::unordered_set<std::string> &stopwords, 
                                               std::unordered_map<std::string, int> &tokens) {
 	// How to deal with empty page, malformed lines, malformed characters?
-    std::regex re("[ \t]");
+    std::regex re("[ ,\t]");
     //the '-1' is what makes the regex split (-1 := what was not matched)
     std::sregex_token_iterator first{content.begin(), content.end(), re, -1}, last;
     std::vector<std::string> v{first, last};
@@ -106,25 +106,7 @@ void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id,
     std::cout << "The elapsed time was " << tmr.ms() << " ms.\n";
 }
 
-#if defined _WIN32
-int getMemoryUsed() {
-    //Memory usage
-    MEMORYSTATUSEX statex;
-    statex.dwLength = sizeof(statex);
-    GlobalMemoryStatusEx(&statex);
-    return statex.dwMemoryLoad;
-}
-#elif defined (__LINUX__) || defined(__gnu_linux__) || defined(__linux__)
-int getMemoryUsed() {
-    long long totalPhysMem = memInfo.totalram;
-    totalPhysMem *= memInfo.mem_unit;
-    long long physMemUsed = memInfo.totalram - memInfo.freeram;
-    physMemUsed *= memInfo.mem_unit
-    return (physMemUsed/ totalPhysMem)*100
-}
-#endif
-
-void parse(const char* in, bool flag, const char* stopwords_filename, unsigned int n_threads) {
+void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char* stopwords_filename, unsigned int n_threads) {
     //Test
     /*
     typedef stxxl::VECTOR_GENERATOR<int>::result vector;
@@ -135,7 +117,9 @@ void parse(const char* in, bool flag, const char* stopwords_filename, unsigned i
     }
     */
 
-	std::cout << "Started Parsing Phase: \n\n";
+    std::cout << "Started Parsing Phase: \n\n";
+    if (BLOCK_SIZE == 0)
+        std::cout << "Error: block size not valid.\n";
 
     boost::iostreams::stream<boost::iostreams::mapped_file_source> mapped_file_stream;
 	boost::iostreams::mapped_file_source mmap(in);
@@ -191,7 +175,7 @@ void parse(const char* in, bool flag, const char* stopwords_filename, unsigned i
         current_size++;
         block.push_back(loaded_content);
 
-		if (getMemoryUsed() < 61) {
+        if (current_size < BLOCK_SIZE) {
             continue;
 		}
 		else {

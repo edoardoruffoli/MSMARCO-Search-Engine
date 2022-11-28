@@ -25,6 +25,11 @@ TEST_CASE("TokenizerTest1", "Spaces") {
     content = "\t\tciao \tciao\t ciao";
     tokenize(content, false, stopwords, tokens);
     REQUIRE(tokens["ciao"] == 3);
+    
+    tokens.clear();
+    content = "\t\tciao \tciao,ciao";
+    tokenize(content, false, stopwords, tokens);
+    REQUIRE(tokens["ciao"] == 3);
 }
 
 TEST_CASE("TokenizerTest2", "Punctuation") {

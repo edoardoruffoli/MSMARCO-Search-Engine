@@ -37,12 +37,6 @@
 #include "MSMARCO-Search-Engine/model.hpp"
 #include "MSMARCO-Search-Engine/io.hpp"
 
-#if defined _WIN32
-#include <windows.h>
-#elif defined (__LINUX__) || defined(__gnu_linux__) || defined(__linux__)
-#include <sys/sysinfo.h>
-#endif
-
 
 void tokenize(std::string &content, bool flag, const std::unordered_set<std::string> &stopwords,
                 std::unordered_map<std::string, int> &tokens);
@@ -54,10 +48,4 @@ void write_doc_table_record(std::ofstream &out, std::string &doc_no, unsigned in
 
 void write_block_to_disk(std::map<std::string, std::list<std::pair<int, int>>>& dictionary, int block_num);
 
-void parse(const char* in, bool flag, const char* stopwords_filename, unsigned int n_threads);
-
-#if defined _WIN32
-    int getMemoryUsed();
-#elif defined (__LINUX__) || defined(__gnu_linux__) || defined(__linux__)
-    int getMemoryUsed();
-#endif
+void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char* stopwords_filename, unsigned int n_threads);

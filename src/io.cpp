@@ -54,12 +54,10 @@ bool save_doc_table(const std::vector<doc_table_entry> &doc_table, std::string &
     return true;
 }
 
-bool load_doc_table(std::vector<doc_table_entry> *doc_table, std::string &filename) {
+bool load_doc_table(doc_table_vector *doc_table, std::string &filename) {
     std::ifstream filestream(filename, std::ios::binary);  
     if (filestream.fail()) 
         return false;
-    boost::archive::binary_iarchive archive(filestream);
-    archive >> *doc_table;
-    filestream.close();
+
     return true;
 }

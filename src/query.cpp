@@ -1,7 +1,8 @@
 #include "MSMARCO-Search-Engine/query.hpp"
 
 // Doc table
-std::vector<doc_table_entry> doc_table;
+stxxl::syscall_file f("../../output/doc_table.bin", stxxl::file::RDONLY); 
+doc_table_vector doc_table(&f);
 
 std::map<std::string, lexicon_entry> lexicon;
 
@@ -14,17 +15,17 @@ bool init_data_structures() {
         std::cout << "Error: cannot open lexicon.\n";
         return false;
     }
-    if(load_doc_table(&doc_table, std::string("../../output/doc_table.bin")) == false) {
+   /* if(load_doc_table(&doc_table, std::string("../../output/doc_table.bin")) == false) {
         std::cout << "Error: cannot open document table.\n";
         return false;
     }
-
+*/
     // IF BM25 compute avg doc len
     unsigned int sum = 0;
-    for (auto doc : doc_table) {
-        sum += doc.doc_len;
-    }
-    avg_doc_len = (double)sum/doc_table.size();
+    for (doc_table_vector::iterator it = doc_table.begin(); it != doc_table.end(); ++it)
+        sum += it->doc_len;
+
+    avg_doc_len = (double)sum / doc_table.size();
 
     printf("Done.\n");
     return true;
@@ -281,7 +282,7 @@ bool execute_query(std::vector<std::string> &terms, unsigned int mode, unsigned 
         if (it != lexicon.end()) {
             posting_list *pl = new posting_list();
             pl->n_skip_pointers = ceil((double) it->second.doc_freq/((unsigned int) sqrt(it->second.doc_freq))); //Rounding up
-            pl->openList(it->second.offset);
+            pl->openList(it->second.docs_offset, it->second.freqs_offset, it->second.doc_freq);
             pl->doc_freq = it->second.doc_freq;
             pls.push_back(pl);
         }
@@ -369,9 +370,7 @@ void query_evaluation(std::string& topics, std::string& result, const std::unord
             auto it = lexicon.find(terms[i]);
             if (it != lexicon.end()) {
                 posting_list* pl = new posting_list();
-                pl->n_skip_pointers = ceil((double)it->second.doc_freq / ((unsigned int)sqrt(it->second.doc_freq))); //Rounding up
-                pl->openList(it->second.offset);
-                pl->doc_freq = it->second.doc_freq;
+                pl->openList(it->second.docs_offset, it->second.freqs_offset, it->second.doc_freq);
                 pls.push_back(pl);
             }
             else {

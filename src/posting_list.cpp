@@ -2,33 +2,41 @@
 #include "MSMARCO-Search-Engine/model.hpp"
 
 
-bool posting_list::openList(unsigned long offset) {
+bool posting_list::openList(unsigned long docs_offset, unsigned long freqs_offset, unsigned int posting_list_len) {
 
-    this->f1.open("../../output/inverted_index.bin", std::ios::binary | std::ios::in);
+    this->f_docs.open("../../output/inverted_index_docs.bin", std::ios::binary | std::ios::in);
+    this->f_freqs.open("../../output/inverted_index_freqs.bin", std::ios::binary | std::ios::in);
 
     unsigned int num_bytes_skip_pointers_list = 0;
-    this->f1.seekg(offset);
+
+    // Position file pointers
+    this->f_docs.seekg(docs_offset);
+    this->f_freqs.seekg(freqs_offset);
+
+    // Save posting_list_len
+    this->pl_len = posting_list_len;
     
-    // Decode array skip pointers
-    for (unsigned int i=0; i<this->n_skip_pointers; i++) {
-        skip_pointer cur_skip_pointer;
+    // We have skip pointers only if size > 20
+    if (this->pl_len > 20) {
 
-        // Decode the current block max doc_id
-        cur_skip_pointer.max_doc_id = VBdecode(this->f1, num_bytes_skip_pointers_list);
-    
-        // Decode the current block doc_id offset
-        cur_skip_pointer.doc_id_offset = VBdecode(this->f1, num_bytes_skip_pointers_list);
+        // Compute skip pointers number
+        this->n_skip_pointers = ceil((double)posting_list_len / ((unsigned int)sqrt(posting_list_len)));
 
-        // Decode the current block freqs offset
-        cur_skip_pointer.freqs_offset = VBdecode(this->f1, num_bytes_skip_pointers_list);
+        for (unsigned int i=0; i<this->n_skip_pointers; i++) {
+            skip_pointer cur_skip_pointer;
 
-        this->skip_pointers.push_back(cur_skip_pointer);
+            // Decode the current block max doc_id
+            cur_skip_pointer.max_doc_id = VBdecode(this->f_docs, num_bytes_skip_pointers_list);
+        
+            // Decode the current block doc_id offset
+            cur_skip_pointer.doc_id_offset = VBdecode(this->f_docs, num_bytes_skip_pointers_list);
+
+            // Decode the current block freqs offset
+            cur_skip_pointer.freqs_offset = VBdecode(this->f_docs, num_bytes_skip_pointers_list);
+
+            this->skip_pointers.push_back(cur_skip_pointer);
+        }
     }
-    this->base_offset = offset;
-    this->skip_pointers_list_size = num_bytes_skip_pointers_list;
-    this->doc_ids_offset = offset + num_bytes_skip_pointers_list;
-    this->freqs_offset = offset + num_bytes_skip_pointers_list + this->skip_pointers[0].freqs_offset;
-    this->stop_offset = this->freqs_offset;
 
     // Init
     next();
@@ -37,26 +45,19 @@ bool posting_list::openList(unsigned long offset) {
 }
 
 void posting_list::closeList() {
-    this->f1.close();
+    this->f_docs.close();
+    this->f_freqs.close();
 }
 
 void posting_list::next() {
-    if (this->doc_ids_offset == this->stop_offset) {
-        this->cur_doc_id = std::numeric_limits<unsigned int>::max();
-        this->cur_freq = std::numeric_limits<unsigned int>::max();
+    if (this->count == this->pl_len) 
         return;
-    }
+        
     unsigned int bytes = 0;
-    this->cur_doc_id = VBdecode(this->f1, bytes);
-    this->doc_ids_offset += bytes;
-
-    // Clean
-    bytes = 0;
-    this->f1.seekg(this->freqs_offset);
-    this->cur_freq = VBdecode(this->f1, bytes);
-    this->freqs_offset += bytes;
-
-    f1.seekg(this->doc_ids_offset);
+    this->cur_doc_id = VBdecode(this->f_docs, bytes);
+    this->cur_freq = VBdecode(this->f_freqs, bytes);
+    
+    this->count++;
 }
 
 /*
@@ -64,6 +65,7 @@ Advances the iterator forward to the next posting with a docID
 greater than or equal to d.
 */
 void posting_list::nextGEQ(unsigned int d) {
+    /*
     if (this->cur_doc_id >= d)
         return;
 
@@ -98,6 +100,7 @@ void posting_list::nextGEQ(unsigned int d) {
 
         this->f1.seekg(this->doc_ids_offset);
     } while (this->cur_doc_id < d);
+    */
 }
 
 unsigned int posting_list::getDocId() {

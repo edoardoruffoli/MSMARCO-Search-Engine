@@ -10,6 +10,9 @@
 #include <math.h> 
 #include <boost/chrono.hpp>
 
+#include <stxxl/vector>
+#include <stxxl/io>
+
 #include "MSMARCO-Search-Engine/model.hpp"
 #include "MSMARCO-Search-Engine/io.hpp"
 #include "MSMARCO-Search-Engine/compressing.hpp"

@@ -145,8 +145,9 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
     }
     
     // Document table
-    stxxl::syscall_file f(doc_table_filename, stxxl::file::RDWR | stxxl::file::CREAT); 
-	stxxl_vector doc_table(&f);
+    stxxl::syscall_file f(doc_table_filename, stxxl::file::RDWR | stxxl::file::CREAT | stxxl::file::DIRECT); 
+    //stxxl::create_file f();
+	doc_table_vector doc_table(&f);
 
 	// Load stopwords
 	std::unordered_set<std::string> stopwords;
@@ -201,18 +202,9 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 
     // Write document table
     //save_doc_table(doc_table, doc_table_filename);
+    doc_table.flush();
 
     std::cout << "Ended Parsing Phase: \n\n";
     tmr.stop();
     std::cout << "The elapsed time was " << tmr.ms() << " ms.\n";
-
-/*
-    stxxl::syscall_file f1(doc_table_filename, stxxl::file::RDONLY); 
-	stxxl_vector doc_table_loaded(&f1);
-    std::cout << doc_table.size() << "\n";
-    for (unsigned int i = 0; i<doc_table.size(); i++) {
-        std::cout << doc_table[i].doc_no << " = " << doc_table_loaded[i].doc_no << " ";
-        std::cout << doc_table[i].doc_len << " = " << doc_table_loaded[i].doc_len << std::endl;
-    }
-*/
 }

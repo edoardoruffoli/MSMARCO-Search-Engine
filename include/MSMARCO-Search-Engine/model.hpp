@@ -4,6 +4,7 @@
 #include <fstream>
 #include <vector>
 #include <list>
+#include <stxxl/vector>
 
 struct term_entry {
     int block_id;
@@ -19,24 +20,21 @@ struct skip_pointer {
 
 // Posting list iterator
 struct posting_list {
-    std::ifstream f1;
+    std::ifstream f_docs;
+    std::ifstream f_freqs;
 
     std::vector<skip_pointer> skip_pointers;
     unsigned int n_skip_pointers;
+
+    unsigned int pl_len;
     
-    unsigned long base_offset;
-    unsigned long skip_pointers_list_size;
-
-    unsigned long doc_ids_offset;
-    unsigned long freqs_offset;
-    unsigned long stop_offset;
-
+    unsigned int count;         // Count the number of posting read
     unsigned int cur_doc_id;    // DocId of the current document
     unsigned int cur_freq;      // Number of term occurences in the current document
     unsigned int doc_freq;      // Number of documents that contains term of the posting list
 
     // API
-    bool openList(unsigned long offset);
+    bool openList(unsigned long docs_offset, unsigned long freqs_offset, unsigned int posting_list_len);
     void closeList();
     void next();
     void nextGEQ(unsigned int d);
@@ -47,13 +45,15 @@ struct posting_list {
 // Lexicon
 struct lexicon_entry {
     unsigned int doc_freq;
-    unsigned long offset;
+    unsigned long docs_offset;
+    unsigned long freqs_offset;
     double max_score;
 
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version) {
         ar & doc_freq;
-        ar & offset;
+        ar & docs_offset;
+        ar & freqs_offset;
         ar & max_score;
     }
 };
@@ -73,3 +73,6 @@ struct doc_table_entry {
         ar & doc_len;
     }
 };
+
+
+typedef stxxl::VECTOR_GENERATOR<doc_table_entry>::result doc_table_vector;  

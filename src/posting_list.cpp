@@ -50,8 +50,10 @@ void posting_list::closeList() {
 }
 
 void posting_list::next() {
-    if (this->count == this->pl_len) 
+    if (this->count == this->pl_len) {
+        this->cur_doc_id = std::numeric_limits<unsigned int>::max();
         return;
+    }
         
     unsigned int bytes = 0;
     this->cur_doc_id = VBdecode(this->f_docs, bytes);
@@ -65,46 +67,41 @@ Advances the iterator forward to the next posting with a docID
 greater than or equal to d.
 */
 void posting_list::nextGEQ(unsigned int d) {
-    /*
     if (this->cur_doc_id >= d)
         return;
 
-    // Find the block
-    unsigned block_idx;
-    for (block_idx = 0; block_idx < this->skip_pointers.size(); block_idx++) {
-        if (this->skip_pointers[block_idx].max_doc_id >= d)
-            break;
+    // Check if skip pointers are present
+    if (this->pl_len > 20) {
+
+        // Check if there is a block that contains doc_id greater or equal than d (FROM THE CURRENT POINT)
+        // Get cur_doc_id block
+
+        unsigned block_idx;
+        for (block_idx = 0; block_idx < this->skip_pointers.size(); block_idx++) {
+            if (this->skip_pointers[block_idx].max_doc_id >= d)
+                break;
+        }
+
+        // No blocks contain doc_id greater or equal than d
+        if (block_idx == this->skip_pointers.size()) {
+            this->cur_doc_id = std::numeric_limits<unsigned int>::max();
+            return;
+        }
+
+        // Position the file pointers to the start of the block that contains doc_id greater or equal than d
+        this->f_docs.seekg(skip_pointers[block_idx].doc_id_offset);
+        this->f_freqs.seekg(skip_pointers[block_idx].freqs_offset);
     }
-
-    if (block_idx == this->skip_pointers.size()) {
-        this->cur_doc_id = std::numeric_limits<unsigned int>::max();
-        this->cur_freq = std::numeric_limits<unsigned int>::max();
-        return;
-    }
-
-    this->doc_ids_offset = this->base_offset + this->skip_pointers_list_size + skip_pointers[block_idx].doc_id_offset;
-    this->freqs_offset = this->base_offset + this->skip_pointers_list_size + skip_pointers[block_idx].freqs_offset;
-
-    this->f1.seekg(this->doc_ids_offset);
     // Scan the list until I find the doc_id greater or equal
     do {
         unsigned int bytes = 0;
-        this->cur_doc_id = VBdecode(this->f1, bytes);
-        this->doc_ids_offset += bytes;
+        this->cur_doc_id = VBdecode(this->f_docs, bytes);
+        this->cur_freq = VBdecode(this->f_freqs, bytes);
 
-        // Clean
-        bytes = 0;
-        this->f1.seekg(this->freqs_offset);
-        this->cur_freq = VBdecode(this->f1, bytes);
-        this->freqs_offset += bytes;
-
-        this->f1.seekg(this->doc_ids_offset);
     } while (this->cur_doc_id < d);
-    */
 }
 
 unsigned int posting_list::getDocId() {
-    // Check if end of file
     return this->cur_doc_id;
 }
 

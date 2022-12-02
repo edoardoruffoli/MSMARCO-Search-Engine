@@ -65,14 +65,9 @@ struct doc_table_entry {
     // URL
     // Page Rank
 
-    doc_table_entry() {}
-
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version) {
         ar & doc_no;
         ar & doc_len;
     }
 };
-
-
-typedef stxxl::VECTOR_GENERATOR<doc_table_entry>::result doc_table_vector;  

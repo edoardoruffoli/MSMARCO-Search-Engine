@@ -20,9 +20,6 @@ int getMemoryUsed() {
 #endif
 */
 
-// template parameter <value_type, page_size, number_of_pages, block_size, alloc_strategy, paging_strategy>
-typedef stxxl::VECTOR_GENERATOR<doc_table_entry, 4, 8, 1*sizeof(doc_table_entry)*4096, stxxl::RC, stxxl::lru>::result stxxl_vector;  
-
 void tokenize(std::string &content, bool flag, const std::unordered_set<std::string> &stopwords, 
                                               std::unordered_map<std::string, int> &tokens) {
 
@@ -30,6 +27,9 @@ void tokenize(std::string &content, bool flag, const std::unordered_set<std::str
     std::transform(content.begin(), content.end(), content.begin(), [](unsigned char c) {
         return std::tolower(c); 
     });
+
+    std::regex pattern("([^yY%]|^)[yY]{2}(?![yY])");
+    content = std::regex_replace(content, pattern, " ");
 
     // Replace punctuation with spaces
     
@@ -71,7 +71,7 @@ void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& 
 
 void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id, unsigned int block_num, 
                        BS::thread_pool &pool, 
-                       stxxl_vector &doc_table,
+                       std::vector<doc_table_entry> &doc_table,
                        std::unordered_set<std::string> &stopwords, bool flag) {
     BS::timer tmr;
     tmr.start();
@@ -164,9 +164,7 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
     }
     
     // Document table
-    stxxl::syscall_file f(doc_table_filename, stxxl::file::RDWR | stxxl::file::CREAT | stxxl::file::DIRECT); 
-    //stxxl::create_file f();
-	doc_table_vector doc_table(&f);
+    std::vector<doc_table_entry> doc_table;
 
 	// Load stopwords
 	std::unordered_set<std::string> stopwords;
@@ -221,8 +219,7 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
     block.clear();
 
     // Write document table
-    //save_doc_table(doc_table, doc_table_filename);
-    doc_table.flush();
+    save_doc_table(doc_table, doc_table_filename);
 
     std::cout << "Ended Parsing Phase: \n\n";
     tmr.stop();

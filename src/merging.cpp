@@ -41,15 +41,15 @@ std::pair<unsigned long, unsigned long> write_inverted_index_record_compressed(s
 
         unsigned int cur_block_count = 0, doc_ids_offset = 0, freqs_offset = 0;
 
-        std::vector<uint8_t> cur_doc_id_bytes, cur_doc_id_freqs, offset_bytes;
+        std::vector<uint8_t> cur_doc_id_bytes, cur_freqs_bytes, offset_bytes;
 
         for (auto& entry : term_entry.posting_list) {
 
             // Add encoding of the current doc_id
             VBencode(unsigned(entry.first), cur_doc_id_bytes);
             VB_doc_ids.insert(VB_doc_ids.end(), cur_doc_id_bytes.begin(), cur_doc_id_bytes.end());
-            VBencode(unsigned(entry.second), cur_doc_id_freqs);
-            VB_freqs.insert(VB_doc_ids.end(), cur_doc_id_freqs.begin(), cur_doc_id_freqs.end());
+            VBencode(unsigned(entry.second), cur_freqs_bytes);
+            VB_freqs.insert(VB_freqs.end(), cur_freqs_bytes.begin(), cur_freqs_bytes.end());
             cur_block_count++;
 
             if (cur_block_count == block_size) {
@@ -188,22 +188,16 @@ void merge_blocks(const unsigned int n_blocks) {
 
     // Lexicon data structure
     std::map<std::string, lexicon_entry> lexicon;
-    // template parameter <value_type, page_size, number_of_pages, block_size, alloc_strategy, paging_strategy>
-    stxxl::syscall_file f("../../output/doc_table.bin", stxxl::file::RDONLY); 
-	doc_table_vector doc_table(&f);
-    //std::vector<doc_table_entry> doc_table; 
-    //load_doc_table(&doc_table, std::string("../../output/doc_table.bin"));
+
+    // Doc Table data structure
+    std::vector<doc_table_entry> doc_table; 
+    load_doc_table(&doc_table, std::string("../../output/doc_table.bin"));
 
     double avg_doc_len;
     // IF BM25 compute avg doc len , to move on parsing
     int sum = 0;
-    /* BUFFERED 
-    for (stxxl_vector::bufreader_type reader(doc_table); !reader.empty(); ++reader) {
-        std::cout << reader->doc_no << "\n";
-        sum += reader->doc_len;
-    }*/
-    for (doc_table_vector::iterator it = doc_table.begin(); it != doc_table.end(); ++it)
-        sum += it->doc_len;
+    for (auto doc : doc_table)
+        sum += doc.doc_len;
 
     avg_doc_len = (double)sum / doc_table.size();
 

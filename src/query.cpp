@@ -1,9 +1,7 @@
 #include "MSMARCO-Search-Engine/query.hpp"
 
 // Doc table
-stxxl::syscall_file f("../../output/doc_table.bin", stxxl::file::RDONLY); 
-doc_table_vector doc_table(&f);
-
+std::vector<doc_table_entry> doc_table;
 std::map<std::string, lexicon_entry> lexicon;
 
 double avg_doc_len;
@@ -15,15 +13,15 @@ bool init_data_structures() {
         std::cout << "Error: cannot open lexicon.\n";
         return false;
     }
-   /* if(load_doc_table(&doc_table, std::string("../../output/doc_table.bin")) == false) {
+    if(load_doc_table(&doc_table, std::string("../../output/doc_table.bin")) == false) {
         std::cout << "Error: cannot open document table.\n";
         return false;
     }
-*/
+
     // IF BM25 compute avg doc len
     unsigned int sum = 0;
-    for (doc_table_vector::iterator it = doc_table.begin(); it != doc_table.end(); ++it)
-        sum += it->doc_len;
+    for (auto doc : doc_table)
+        sum += doc.doc_len;
 
     avg_doc_len = (double)sum / doc_table.size();
 

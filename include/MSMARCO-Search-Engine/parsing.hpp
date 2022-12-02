@@ -30,6 +30,7 @@
 #include "BS_thread_pool.hpp"
 #include <Porter2.hpp>
 #include <stxxl/vector>
+#include <stxxl/io>
 
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>

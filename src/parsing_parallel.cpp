@@ -1,5 +1,24 @@
 #include "MSMARCO-Search-Engine/parsing.hpp"
 
+/*
+#if defined _WIN32
+int getMemoryUsed() {
+    //Memory usage
+    MEMORYSTATUSEX statex;
+    statex.dwLength = sizeof(statex);
+    GlobalMemoryStatusEx(&statex);
+    return statex.dwMemoryLoad;
+}
+#elif defined (__LINUX__) || defined(__gnu_linux__) || defined(__linux__)
+int getMemoryUsed() {
+    long long totalPhysMem = memInfo.totalram;
+    totalPhysMem *= memInfo.mem_unit;
+    long long physMemUsed = memInfo.totalram - memInfo.freeram;
+    physMemUsed *= memInfo.mem_unit
+        return (physMemUsed / totalPhysMem) * 100
+}
+#endif
+*/
 
 // template parameter <value_type, page_size, number_of_pages, block_size, alloc_strategy, paging_strategy>
 typedef stxxl::VECTOR_GENERATOR<doc_table_entry, 4, 8, 1*sizeof(doc_table_entry)*4096, stxxl::RC, stxxl::lru>::result stxxl_vector;  
@@ -180,6 +199,7 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
         current_size++;
         block.push_back(loaded_content);
 
+        //if (getMemoryUsed() < 61){
         if (current_size < BLOCK_SIZE) {
             continue;
 		}

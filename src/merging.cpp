@@ -21,21 +21,73 @@ bool read_record(std::ifstream &in, term_entry &term_entry) {
 }
 
 
-unsigned long write_inverted_index_record_compressed(std::ostream& out, term_entry& term_entry) {  
+unsigned long write_inverted_index_record_compressed(std::ofstream& out_docs, std::ofstream& out_freqs, term_entry& term_entry) {
     // Keeps the count of the number of bytes written on file  
     unsigned long num_bytes_written = 0;
 
-    // Compute skip pointer block size
-    unsigned int block_size = sqrt(term_entry.posting_list.size());
-
     // Vectors to store the VB representation of the doc_id and freqs
-    std::vector<uint8_t> VB_doc_ids;    
+    std::vector<uint8_t> VB_doc_ids;
     std::vector<uint8_t> VB_freqs;
 
-    // Vectors to store the VB representation of skip pointers
-    std::vector<std::vector<uint8_t>> VB_block_max_doc_ids;
-    std::vector<std::vector<uint8_t>> VB_block_offset_doc_ids;
-    std::vector<std::vector<uint8_t>> VB_block_offset_freqs;
+    if (term_entry.posting_list.size() > 20) {
+        // Compute skip pointer block size
+        unsigned int block_size = sqrt(term_entry.posting_list.size());
+
+        // Vectors to store the VB representation of skip pointers
+        std::vector<std::vector<uint8_t>> VB_block_max_doc_ids;
+        std::vector<std::vector<uint8_t>> VB_block_offset_doc_ids;
+        std::vector<std::vector<uint8_t>> VB_block_offset_freqs;
+
+        unsigned int cur_block_count = 0;
+        unsigned int doc_ids_offset = 0;
+        unsigned int freqs_offset = 0;
+        unsigned int freqs_offset = 0;
+
+        std::vector<uint8_t> cur_doc_id_bytes;
+        std::vector<uint8_t> cur_doc_id_freqs;
+        std::vector<uint8_t> offset_bytes;
+
+        for (auto& entry : term_entry.posting_list) {
+
+            // Add encoding of the current doc_id
+            VBencode(unsigned(entry.first), cur_doc_id_bytes);
+            VB_doc_ids.insert(VB_doc_ids.end(), cur_doc_id_bytes.begin(), cur_doc_id_bytes.end());
+            VBencode(unsigned(entry.second), cur_doc_id_freqs);
+            VB_freqs.insert(VB_doc_ids.end(), cur_doc_id_freqs.begin(), cur_doc_id_freqs.end());
+            cur_block_count++;
+
+            if (cur_block_count == block_size) {
+                // Store the max doc_id of the current block, that is the prev iteration doc_id, stored in bytes variable
+                VB_block_max_doc_ids.push_back(cur_doc_id_bytes);
+
+                // Store the doc_id offset of the current block
+                VBencode(doc_ids_offset, offset_bytes);
+                VB_block_offset_doc_ids.push_back(offset_bytes);
+
+                // Update doc_id offset, the start offset of the next block is equal to the current size of VB_doc_ids
+                doc_ids_offset = VB_doc_ids.size();
+
+                // Store the freqs offset of the current block
+                VBencode(freqs_offset, offset_bytes);
+                VB_block_offset_freqs.push_back(offset_bytes);
+
+                // Update doc_id offset, the start offset of the next block is equal to the current size of VB_doc_ids
+                freqs_offset = VB_freqs.size();
+
+                // Restart the element in block counter
+                cur_block_count = 0;
+            }
+        }
+
+        // The last block may contain a number of elements < BLOCK_SIZE
+        if (cur_block_count > 0) {
+            VB_block_max_doc_ids.push_back(bytes);
+            VBencode(offset, bytes);
+            VB_block_offset_doc_ids.push_back(bytes);
+        }
+
+    }
+
 
     // Keeps the count of the number of elements in the current block
     unsigned int cur_block_count = 0;
@@ -136,9 +188,10 @@ void merge_blocks(const unsigned int n_blocks) {
     std::cout << "Started Merging Phase: \n\n";
     std::cout << "Number of blocks: " << n_blocks << "\n\n";
 
-    std::ofstream out_inverted_index("../../output/inverted_index.bin", std::ios::binary | std::ios::out);
-    
-    if (out_inverted_index.fail()) 
+    std::ofstream out_inverted_index_docs("../../output/inverted_index_docs.bin", std::ios::binary | std::ios::out);
+    std::ofstream out_inverted_index_freqs("../../output/inverted_index_freqs.bin", std::ios::binary | std::ios::out);
+
+    if (out_inverted_index_docs.fail() || out_inverted_index_freqs.fail())
         std::cout << "Error: cannot open inverted_index\n";
     
     std::string lexicon_file("../../output/lexicon.bin");
@@ -224,7 +277,7 @@ void merge_blocks(const unsigned int n_blocks) {
         // Writing
         //std::cout << "Writing Inverted Index record -> " << cur.term << '\n';
         offset += len;
-        len = write_inverted_index_record_compressed(out_inverted_index, cur);
+        len = write_inverted_index_record_compressed(out_inverted_index_docs, out_inverted_index_freqs, cur);
         //write_inverted_index_record(out_inverted_index, cur);
         
         //lexicon : [term, num_docs, offset inverted index, maxscore]

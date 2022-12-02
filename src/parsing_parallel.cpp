@@ -1,7 +1,19 @@
 #include "MSMARCO-Search-Engine/parsing.hpp"
 
+
+// template parameter <value_type, page_size, number_of_pages, block_size, alloc_strategy, paging_strategy>
+typedef stxxl::VECTOR_GENERATOR<doc_table_entry, 4, 8, 1*sizeof(doc_table_entry)*4096, stxxl::RC, stxxl::lru>::result stxxl_vector;  
+
 void tokenize(std::string &content, bool flag, const std::unordered_set<std::string> &stopwords, 
                                               std::unordered_map<std::string, int> &tokens) {
+
+    // To lower case
+    std::transform(content.begin(), content.end(), content.begin(), [](unsigned char c) {
+        return std::tolower(c); 
+    });
+
+    // Replace punctuation with spaces
+    
 	// How to deal with empty page, malformed lines, malformed characters?
     std::regex re("[ ,\t]");
     //the '-1' is what makes the regex split (-1 := what was not matched)
@@ -18,11 +30,6 @@ void tokenize(std::string &content, bool flag, const std::unordered_set<std::str
 
 		if (!token.size())
 			continue;
-
-        // To lower case
-        std::transform(token.begin(), token.end(), token.begin(), [](unsigned char c) {
-            return std::tolower(c); 
-        });
 
         if(flag) {
 			if (stopwords.find(token) != stopwords.end()) {
@@ -44,7 +51,8 @@ void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& 
 }
 
 void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id, unsigned int block_num, 
-                       BS::thread_pool &pool, std::vector<doc_table_entry> &doc_table,
+                       BS::thread_pool &pool, 
+                       stxxl_vector &doc_table,
                        std::unordered_set<std::string> &stopwords, bool flag) {
     BS::timer tmr;
     tmr.start();
@@ -72,9 +80,11 @@ void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id,
             tokenize(text, flag, stopwords, tokens);
             add_to_posting_list(dict, tokens, start_doc_id + i, doc_len);
             tokens.clear();
+            doc_table_entry dte;
+            dte.doc_len = doc_len;
+            dte.doc_no = doc_no;
             doc_table_mutex.lock();
-            doc_table[start_doc_id + i].doc_len = doc_len;    // ??? Concurrency
-            doc_table[start_doc_id + i].doc_no = doc_no;
+            doc_table[start_doc_id + i] = dte;
             doc_table_mutex.unlock();
         }
         return dict;
@@ -107,16 +117,6 @@ void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id,
 }
 
 void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char* stopwords_filename, unsigned int n_threads) {
-    //Test
-    /*
-    typedef stxxl::VECTOR_GENERATOR<int>::result vector;
-    vector my_vector;
-    for (int i = 0; i < 1024 * 1024; i++)
-    {
-        my_vector.push_back(i);
-    }
-    */
-
     std::cout << "Started Parsing Phase: \n\n";
     if (BLOCK_SIZE == 0)
         std::cout << "Error: block size not valid.\n";
@@ -139,8 +139,14 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 	// Document table output
 	std::string doc_table_filename("../../output/doc_table.bin");
 
+    // Clear previous outputs
+    if (boost::filesystem::exists(doc_table_filename)) {
+        boost::filesystem::remove(doc_table_filename);
+    }
+    
     // Document table
-	std::vector<doc_table_entry> doc_table;
+    stxxl::syscall_file f(doc_table_filename, stxxl::file::RDWR | stxxl::file::CREAT); 
+	stxxl_vector doc_table(&f);
 
 	// Load stopwords
 	std::unordered_set<std::string> stopwords;
@@ -164,7 +170,6 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 	unsigned int block_num = 1;
 	unsigned int doc_id = 0;
     std::string loaded_content;
-
 
     // Timer
     BS::timer tmr;
@@ -195,9 +200,19 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
     block.clear();
 
     // Write document table
-    save_doc_table(doc_table, doc_table_filename);
+    //save_doc_table(doc_table, doc_table_filename);
 
     std::cout << "Ended Parsing Phase: \n\n";
     tmr.stop();
     std::cout << "The elapsed time was " << tmr.ms() << " ms.\n";
+
+/*
+    stxxl::syscall_file f1(doc_table_filename, stxxl::file::RDONLY); 
+	stxxl_vector doc_table_loaded(&f1);
+    std::cout << doc_table.size() << "\n";
+    for (unsigned int i = 0; i<doc_table.size(); i++) {
+        std::cout << doc_table[i].doc_no << " = " << doc_table_loaded[i].doc_no << " ";
+        std::cout << doc_table[i].doc_len << " = " << doc_table_loaded[i].doc_len << std::endl;
+    }
+*/
 }

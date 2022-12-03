@@ -1,5 +1,9 @@
 #include "MSMARCO-Search-Engine/disk_vector.hpp"
 
+DiskVector::DiskVector() {}
+
+DiskVector::~DiskVector() {}
+
 bool DiskVector::create(const std::string& filename) {
 	this->f.close();
 	if (this->f.is_open())

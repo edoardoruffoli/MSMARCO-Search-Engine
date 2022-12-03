@@ -1,9 +1,14 @@
+#ifndef DISK_VECTOR_HEADER
+#define DISK_VECTOR_HEADER
+
 #include <iostream>
 #include <fstream>
 #include "MSMARCO-Search-Engine/model.hpp"
 
 class DiskVector {
     public:
+        DiskVector();
+        ~DiskVector();
         bool create(const std::string& filename);
         bool open(const std::string& filename);
         void close();
@@ -15,3 +20,5 @@ class DiskVector {
         unsigned int doc_len_accumulator;
         double avg_doc_len;
 };
+
+#endif

@@ -20,33 +20,27 @@ int getMemoryUsed() {
 #endif
 */
 
+/* Tokenize a text and return the result into the tokens variable.
+*/
 void tokenize(std::string &content, bool flag, const std::unordered_set<std::string> &stopwords, 
-                                              std::unordered_map<std::string, int> &tokens) {
+                std::unordered_map<std::string, int> &tokens) 
+{
+    // Replace characters that are not numbers or ASCII letters with spaces
+    std::replace_if(content.begin(), content.end(), [] (const char& c) { 
+        return !(c>='0' && c <= '9') && !isalpha(c) && c != ' ';
+    }, ' ');
 
     // To lower case
     std::transform(content.begin(), content.end(), content.begin(), [](unsigned char c) {
         return std::tolower(c); 
     });
 
-    //std::regex pattern("([^yY%]|^)[yY]{2}(?![yY])");
-    //content = std::regex_replace(content, pattern, " ");
-
-    // Replace punctuation with spaces
-    
-	// How to deal with empty page, malformed lines, malformed characters?
-    std::regex re("[ ,\t]");
-    //the '-1' is what makes the regex split (-1 := what was not matched)
-    std::sregex_token_iterator first{content.begin(), content.end(), re, -1}, last;
-    std::vector<std::string> v{first, last};
-
-    for (auto token : v) {
-		if (!token.size())
-			continue;
-        // Remove punctuation and non ASCII
-        token.erase(std::remove_if(token.begin(), token.end(), [](unsigned char c) {
-            return (!(c>='0' && c <= '9') && !isalpha(c));
-        }), token.end());
-
+    // Split content using whitespace characters
+    std::istringstream iss(content);
+    std::string token;
+    while (getline(iss, token, ' ')) {
+        
+        // If the current token is empty continue
 		if (!token.size())
 			continue;
 
@@ -60,8 +54,14 @@ void tokenize(std::string &content, bool flag, const std::unordered_set<std::str
     }
 }
 
+/* Add a token_stream to the dictionary passed by parameter and compute the document len by counting the token
+   in the stream.
+*/
 void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& dictionary,
-                  const std::unordered_map<std::string, int>& token_stream, int doc_id, unsigned int &doc_len) {
+                  const std::unordered_map<std::string, int>& token_stream, 
+                  int doc_id, 
+                  unsigned int &doc_len) 
+{
     doc_len = 0;
 	for (const std::pair<std::string, int> term_doc : token_stream) {
 		dictionary[term_doc.first].push_back(std::make_pair(doc_id, term_doc.second));
@@ -69,57 +69,83 @@ void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& 
     }
 }
 
+/* Process a block of documents and write the results on file. The processing is done using a pool of threads.
+*/
 void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id, unsigned int block_num, 
-                       BS::thread_pool &pool, 
-                       DiskVector &doc_table,
-                       std::unordered_set<std::string> &stopwords, bool flag) {
-    BS::timer tmr;
-    tmr.start();
+                   BS::thread_pool &pool, 
+                   DiskVector &doc_table,
+                   std::unordered_set<std::string> &stopwords, bool flag) 
+{
+    // Data structures that will be used to merge the threads outputs
     std::map<std::string, std::list<std::pair<int, int>>> dictionary;
     std::vector<doc_table_entry> doc_table_entries;
-    std::cout << "Starting doc_id: " << start_doc_id << " block_num:" << block_num << " num_docs: " << documents.size() << '\n';
 
-    // Add typedef <std::map<std::string, std::list<std::pair<int, int>>>
+    std::cout << "Starting doc_id: " << start_doc_id << " block_num:" << block_num << " num_docs: " << documents.size() << '\n';
+    
+    // Start a processing timer
+    BS::timer tmr;
+    tmr.start();
+
+    // Each thread will output a partial doc_table and a partial inverted index
+    typedef std::pair<std::vector<doc_table_entry>,std::map<std::string, std::list<std::pair<int,int>>>> thread_res;
+
+    // Worker thread function: each thread will process a portion of the document in the current block and will
+    // output the partial results based on its portion
     auto process_block = [&documents, &doc_table, start_doc_id, flag, &stopwords]
     (const unsigned start, const unsigned end) 
     {
         //std::cout << "Launched Worker Thread, Interval: [" << start << "," << end << "]\n";
-        std::string doc_no;
-        std::string text;
-        std::istringstream iss;
+
+        // Data structures that will contain the partial output
         std::map<std::string, std::list<std::pair<int, int>>> dict;
         std::vector<doc_table_entry> partial_doc_table;
+
+        // Utility variables
+        std::string doc_no, text;
+        std::istringstream iss;
         std::unordered_map<std::string, int> tokens;
         doc_table_entry de;
         unsigned int doc_len = 0;
                                 
         for (unsigned int i = start; i < end; i++) {
+            // Parse the current doc to obtain doc_no and text
             iss = std::istringstream(documents[i]);
             getline(iss, doc_no, '\t');
             getline(iss, text, '\n');
+
+            // Tokenize the text into tokens
             tokenize(text, flag, stopwords, tokens);
+
+            // Add tokens to posting list of the partial dictionary
             add_to_posting_list(dict, tokens, start_doc_id + i, doc_len);
             tokens.clear();
+
+            // Add document information to the partial doc_table
             strcpy(de.doc_no, doc_no.c_str());
             de.doc_len = doc_len;
             partial_doc_table.push_back(de);
         }
+
         return std::make_pair(partial_doc_table, dict);
     };
 
-    // Parallel Processing of the docs
-    typedef std::pair<std::vector<doc_table_entry>, std::map<std::string, std::list<std::pair<int, int>>>> thread_res;
+    // Start the parallel processing of the docs
     BS::multi_future<thread_res> mf = pool.parallelize_loop(0, documents.size(), process_block);
+
+    // Get the results of the processing. Note that the results are ordered by thread id
     std::vector<thread_res> results = mf.get();
 
+    // Merge the results into the final data structures
     for (auto result : results) {
-        // Concatenate the partial doc tables
+
+        // Merge the partial doc tables by concatenating them
         doc_table_entries.insert(doc_table_entries.end(), result.first.begin(), result.first.end());
 
-        // Merge the dictionary of each thread in the global dictionary, since the outputs are ordered, 
-        // we can simply concate them to the global dict
+        // Merge the partial dictionaries, since the outputs are ordered, we can simply concate the 
+        // posting list to obtain the final dictionary
         for (auto entry : result.second) {
-            // If term does not exist create it otherwise concate the posting list
+
+            // If term entry does not exist create it otherwise concatenate the posting list
             if (dictionary.find(entry.first) == dictionary.end()) {
                 dictionary[entry.first] = entry.second;
             } else {
@@ -128,21 +154,29 @@ void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id,
         }
     }
 
-    // Update the doc table 
+    // Update the disk based Doc Table 
     doc_table.insert(doc_table_entries);
 
+    // Save the intermediate dictionary results on file
     save_intermediate_inv_idx(dictionary, std::string("../tmp/intermediate_" + std::to_string(block_num)));
 
-    tmr.stop();
     std::cout << "Ended Paralleling Processing: \n"; 
+
+    // Stop the timer
+    tmr.stop();
     std::cout << "The elapsed time was " << tmr.ms() << " ms.\n";
 }
 
-void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char* stopwords_filename, unsigned int n_threads) {
+void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char* stopwords_filename, 
+            unsigned int n_threads) 
+{
     std::cout << "Started Parsing Phase: \n\n";
+
+    // Check input arguments
     if (BLOCK_SIZE == 0)
         std::cout << "Error: block size not valid.\n";
 
+    // Use in memory mapping to efficiently read the file
     boost::iostreams::stream<boost::iostreams::mapped_file_source> mapped_file_stream;
 	boost::iostreams::mapped_file_source mmap(in);
 	boost::iostreams::filtering_streambuf<boost::iostreams::input> inbuf;
@@ -150,29 +184,27 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
     if (mapped_file_stream.fail())
 		std::cout << "Error: input fail not valid.\n";
     
-    // Compressed reading
+    // Compressed reading using gzip
 	inbuf.push(boost::iostreams::gzip_decompressor());
 	inbuf.push(mapped_file_stream);
 
 	// Convert streambuf to istream
 	std::istream instream(&inbuf);
-    //std::ifstream instream(in);
 
-	// Document table output
+	// Doc Table file
 	std::string doc_table_filename("../../output/doc_table.bin");
 
-    // Clear previous outputs
+    // Clear previous Doc Table
     if (boost::filesystem::exists(doc_table_filename)) {
         boost::filesystem::remove(doc_table_filename);
     }
     
-    // Document table
-    DiskVector doc_table;   // template doc_table_entry
+    // Disk based Doc Table data structure
+    DiskVector doc_table;
     doc_table.create("../../output/doc_table.bin");
 
 	// Load stopwords
 	std::unordered_set<std::string> stopwords;
-
 	if (flag) {
 		std::ifstream is(stopwords_filename);
 		std::string word;
@@ -184,20 +216,20 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
     // Constructs a worker threads pool 
     BS::thread_pool pool(n_threads);
 
-    // Stores a block of documents
+    // Stores a block of documents to be processed
     std::vector<std::string> block;
 
-    // Init
+    // Init utility variables
     unsigned int current_size = 0;
 	unsigned int block_num = 1;
 	unsigned int doc_id = 0;
     std::string loaded_content;
 
-    // Timer
+    // Start processing timer
     BS::timer tmr;
     tmr.start();
 
-    // Blocked Sort Based Indexing   
+    // Blocked Sort Based Indexing BSBI 
 	while (getline(instream, loaded_content)) {
         current_size++;
         block.push_back(loaded_content);
@@ -207,23 +239,26 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
             continue;
 		}
 		else {
-            // Init next BLOCK_SIZE values in order to let the threads acces them
+            // When a block of BLOCK_SIZE documents has been read, start the processing
             BSBI_Invert(block, doc_id, block_num, pool, doc_table, stopwords, flag);
             doc_id += current_size;
 			block_num++;
             current_size = 0;
+            // Clear block for the next iterations
             block.clear();
 		}
 	}
 
-    // Write last block
+    // Process last block
     BSBI_Invert(block, doc_id, block_num, pool, doc_table, stopwords, flag);
     block.clear();
 
-    // Close the doc table
+    // Close the Doc Table
     doc_table.close();
 
     std::cout << "Ended Parsing Phase: \n\n";
+
+    // Stop the processing timer
     tmr.stop();
     std::cout << "The elapsed time was " << tmr.ms() << " ms.\n";
 }

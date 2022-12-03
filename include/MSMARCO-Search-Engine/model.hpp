@@ -60,7 +60,7 @@ struct lexicon_entry {
 
 // Document Table
 struct doc_table_entry {
-    std::string doc_no;
+    char doc_no[7];
     unsigned int doc_len;
     // URL
     // Page Rank

@@ -8,6 +8,8 @@ add_library(msmarco_search_engine
                 query.cpp 
                 compressing.cpp 
                 scoring_functions.cpp
+                disk_hash_map.cpp
+                disk_vector.cpp
                  ${HEADER_LIST})
 
 target_include_directories(msmarco_search_engine PUBLIC ../include ../thirdparty)

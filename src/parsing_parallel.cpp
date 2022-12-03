@@ -25,8 +25,9 @@ int getMemoryUsed() {
 void tokenize(std::string &content, bool flag, const std::unordered_set<std::string> &stopwords, 
                 std::unordered_map<std::string, int> &tokens) 
 {
+    std::cout << content << std::endl;
     // Replace characters that are not numbers or ASCII letters with spaces
-    std::replace_if(content.begin(), content.end(), [] (const char& c) { 
+    std::replace_if(content.begin(), content.end(), [] (unsigned char c) { 
         return !(c>='0' && c <= '9') && !isalpha(c) && c != ' ';
     }, ' ');
 
@@ -119,6 +120,9 @@ void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id,
             // Add tokens to posting list of the partial dictionary
             add_to_posting_list(dict, tokens, start_doc_id + i, doc_len);
             tokens.clear();
+
+            // Clear previous values
+            memset(de.doc_no, '\0', sizeof(de.doc_no));
 
             // Add document information to the partial doc_table
             strcpy(de.doc_no, doc_no.c_str());
@@ -225,14 +229,17 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 	unsigned int doc_id = 0;
     std::string loaded_content;
 
+    // The first doc is the file name, so we skip it
+    getline(instream, loaded_content);
+
     // Start processing timer
     BS::timer tmr;
     tmr.start();
 
     // Blocked Sort Based Indexing BSBI 
 	while (getline(instream, loaded_content)) {
-        current_size++;
         block.push_back(loaded_content);
+        current_size++;
 
         //if (getMemoryUsed() < 61){
         if (current_size < BLOCK_SIZE) {

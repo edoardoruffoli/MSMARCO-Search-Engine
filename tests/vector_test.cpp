@@ -3,7 +3,7 @@
 #include "MSMARCO-Search-Engine/disk_vector.hpp"
 #include "MSMARCO-Search-Engine/model.hpp"
 
-TEST_CASE("DiskVector", "create") {
+TEST_CASE("DiskVector1", "create") {
     DiskVector doc_table;
     
     REQUIRE(doc_table.create("../../output/doc_table_test.bin") == true);
@@ -31,4 +31,27 @@ TEST_CASE("DiskVector", "create") {
     REQUIRE(res == true);
     REQUIRE(!strcmp(de.doc_no, "500"));
     REQUIRE(de.doc_len == 500);
+
+    doc_table.close();
+}
+
+TEST_CASE("DiskVector2", "open") {
+    DiskVector doc_table;
+    
+    REQUIRE(doc_table.open("../../output/doc_table_test.bin") == true);
+
+    doc_table_entry de;
+    bool res;
+
+    res = doc_table.getEntryByIndex(500, de);
+    REQUIRE(res == true);
+    REQUIRE(!strcmp(de.doc_no, "500"));
+    REQUIRE(de.doc_len == 500);
+
+    res = doc_table.getEntryByIndex(10500, de);
+    REQUIRE(res == true);
+    REQUIRE(!strcmp(de.doc_no, "500"));
+    REQUIRE(de.doc_len == 500);
+
+    doc_table.close();
 }

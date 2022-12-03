@@ -20,7 +20,6 @@ bool read_record(std::ifstream &in, term_entry &term_entry) {
     return true;
 }
 
-
 std::pair<unsigned long, unsigned long> write_inverted_index_record_compressed(std::ofstream& out_docs, 
                     std::ofstream& out_freqs, 
                     term_entry& term_entry) 
@@ -159,6 +158,7 @@ void merge_blocks(const unsigned int n_blocks) {
         std::cout << "Error: cannot open inverted_index\n";
     
     std::string lexicon_file("../../output/lexicon.bin");
+    std::string doc_table_file("../../output/doc_table.bin");
 
     // Utility to sort the priority queue as min heap based on lexicographic order
     struct compare {
@@ -187,19 +187,22 @@ void merge_blocks(const unsigned int n_blocks) {
     }
 
     // Lexicon data structure
-    std::map<std::string, lexicon_entry> lexicon;
+    DiskHashMap lexicon;
+    lexicon.create(lexicon_file, 1000000);
 
     // Doc Table data structure
-    std::vector<doc_table_entry> doc_table; 
-    load_doc_table(&doc_table, std::string("../../output/doc_table.bin"));
+    DiskVector doc_table; 
+    doc_table.open(doc_table_file);
 
-    double avg_doc_len;
+    double avg_doc_len = 10;
+    /*
     // IF BM25 compute avg doc len , to move on parsing
     int sum = 0;
     for (auto doc : doc_table)
         sum += doc.doc_len;
 
     avg_doc_len = (double)sum / doc_table.size();
+    */
 
     // Pointer to the posting list in the inverted index file
     unsigned long docs_offset = 0, freqs_offset = 0;
@@ -231,14 +234,14 @@ void merge_blocks(const unsigned int n_blocks) {
         } 
 
         // Compute upper bound score
-        for (auto entry : cur.posting_list) {
+     /*   for (auto entry : cur.posting_list) {
             bm25 = BM25(entry.second, (unsigned int)cur.posting_list.size(), 
                         doc_table[entry.first].doc_len, avg_doc_len, 
                         (unsigned int)doc_table.size());
             if (bm25 > max_score)
                 max_score = bm25;
         }
-
+        */
         // Writing
         //std::cout << "Writing Inverted Index record -> " << cur.term << '\n';
         docs_offset += len.first;
@@ -247,11 +250,13 @@ void merge_blocks(const unsigned int n_blocks) {
         //write_inverted_index_record(out_inverted_index, cur);
         
         //lexicon : [term, num_docs, offset inverted index, maxscore]
-        lexicon[cur.term] = {(unsigned int) cur.posting_list.size(), docs_offset, freqs_offset, max_score};
+        lexicon_entry le = {(unsigned int) cur.posting_list.size(), docs_offset, freqs_offset, max_score};
+        lexicon.insert(cur.term, le);
     }
 
     // Write Lexicon on file
-    save_lexicon(lexicon, lexicon_file);
+    lexicon.close();
+
     // Remove intermediate files
 /*    for (unsigned int i = 1; i <= n_blocks; ++i) {
         in_files[i-1].close();

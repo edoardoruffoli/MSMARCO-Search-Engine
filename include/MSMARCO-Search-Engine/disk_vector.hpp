@@ -9,8 +9,9 @@ class DiskVector {
         void close();
         bool insert(std::vector<doc_table_entry> &entries);
         bool getEntryByIndex(unsigned int index, doc_table_entry& de);
-
     private:
         std::fstream f;
         unsigned int size;
+        unsigned int doc_len_accumulator;
+        double avg_doc_len;
 };

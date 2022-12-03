@@ -28,8 +28,8 @@ void tokenize(std::string &content, bool flag, const std::unordered_set<std::str
         return std::tolower(c); 
     });
 
-    std::regex pattern("([^yY%]|^)[yY]{2}(?![yY])");
-    content = std::regex_replace(content, pattern, " ");
+    //std::regex pattern("([^yY%]|^)[yY]{2}(?![yY])");
+    //content = std::regex_replace(content, pattern, " ");
 
     // Replace punctuation with spaces
     
@@ -71,17 +71,16 @@ void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& 
 
 void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id, unsigned int block_num, 
                        BS::thread_pool &pool, 
-                       std::vector<doc_table_entry> &doc_table,
+                       DiskVector &doc_table,
                        std::unordered_set<std::string> &stopwords, bool flag) {
     BS::timer tmr;
     tmr.start();
     std::map<std::string, std::list<std::pair<int, int>>> dictionary;
+    std::vector<doc_table_entry> doc_table_entries;
     std::cout << "Starting doc_id: " << start_doc_id << " block_num:" << block_num << " num_docs: " << documents.size() << '\n';
 
-    std::mutex doc_table_mutex;
-
     // Add typedef <std::map<std::string, std::list<std::pair<int, int>>>
-    auto process_block = [&documents, &doc_table, &doc_table_mutex, start_doc_id, flag, &stopwords]
+    auto process_block = [&documents, &doc_table, start_doc_id, flag, &stopwords]
     (const unsigned start, const unsigned end) 
     {
         //std::cout << "Launched Worker Thread, Interval: [" << start << "," << end << "]\n";
@@ -89,7 +88,9 @@ void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id,
         std::string text;
         std::istringstream iss;
         std::map<std::string, std::list<std::pair<int, int>>> dict;
+        std::vector<doc_table_entry> partial_doc_table;
         std::unordered_map<std::string, int> tokens;
+        doc_table_entry de;
         unsigned int doc_len = 0;
                                 
         for (unsigned int i = start; i < end; i++) {
@@ -99,26 +100,25 @@ void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id,
             tokenize(text, flag, stopwords, tokens);
             add_to_posting_list(dict, tokens, start_doc_id + i, doc_len);
             tokens.clear();
-            doc_table_entry dte;
-            dte.doc_len = doc_len;
-            dte.doc_no = doc_no;
-            doc_table_mutex.lock();
-            doc_table[start_doc_id + i] = dte;
-            doc_table_mutex.unlock();
+            strcpy(de.doc_no, doc_no.c_str());
+            de.doc_len = doc_len;
+            partial_doc_table.push_back(de);
         }
-        return dict;
+        return std::make_pair(partial_doc_table, dict);
     };
 
     // Parallel Processing of the docs
-    BS::multi_future<std::map<std::string, std::list<std::pair<int, int>>>> mf = pool.parallelize_loop(0, documents.size(),
-                            process_block);
+    typedef std::pair<std::vector<doc_table_entry>, std::map<std::string, std::list<std::pair<int, int>>>> thread_res;
+    BS::multi_future<thread_res> mf = pool.parallelize_loop(0, documents.size(), process_block);
+    std::vector<thread_res> results = mf.get();
 
-    std::vector<std::map<std::string, std::list<std::pair<int, int>>>> totals = mf.get();
+    for (auto result : results) {
+        // Concatenate the partial doc tables
+        doc_table_entries.insert(doc_table_entries.end(), result.first.begin(), result.first.end());
 
-    // Merge the output of each thread in the global map, since the outputs are ordered, we can simply 
-    // concate them to the global dict
-    for (auto output_dict : totals) {
-        for (auto entry : output_dict) {
+        // Merge the dictionary of each thread in the global dictionary, since the outputs are ordered, 
+        // we can simply concate them to the global dict
+        for (auto entry : result.second) {
             // If term does not exist create it otherwise concate the posting list
             if (dictionary.find(entry.first) == dictionary.end()) {
                 dictionary[entry.first] = entry.second;
@@ -127,6 +127,9 @@ void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id,
             }
         }
     }
+
+    // Update the doc table 
+    doc_table.insert(doc_table_entries);
 
     save_intermediate_inv_idx(dictionary, std::string("../tmp/intermediate_" + std::to_string(block_num)));
 
@@ -164,7 +167,8 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
     }
     
     // Document table
-    std::vector<doc_table_entry> doc_table;
+    DiskVector doc_table;   // template doc_table_entry
+    doc_table.create("../../output/doc_table.bin");
 
 	// Load stopwords
 	std::unordered_set<std::string> stopwords;
@@ -204,7 +208,6 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 		}
 		else {
             // Init next BLOCK_SIZE values in order to let the threads acces them
-            doc_table.resize(doc_table.size() + block.size());
             BSBI_Invert(block, doc_id, block_num, pool, doc_table, stopwords, flag);
             doc_id += current_size;
 			block_num++;
@@ -214,12 +217,11 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 	}
 
     // Write last block
-    doc_table.resize(doc_table.size() + block.size());
     BSBI_Invert(block, doc_id, block_num, pool, doc_table, stopwords, flag);
     block.clear();
 
-    // Write document table
-    save_doc_table(doc_table, doc_table_filename);
+    // Close the doc table
+    doc_table.close();
 
     std::cout << "Ended Parsing Phase: \n\n";
     tmr.stop();

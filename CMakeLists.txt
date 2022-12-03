@@ -32,13 +32,6 @@ if(WIN32)
     set(ZLIB_INCLUDE_DIR ${CMAKE_BINARY_DIR}/thirdparty/zlib/)
 endif()
 
-# setup directory informaiton for stxxl library
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/thirdparty/stxxl/include)
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/thirdparty/stxxl/build/include)
-LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/thirdparty/stxxl/build/lib)
-# for debug library, use stxxl_debug
-SET(STXXL_LIB stxxl)
-
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 add_subdirectory(thirdparty)

@@ -4,7 +4,6 @@
 #include <fstream>
 #include <vector>
 #include <list>
-#include <stxxl/vector>
 
 struct term_entry {
     int block_id;
@@ -60,7 +59,7 @@ struct lexicon_entry {
 
 // Document Table
 struct doc_table_entry {
-    char doc_no[7];
+    char doc_no[10];
     unsigned int doc_len;
     // URL
     // Page Rank

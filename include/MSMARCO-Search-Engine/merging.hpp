@@ -23,12 +23,11 @@
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>
 
-#include <stxxl/vector>
-#include <stxxl/io>
-
 #include "MSMARCO-Search-Engine/io.hpp"
 #include "MSMARCO-Search-Engine/compressing.hpp"
 #include "MSMARCO-Search-Engine/scoring_functions.hpp"
+#include "MSMARCO-Search-Engine/disk_vector.hpp"
+#include "MSMARCO-Search-Engine/disk_hash_map.hpp"
 
 bool read_record(std::ifstream &in, term_entry &term_entry);
 

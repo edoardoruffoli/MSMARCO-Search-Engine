@@ -29,12 +29,11 @@
 
 #include "BS_thread_pool.hpp"
 #include <Porter2.hpp>
-#include <stxxl/vector>
-#include <stxxl/io>
 
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>
 
+#include "MSMARCO-Search-Engine/disk_vector.hpp"
 #include "MSMARCO-Search-Engine/model.hpp"
 #include "MSMARCO-Search-Engine/io.hpp"
 /*

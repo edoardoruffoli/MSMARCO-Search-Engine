@@ -17,9 +17,6 @@
 #include <boost/serialization/utility.hpp>
 #include <boost/serialization/export.hpp>
 
-#include <stxxl/vector>
-#include <stxxl/io>
-
 #include "MSMARCO-Search-Engine/model.hpp"
 
 bool save_intermediate_inv_idx(std::map<std::string, std::list<std::pair<int, int>>>& dictionary, std::string &filename);

@@ -4,6 +4,3 @@ add_subdirectory(boost-cmake)
 add_subdirectory(zlib)
 add_subdirectory(Porter2)
 add_subdirectory(cli)
-
-# stxxl
-add_subdirectory(stxxl)

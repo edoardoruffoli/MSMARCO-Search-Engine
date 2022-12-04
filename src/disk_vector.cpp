@@ -5,46 +5,51 @@ DiskVector::DiskVector() {}
 DiskVector::~DiskVector() {}
 
 bool DiskVector::create(const std::string& filename) {
-	boost::iostreams::mapped_file mmap(filename, std::ios::in | std::ios::out | std::ios::binary | std::ios::trunc);
-    this->f.open(mmap);
+    this->f_write.open(filename, std::ios::binary | std::ios::out | std::ios::trunc);
 
     this->size = 0;
     this->doc_len_accumulator = 0;
     this->avg_doc_len = 0;
 
     // Clear first bytes that will be used to store the size and the avg doc len
-    this->f.write(reinterpret_cast<const char*>(&this->size), sizeof(unsigned int));
-    this->f.write(reinterpret_cast<const char*>(&this->avg_doc_len), sizeof(double));
+    this->f_write.write(reinterpret_cast<const char*>(&this->size), sizeof(unsigned int));
+    this->f_write.write(reinterpret_cast<const char*>(&this->avg_doc_len), sizeof(double));
 
-	return this->f.good();
+	return this->f_write.good();
 }
 
 bool DiskVector::open(const std::string& filename) {
-    boost::iostreams::mapped_file mmap(filename);
-    this->f.open(mmap);
+    boost::iostreams::mapped_file_params params;
+    params.path = filename;
+    params.flags = boost::iostreams::mapped_file_source::mapmode::readonly;
+
+    boost::iostreams::mapped_file_source mmap(params);
+    this->f_read.open(mmap);
 
     // Read the size and the avg_doc_len
-    this->f.read(reinterpret_cast<char*>(&this->size), sizeof(unsigned int));
-    this->f.read(reinterpret_cast<char*>(&this->avg_doc_len), sizeof(double));
+    this->f_read.read(reinterpret_cast<char*>(&this->size), sizeof(unsigned int));
+    this->f_read.read(reinterpret_cast<char*>(&this->avg_doc_len), sizeof(double));
 
-	return this->f.good();
+	return this->f_read.good();
 }
 
 void DiskVector::close() {
-    // Write the avg doc len at the start of the file
-    this->f.seekg(0, std::ios::beg);
+    // If the Doc Table was open in write mode
+    if (f_write.is_open()) {
+        // Write the avg doc len at the start of the file
+        this->f_write.seekp(0, std::ios::beg);
 
-    this->avg_doc_len = (double) this->doc_len_accumulator / this->size;
+        this->avg_doc_len = (double) this->doc_len_accumulator / this->size;
 
-    this->f.write(reinterpret_cast<const char*>(&this->size), sizeof(unsigned int));
-    this->f.write(reinterpret_cast<const char*>(&this->avg_doc_len), sizeof(double));
-    this->f.close();
-}
+        this->f_write.write(reinterpret_cast<const char*>(&this->size), sizeof(unsigned int));
+        this->f_write.write(reinterpret_cast<const char*>(&this->avg_doc_len), sizeof(double));
+        this->f_write.close();
+    }
 
-bool DiskVector::load(std::vector<doc_table_entry> &in_mem_doc_table) {
-    in_mem_doc_table.resize(this->size);
-    this->f.read(reinterpret_cast<char*>(in_mem_doc_table.data()), in_mem_doc_table.size() * sizeof(doc_table_entry));
-    return true;
+    // If the Doc Table is opened in read mode
+    if (f_read.is_open()) {
+        this->f_read.close();
+    }
 }
 
 bool DiskVector::insert(std::vector<doc_table_entry> &entries) {
@@ -55,13 +60,13 @@ bool DiskVector::insert(std::vector<doc_table_entry> &entries) {
     for (auto doc : entries)
         this->doc_len_accumulator += doc.doc_len;
 
-    this->f.write(reinterpret_cast<const char*>(entries.data()), entries.size() * sizeof(doc_table_entry)); 
+    this->f_write.write(reinterpret_cast<const char*>(entries.data()), entries.size() * sizeof(doc_table_entry)); 
     return true;
 }
 
 bool DiskVector::getEntryByIndex(unsigned int index, doc_table_entry& de) {
-	this->f.seekg(sizeof(unsigned int) + sizeof(double) + index * sizeof(doc_table_entry), std::ios::beg);
-    this->f.read(reinterpret_cast<char*>(&de), sizeof(doc_table_entry));
+	this->f_read.seekg(sizeof(unsigned int) + sizeof(double) + index * sizeof(doc_table_entry), std::ios::beg);
+    this->f_read.read(reinterpret_cast<char*>(&de), sizeof(doc_table_entry));
     return true;
 }
 

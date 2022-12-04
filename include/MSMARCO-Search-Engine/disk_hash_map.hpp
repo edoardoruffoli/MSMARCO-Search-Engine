@@ -11,28 +11,61 @@ const unsigned int MAX_KEY_LEN = 20;
 
 class DiskHashMap {
     public:
+        // Hash Map Entry struct
         struct HashMapEntry {
+            // Hash key (truncated at MAX_KEY_LEN)
             char key[MAX_KEY_LEN];
-            lexicon_entry le;
-            unsigned int next;  // Offset of the next entry with the same hash
 
+            lexicon_entry le;
+
+            // File offset of the next entry with the same hash
+            unsigned int next; 
+
+            // Check if entry is empty
             bool isEmpty() {
                 return !strcmp(key, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
             }
         };
+
+        // Constructor
         DiskHashMap();
+
+        // Destructor
         ~DiskHashMap();
-        bool create(const std::string& filename, unsigned int numBuckets);
+
+        // Create a new Lexicon in filename with N possible hash keys
+        bool create(const std::string& filename, unsigned int N);
+
+        // Read the Lexicon stored in filename
         bool open(const std::string& filename);
+
+        // Close the I/O streams
         void close();
-        bool insert(const std::string& key, /*template*/const lexicon_entry& le);
+
+        // Insert lexicon entry with key in Lexicon
+        bool insert(const std::string& key, const lexicon_entry& le);
+
+        // Search for the lexicon entry with the given key
         bool search(const std::string& key, lexicon_entry& le);
-        HashMapEntry getEntryByOffset(unsigned long offset);
+
+        // Returns the lexicon entry given the offset
+        HashMapEntry getEntryByOffset(std::istream &f, unsigned long offset);
 
     private:
+
+        // Update the lexicon entry at offset
         bool updateEntry(HashMapEntry entry, unsigned long offset);
 
-        boost::iostreams::stream<boost::iostreams::mapped_file> f;
+        // Regular stream for creating the Lexicon
+        std::fstream f_create;  
+
+        // Memory mapped stream for reading the Lexicon
+        boost::iostreams::stream<boost::iostreams::mapped_file_source> f_read;
+
+        // Number of hash keys
         unsigned int N;
-        unsigned int n_collisions;  // Used to retrieve the next address to write at
+
+        // Number of total hash keys collisions. Used to retrieve the address at which write the entries 
+        // that collided (at the end of file)
+        unsigned int n_collisions;
 };

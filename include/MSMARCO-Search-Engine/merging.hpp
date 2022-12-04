@@ -37,4 +37,4 @@ std::pair<unsigned long, unsigned long> write_inverted_index_record_compressed(s
 
 void write_lexicon_record(std::ofstream &out, term_entry &term_entry, unsigned long offset);
 
-void merge_blocks(const unsigned int n_blocks, bool in_memory_flag);
+void merge_blocks(const unsigned int n_blocks);

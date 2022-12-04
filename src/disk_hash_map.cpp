@@ -11,40 +11,67 @@ DiskHashMap::DiskHashMap() {}
 DiskHashMap::~DiskHashMap() {}
 
 bool DiskHashMap::create(const std::string& filename, unsigned int N) {
-	this->f.open(filename, std::ios::in | std::ios::out | std::ios::binary | std::ios::trunc);
+	this->f_create.open(filename, std::ios::in | std::ios::out | std::ios::binary | std::ios::trunc);
 
-    // Fill file with null values 
+    // Fill file with null values. So that we can know when an entry has been inserted
     char val = '\0';
-    std::fill_n(std::ostreambuf_iterator<char>(this->f), N * sizeof(HashMapEntry), val);
+    std::fill_n(std::ostreambuf_iterator<char>(this->f_create), N * sizeof(HashMapEntry), val);
+
+    // Init Lexicon values
     this->N = N;
     this->n_collisions = 0;
-	return this->f.good();
+
+    // Clear first bytes that will be used to store the N value of the lexicon
+    this->f_create.write(reinterpret_cast<const char*>(&this->N), sizeof(unsigned int));
+
+	return this->f_create.good();
 }
 
 bool DiskHashMap::open(const std::string& filename) {
-    boost::iostreams::mapped_file mmap(filename);
-    this->f.open(mmap);
-	return this->f.good();
+    boost::iostreams::mapped_file_params params;
+    params.path = filename;
+    params.flags = boost::iostreams::mapped_file_source::mapmode::readonly;
+
+    boost::iostreams::mapped_file_source mmap(filename);
+    this->f_read.open(mmap);
+
+    // Read the N value
+    this->f_read.read(reinterpret_cast<char*>(&this->N), sizeof(unsigned int));
+    
+	return this->f_read.good();
 }
 
 void DiskHashMap::close() {
-    this->f.close();
+    // If the Lexicon was opened in write mode
+    if (f_create.is_open()) {
+        // Write the N value at the start of the file
+        this->f_create.seekp(0, std::ios::beg);
+        this->f_create.write(reinterpret_cast<const char*>(&this->N), sizeof(unsigned int));
+        this->f_create.close();
+    }
+
+    // If the Lexicon was opened in read mode
+    if (f_read.is_open()) {
+        this->f_read.close();
+    }
 }
 
-bool DiskHashMap::insert(const std::string& key, /*template*/const lexicon_entry& le) {
+bool DiskHashMap::insert(const std::string& key, const lexicon_entry& le) {
     // Truncate key to be in 20 bytes
     std::string hash_key = key.substr(0, MAX_KEY_LEN);
-    unsigned int target_offset;    // Offset where the entry will be written
+
+     // Offset where the entry will be written
+    unsigned int target_offset;   
 
     // Compute the index using hash 
     std::size_t h1 = std::hash<std::string>{}(hash_key);
-    unsigned int index = h1 % 1000000;
+    unsigned int index = h1 % this->N;
 
     // Index of the first member of the collision list if present
-    unsigned start_offset = index * sizeof(HashMapEntry);   
+    unsigned start_offset = sizeof(unsigned int) + index * sizeof(HashMapEntry);   
 
     // Check if there is already an entry at index
-    DiskHashMap::HashMapEntry e = DiskHashMap::getEntryByOffset(start_offset);
+    DiskHashMap::HashMapEntry e = DiskHashMap::getEntryByOffset(this->f_create, start_offset);
     if (e.isEmpty()) {
         target_offset = start_offset;
     } 
@@ -53,11 +80,11 @@ bool DiskHashMap::insert(const std::string& key, /*template*/const lexicon_entry
         unsigned int prev = start_offset;
         while (e.next != 0) {
             prev = e.next;
-            e = getEntryByOffset(e.next);
+            e = getEntryByOffset(this->f_create, e.next);
         }
 
         // Find the first free offset using the number of collisions
-        target_offset = (N + n_collisions) * sizeof(DiskHashMap::HashMapEntry);
+        target_offset = sizeof(unsigned int) + (N + n_collisions) * sizeof(DiskHashMap::HashMapEntry);
         n_collisions++;
 
         // Update the previous member of the collision list
@@ -78,14 +105,14 @@ bool DiskHashMap::insert(const std::string& key, /*template*/const lexicon_entry
 bool DiskHashMap::search(const std::string& key, lexicon_entry& le) {
     // Compute the index using hash 
     std::size_t h1 = std::hash<std::string>{}(key);
-    unsigned int index = h1 % 1000000;
+    unsigned int index = h1 % this->N;
 
     unsigned int prev;
 
     // Index of the first member of the collision list if present
-    unsigned start_offset = index * sizeof(HashMapEntry);   
+    unsigned start_offset = sizeof(unsigned int) + index * sizeof(HashMapEntry);   
 
-    DiskHashMap::HashMapEntry e = DiskHashMap::getEntryByOffset(start_offset);
+    DiskHashMap::HashMapEntry e = DiskHashMap::getEntryByOffset(this->f_read, start_offset);
     if (e.isEmpty()) {
         return false;
     } 
@@ -96,7 +123,7 @@ bool DiskHashMap::search(const std::string& key, lexicon_entry& le) {
         // Loop until we reach the last element or we have found the matching key
         while (e.next != 0 && strcmp(e.key, key.c_str())) {
             prev = e.next;
-            e = getEntryByOffset(e.next);
+            e = getEntryByOffset(this->f_read, e.next);
         }
         // Found elem
         if (!strcmp(e.key, key.c_str())) {
@@ -107,15 +134,14 @@ bool DiskHashMap::search(const std::string& key, lexicon_entry& le) {
     }
 }
 
-DiskHashMap::HashMapEntry DiskHashMap::getEntryByOffset(unsigned long offset) {
+DiskHashMap::HashMapEntry DiskHashMap::getEntryByOffset(std::istream &f, unsigned long offset) {
 	HashMapEntry entry;
-    this->f.seekg(offset, std::ios::beg);
-    this->f.read(reinterpret_cast<char*>(&entry), sizeof(entry));
+    f.seekg(offset, std::ios::beg);
+    f.read(reinterpret_cast<char*>(&entry), sizeof(entry));
 	return entry;
 }
 
 bool DiskHashMap::updateEntry(DiskHashMap::HashMapEntry entry, unsigned long offset) { 
-    return this->f.seekg(offset, std::ios::beg) && 
-            this->f.write(reinterpret_cast<const char*>(&entry), sizeof(entry)); 
+    return this->f_create.seekg(offset, std::ios::beg) && 
+            this->f_create.write(reinterpret_cast<const char*>(&entry), sizeof(entry)); 
 }
-

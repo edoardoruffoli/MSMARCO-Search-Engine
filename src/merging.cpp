@@ -153,7 +153,7 @@ std::pair<unsigned long, unsigned long> write_inverted_index_record_compressed(s
     return std::make_pair(docs_num_bytes_written, freqs_num_bytes_written);
 }
 
-void merge_blocks(const unsigned int n_blocks, bool in_memory_flag) {
+void merge_blocks(const unsigned int n_blocks) {
     std::cout << "Started Merging Phase: \n\n";
     std::cout << "Number of blocks: " << n_blocks << "\n\n";
 
@@ -200,11 +200,6 @@ void merge_blocks(const unsigned int n_blocks, bool in_memory_flag) {
     DiskVector doc_table; 
     doc_table.open(doc_table_file);
 
-    // Load Doc Table in memory to speed up the computations
-    std::vector<doc_table_entry> in_mem_doc_table;
-    if (in_memory_flag)
-        doc_table.load(in_mem_doc_table);
-
     // Pointer to the posting list in the inverted index file
     unsigned long docs_offset = 0, freqs_offset = 0;
     std::pair<unsigned long, unsigned long> len;
@@ -237,14 +232,11 @@ void merge_blocks(const unsigned int n_blocks, bool in_memory_flag) {
         // Compute upper bound score
         doc_table_entry de;
         for (auto entry : cur.posting_list) {
-            if (!in_memory_flag) {
-                if (!doc_table.getEntryByIndex(entry.first, de)) {
-                    std::cout << "Error while reading the doc_table.\n";
-                    return;
-                }
-            }
-            else {
-                de.doc_len = in_mem_doc_table[entry.first].doc_len;
+
+            // Get doc entry
+            if (!doc_table.getEntryByIndex(entry.first, de)) {
+                std::cout << "Error while reading the doc_table.\n";
+                return;
             }
 
             bm25 = BM25(entry.second, (unsigned int)cur.posting_list.size(), 
@@ -268,6 +260,9 @@ void merge_blocks(const unsigned int n_blocks, bool in_memory_flag) {
 
     // Write Lexicon on file
     lexicon.close();
+
+    // Close Doc Table
+    doc_table.close();
 
     // Remove intermediate files
 /*    for (unsigned int i = 1; i <= n_blocks; ++i) {

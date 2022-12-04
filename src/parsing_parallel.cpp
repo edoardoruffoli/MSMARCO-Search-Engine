@@ -227,9 +227,7 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 	unsigned int block_num = 1;
 	unsigned int doc_id = 0;
     std::string loaded_content;
-
-    // The first doc is the file name, so we skip it
-    getline(instream, loaded_content);
+    bool first_doc = true;
 
     // Start processing timer
     BS::timer tmr;
@@ -237,6 +235,13 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 
     // Blocked Sort Based Indexing BSBI 
 	while (getline(instream, loaded_content)) {
+
+        // The first doc includes the header of the gzip file
+        if (first_doc) {
+            loaded_content.erase(0, 512);
+            first_doc = false;
+        }
+
         block.push_back(loaded_content);
         current_size++;
 

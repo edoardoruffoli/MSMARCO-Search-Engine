@@ -53,3 +53,15 @@ TEST_CASE("TokenizerTest2", "Punctuation") {
     //std::string::iterator
     REQUIRE(exceptionThrown == false);
 }
+
+TEST_CASE("TokenizerTest3", "Unicode") {
+    std::string content(" We├ó┬Ç┬Öre going on a bear hunt. (Slap thighs.)We├ó┬Ç┬Öre going to catch a big one, (Extend arms.)With big green eyes, (Make circles around eyes.)And a fuzzy little tail. (Bend over and make a tail withhands.)Look over there. (Point to left.)It├ó┬Ç┬Ös a candy factory.Can├ó┬Ç┬Öt go over it.");
+    std::unordered_map<std::string, int> tokens;
+    std::unordered_set<std::string> stopwords;
+
+    tokenize(content, false, stopwords, tokens);
+    REQUIRE(tokens["with"] == 1);
+    REQUIRE(tokens["we"] == 2);
+    REQUIRE(tokens["factory"] == 1);
+    REQUIRE(tokens["a"] == 5);
+}

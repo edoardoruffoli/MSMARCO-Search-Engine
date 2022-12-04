@@ -10,6 +10,8 @@
 #include <math.h> 
 #include <boost/chrono.hpp>
 
+#include <boost/compute/detail/lru_cache.hpp>
+
 #include "MSMARCO-Search-Engine/model.hpp"
 #include "MSMARCO-Search-Engine/io.hpp"
 #include "MSMARCO-Search-Engine/compressing.hpp"

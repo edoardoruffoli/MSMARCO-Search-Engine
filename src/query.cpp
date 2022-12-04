@@ -272,6 +272,8 @@ void disjunctive_query_max_score(std::priority_queue<std::pair<unsigned int, dou
     }
 }
 
+auto LRUCache = boost::compute::detail::lru_cache<std::string, lexicon_entry>(1000);
+
 bool execute_query(std::vector<std::string> &terms, unsigned int mode, unsigned int k) {
     std::cout << "Executing query\n";
     boost::chrono::high_resolution_clock::time_point t1 = boost::chrono::high_resolution_clock::now();
@@ -282,7 +284,17 @@ bool execute_query(std::vector<std::string> &terms, unsigned int mode, unsigned 
     std::vector<posting_list*> pls;
     for (unsigned int i = 0; i < terms.size(); i++) {
         lexicon_entry le;
-        bool found = lexicon.search(terms[i], le);
+        bool found = false;
+
+        // Check if current term is in cache
+        if (LRUCache.contains(terms[i])) {
+            le = LRUCache.get(terms[i]).get();
+            found = true;
+        }
+        else {
+            if (found = lexicon.search(terms[i], le))
+                LRUCache.insert(terms[i], le);
+        }
         if (found) {
             posting_list *pl = new posting_list();
             pl->n_skip_pointers = ceil((double) le.doc_freq/((unsigned int) sqrt(le.doc_freq))); //Rounding up

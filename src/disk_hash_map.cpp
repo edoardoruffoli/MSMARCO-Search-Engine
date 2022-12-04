@@ -11,9 +11,6 @@ DiskHashMap::DiskHashMap() {}
 DiskHashMap::~DiskHashMap() {}
 
 bool DiskHashMap::create(const std::string& filename, unsigned int N) {
-	this->f.close();
-	if (this->f.is_open())
-	    return false;
 	this->f.open(filename, std::ios::in | std::ios::out | std::ios::binary | std::ios::trunc);
 
     // Fill file with null values 

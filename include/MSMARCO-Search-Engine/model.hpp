@@ -27,6 +27,7 @@ struct posting_list {
 
     unsigned int pl_len;
     
+    unsigned int block_size;
     unsigned int count;         // Count the number of posting read
     unsigned int cur_doc_id;    // DocId of the current document
     unsigned int cur_freq;      // Number of term occurences in the current document

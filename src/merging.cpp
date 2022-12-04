@@ -30,6 +30,8 @@ std::pair<unsigned long, unsigned long> write_inverted_index_record_compressed(s
     // Vectors to store the VB representation of the doc_id and freqs
     std::vector<uint8_t> VB_doc_ids, VB_freqs;
 
+    unsigned int prev_doc_id = 0;
+
     // Compute skip pointers
     if (term_entry.posting_list.size() > 20) {
         // Compute skip pointer block size
@@ -45,8 +47,11 @@ std::pair<unsigned long, unsigned long> write_inverted_index_record_compressed(s
         for (auto& entry : term_entry.posting_list) {
 
             // Add encoding of the current doc_id
-            VBencode(unsigned(entry.first), cur_doc_id_bytes);
+            VBencode(unsigned(entry.first - prev_doc_id), cur_doc_id_bytes);
             VB_doc_ids.insert(VB_doc_ids.end(), cur_doc_id_bytes.begin(), cur_doc_id_bytes.end());
+            prev_doc_id = entry.first;
+
+            // Add encoding of the current freqs
             VBencode(unsigned(entry.second), cur_freqs_bytes);
             VB_freqs.insert(VB_freqs.end(), cur_freqs_bytes.begin(), cur_freqs_bytes.end());
             cur_block_count++;
@@ -127,7 +132,8 @@ std::pair<unsigned long, unsigned long> write_inverted_index_record_compressed(s
 
         for (auto& entry : term_entry.posting_list) {
             // Add encoding of the current doc_id
-            VBencode(unsigned(entry.first), bytes);
+            VBencode(unsigned(entry.first - prev_doc_id), bytes);
+            prev_doc_id = entry.first;
 
             // Write the doc_ids represented in VB previously computed
             for (std::vector<uint8_t>::iterator it = bytes.begin(); it != bytes.end(); it++) {

@@ -25,7 +25,6 @@ int getMemoryUsed() {
 void tokenize(std::string &content, bool flag, const std::unordered_set<std::string> &stopwords, 
                 std::unordered_map<std::string, int> &tokens) 
 {
-    std::cout << content << std::endl;
     // Replace characters that are not numbers or ASCII letters with spaces
     std::replace_if(content.begin(), content.end(), [] (unsigned char c) { 
         return !(c>='0' && c <= '9') && !isalpha(c) && c != ' ';

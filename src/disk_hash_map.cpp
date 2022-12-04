@@ -38,11 +38,11 @@ void DiskHashMap::close() {
 
 bool DiskHashMap::insert(const std::string& key, /*template*/const lexicon_entry& le) {
     // Truncate key to be in 20 bytes
-
+    std::string hash_key = key.substr(0, MAX_KEY_LEN-1);
     unsigned int target_offset;    // Offset where the entry will be written
 
     // Compute the index using hash 
-    std::size_t h1 = std::hash<std::string>{}(key);
+    std::size_t h1 = std::hash<std::string>{}(hash_key);
     unsigned int index = h1 % this->N;
 
     // Index of the first member of the collision list if present
@@ -72,7 +72,7 @@ bool DiskHashMap::insert(const std::string& key, /*template*/const lexicon_entry
 
     // Create the current entry struct
     HashMapEntry data;
-    strcpy(data.key, key.c_str());
+    strcpy(data.key, hash_key.c_str());
     data.le = le;
     data.next = 0;
 

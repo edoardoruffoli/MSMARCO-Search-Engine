@@ -1,29 +1,22 @@
 #include "MSMARCO-Search-Engine/query.hpp"
 
-// Doc table
-std::vector<doc_table_entry> doc_table;
-std::map<std::string, lexicon_entry> lexicon;
+// Doc Table
+DiskVector doc_table;
 
-double avg_doc_len;
+// Lexicon
+DiskHashMap lexicon;
 
 bool init_data_structures() {
-    std::cout << "Loading Lexicon and Document Table ...\n";
+    std::cout << "Opening Lexicon and Document Table ...\n";
 
-    if(load_lexicon(&lexicon, std::string("../../output/lexicon.bin")) == false) {
+    if(lexicon.open(std::string("../../output/lexicon.bin")) == false) {
         std::cout << "Error: cannot open lexicon.\n";
         return false;
     }
-    if(load_doc_table(&doc_table, std::string("../../output/doc_table.bin")) == false) {
+    if(doc_table.open(std::string("../../output/doc_table.bin")) == false) {
         std::cout << "Error: cannot open document table.\n";
         return false;
     }
-
-    // IF BM25 compute avg doc len
-    unsigned int sum = 0;
-    for (auto doc : doc_table)
-        sum += doc.doc_len;
-
-    avg_doc_len = (double)sum / doc_table.size();
 
     printf("Done.\n");
     return true;
@@ -131,13 +124,15 @@ void conjunctive_query(std::priority_queue<std::pair<unsigned int, double>,
             double score = 0.0;
             for (auto& pl : pls) {
                 if (pl->getDocId() == cur_doc_id) {
+                    doc_table_entry de;
+                    doc_table.getEntryByIndex(cur_doc_id, de);
                     unsigned int term_freq = pl->getFreq();
-                    unsigned int doc_len = doc_table[cur_doc_id].doc_len; // ONLY BM25
+                    unsigned int doc_len = de.doc_len; // ONLY BM25
                     unsigned int doc_freq = pl->doc_freq;
-                    unsigned int N = (unsigned int)doc_table.size();   // O(1)
+                    unsigned int N = (unsigned int) doc_table.getSize();
                     //score += TFIDF(term_freq, doc_freq, N);
                     //std::cout << doc_len << " " << avg_doc_len << std::endl;
-                    score += BM25(term_freq, doc_freq, doc_len, avg_doc_len, N);
+                    score += BM25(term_freq, doc_freq, doc_len, doc_table.getAvgDocLen(), N);
                 }
             }
             if (min_heap.size() >= k) {
@@ -168,13 +163,15 @@ void disjunctive_query(std::priority_queue<std::pair<unsigned int, double>,
         double score = 0.0;
         for (auto &pl : pls) {
             if (pl->getDocId() == cur_doc_id) {
+                doc_table_entry de;
+                doc_table.getEntryByIndex(cur_doc_id, de);
                 unsigned int term_freq = pl->getFreq();
-                unsigned int doc_len = doc_table[cur_doc_id].doc_len; // ONLY BM25
+                unsigned int doc_len = de.doc_len; // ONLY BM25
                 unsigned int doc_freq = pl->doc_freq;
-                unsigned int N = (unsigned int) doc_table.size();   // O(1)
+                unsigned int N = (unsigned int) doc_table.getSize();
                 //score += TFIDF(term_freq, doc_freq, N);
                 //std::cout << doc_len << " " << avg_doc_len << std::endl;
-                score += BM25(term_freq, doc_freq, doc_len, avg_doc_len, N);
+                score += BM25(term_freq, doc_freq, doc_len, doc_table.getAvgDocLen(), N);
                 pl->next();
             }
         }
@@ -218,13 +215,16 @@ void disjunctive_query_max_score(std::priority_queue<std::pair<unsigned int, dou
         // Essential lists
         for (unsigned int i = pivot; i < pls.size(); i++) {
             if (pls[i]->getDocId() == cur_doc_id) {
+                doc_table_entry de;
+                doc_table.getEntryByIndex(cur_doc_id, de);
+
                 unsigned int term_freq = pls[i]->getFreq();
-                unsigned int doc_len = doc_table[cur_doc_id].doc_len; // ONLY BM25
+                unsigned int doc_len = de.doc_len; // ONLY BM25
                 unsigned int doc_freq = pls[i]->doc_freq;
-                unsigned int N = (unsigned int) doc_table.size();   // O(1)
+                unsigned int N = (unsigned int) doc_table.getSize();
                 //score += TFIDF(term_freq, doc_freq, N);
                 //std::cout << doc_len << " " << avg_doc_len << std::endl;
-                score += BM25(term_freq, doc_freq, doc_len, avg_doc_len, N);
+                score += BM25(term_freq, doc_freq, doc_len, doc_table.getAvgDocLen(), N);
                 pls[i]->next();
             }
             if (pls[i]->getDocId() < next_doc_id) {
@@ -238,13 +238,16 @@ void disjunctive_query_max_score(std::priority_queue<std::pair<unsigned int, dou
                 break;
             pls[i]->nextGEQ(cur_doc_id);
             if (pls[i]->getDocId() == cur_doc_id) {
+                doc_table_entry de;
+                doc_table.getEntryByIndex(cur_doc_id, de);
+
                 unsigned int term_freq = pls[i]->getFreq();
-                unsigned int doc_len = doc_table[cur_doc_id].doc_len; // ONLY BM25
+                unsigned int doc_len = de.doc_len; // ONLY BM25
                 unsigned int doc_freq = pls[i]->doc_freq;
-                unsigned int N = (unsigned int) doc_table.size();   // O(1)
+                unsigned int N = (unsigned int) doc_table.getSize();
                 //score += TFIDF(term_freq, doc_freq, N);
                 //std::cout << doc_len << " " << avg_doc_len << std::endl;
-                score += BM25(term_freq, doc_freq, doc_len, avg_doc_len, N);
+                score += BM25(term_freq, doc_freq, doc_len, doc_table.getAvgDocLen(), N);
             }
         }
 
@@ -273,20 +276,23 @@ bool execute_query(std::vector<std::string> &terms, unsigned int mode, unsigned 
     std::cout << "Executing query\n";
     boost::chrono::high_resolution_clock::time_point t1 = boost::chrono::high_resolution_clock::now();
 
+    // Vector of max score one per query term
+    std::vector<double> max_scores;
+
     std::vector<posting_list*> pls;
     for (unsigned int i = 0; i < terms.size(); i++) {
-
-        auto it = lexicon.find(terms[i]);
-        if (it != lexicon.end()) {
+        lexicon_entry le;
+        bool found = lexicon.search(terms[i], le);
+        if (found) {
             posting_list *pl = new posting_list();
-            pl->n_skip_pointers = ceil((double) it->second.doc_freq/((unsigned int) sqrt(it->second.doc_freq))); //Rounding up
-            pl->openList(it->second.docs_offset, it->second.freqs_offset, it->second.doc_freq);
-            pl->doc_freq = it->second.doc_freq;
+            pl->n_skip_pointers = ceil((double) le.doc_freq/((unsigned int) sqrt(le.doc_freq))); //Rounding up
+            pl->openList(le.docs_offset, le.freqs_offset, le.doc_freq);
+            pl->doc_freq = le.doc_freq;
             pls.push_back(pl);
+            max_scores.push_back(le.max_score);
         }
         else {
             std::cout << terms[i] << " not present in lexicon.\n";
-            terms.erase(terms.begin() + i);
         }
     }
 
@@ -296,12 +302,6 @@ bool execute_query(std::vector<std::string> &terms, unsigned int mode, unsigned 
     if (pls.size() == 0) {
         std::cout << "No terms found.\n";
         return false;
-    }
-
-    // Vector of max score one per query term
-    std::vector<double> max_scores;
-    for (auto &term : terms) {
-        max_scores.push_back(lexicon[term].max_score);
     }
 
     switch(mode){
@@ -362,14 +362,19 @@ void query_evaluation(std::string& topics, std::string& result, const std::unord
         for (auto kv : tokens) {
             terms.push_back(kv.first);
         }
+
+        // Vector of max score one per query term
+        std::vector<double> max_scores;
+
         std::vector<posting_list*> pls;
         for (unsigned int i = 0; i < terms.size(); i++) {
-
-            auto it = lexicon.find(terms[i]);
-            if (it != lexicon.end()) {
+            lexicon_entry le;
+            bool found = lexicon.search(terms[i], le);
+            if (found) {
                 posting_list* pl = new posting_list();
-                pl->openList(it->second.docs_offset, it->second.freqs_offset, it->second.doc_freq);
+                pl->openList(le.docs_offset, le.freqs_offset, le.doc_freq);
                 pls.push_back(pl);
+                max_scores.push_back(le.max_score);
             }
             else {
                 std::cout << terms[i] << " not present in lexicon.\n";
@@ -382,12 +387,6 @@ void query_evaluation(std::string& topics, std::string& result, const std::unord
 
         if (pls.size() == 0) {
             std::cout << "No terms found.\n";
-        }
-
-        // Vector of max score one per query term
-        std::vector<double> max_scores;
-        for (auto& term : terms) {
-            max_scores.push_back(lexicon[term].max_score);
         }
 
         switch (mode) {

@@ -1,7 +1,10 @@
+#pragma once
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <cstring>
+#include <boost/iostreams/device/mapped_file.hpp>
+#include <boost/iostreams/stream.hpp>
 #include "MSMARCO-Search-Engine/model.hpp"
 
 const unsigned int MAX_KEY_LEN = 20;
@@ -29,7 +32,7 @@ class DiskHashMap {
     private:
         bool updateEntry(HashMapEntry entry, unsigned long offset);
 
-        std::fstream f;
+        boost::iostreams::stream<boost::iostreams::mapped_file> f;
         unsigned int N;
         unsigned int n_collisions;  // Used to retrieve the next address to write at
 };

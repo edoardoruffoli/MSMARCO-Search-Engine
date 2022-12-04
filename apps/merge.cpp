@@ -8,5 +8,5 @@ int main(int argc, char* argv[]) {
         n_blocks++;
     }
 
-    merge_blocks(n_blocks);
+    merge_blocks(n_blocks, true);
 }

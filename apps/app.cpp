@@ -50,7 +50,7 @@ static void merge(std::ostream& out) {
     while (boost::filesystem::exists("../tmp/intermediate_" + std::to_string(n_blocks + 1))) {
         n_blocks++;
     }
-    merge_blocks(n_blocks);
+    merge_blocks(n_blocks, true);
     loaded_data = false;
 }
 

@@ -147,7 +147,7 @@ std::pair<unsigned long, unsigned long> write_inverted_index_record_compressed(s
     return std::make_pair(docs_num_bytes_written, freqs_num_bytes_written);
 }
 
-void merge_blocks(const unsigned int n_blocks) {
+void merge_blocks(const unsigned int n_blocks, bool in_memory_flag) {
     std::cout << "Started Merging Phase: \n\n";
     std::cout << "Number of blocks: " << n_blocks << "\n\n";
 
@@ -194,15 +194,10 @@ void merge_blocks(const unsigned int n_blocks) {
     DiskVector doc_table; 
     doc_table.open(doc_table_file);
 
-    double avg_doc_len = 10;
-    /*
-    // IF BM25 compute avg doc len , to move on parsing
-    int sum = 0;
-    for (auto doc : doc_table)
-        sum += doc.doc_len;
-
-    avg_doc_len = (double)sum / doc_table.size();
-    */
+    // Load Doc Table in memory to speed up the computations
+    std::vector<doc_table_entry> in_mem_doc_table;
+    if (in_memory_flag)
+        doc_table.load(in_mem_doc_table);
 
     // Pointer to the posting list in the inverted index file
     unsigned long docs_offset = 0, freqs_offset = 0;
@@ -234,14 +229,25 @@ void merge_blocks(const unsigned int n_blocks) {
         } 
 
         // Compute upper bound score
-     /*   for (auto entry : cur.posting_list) {
+        doc_table_entry de;
+        for (auto entry : cur.posting_list) {
+            if (!in_memory_flag) {
+                if (!doc_table.getEntryByIndex(entry.first, de)) {
+                    std::cout << "Error while reading the doc_table.\n";
+                    return;
+                }
+            }
+            else {
+                de.doc_len = in_mem_doc_table[entry.first].doc_len;
+            }
+
             bm25 = BM25(entry.second, (unsigned int)cur.posting_list.size(), 
-                        doc_table[entry.first].doc_len, avg_doc_len, 
-                        (unsigned int)doc_table.size());
+                        de.doc_len, doc_table.getAvgDocLen(), 
+                        doc_table.getSize());
             if (bm25 > max_score)
                 max_score = bm25;
         }
-        */
+        
         // Writing
         //std::cout << "Writing Inverted Index record -> " << cur.term << '\n';
         docs_offset += len.first;

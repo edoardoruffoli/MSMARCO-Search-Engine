@@ -15,6 +15,8 @@
 #include "MSMARCO-Search-Engine/compressing.hpp"
 #include "MSMARCO-Search-Engine/scoring_functions.hpp"
 #include "MSMARCO-Search-Engine/parsing.hpp"
+#include "MSMARCO-Search-Engine/disk_vector.hpp"
+#include "MSMARCO-Search-Engine/disk_hash_map.hpp"
 
 #define CONJUNCTIVE_MODE 0  // DAAT
 #define DISJUNCTIVE_MODE 1

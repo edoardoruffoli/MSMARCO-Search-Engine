@@ -25,10 +25,8 @@ bool DiskHashMap::create(const std::string& filename, unsigned int N) {
 }
 
 bool DiskHashMap::open(const std::string& filename) {
-    this->f.close();
-	if (this->f.is_open())
-		return false;
-	this->f.open(filename, std::ios::in | std::ios::out | std::ios::binary);
+    boost::iostreams::mapped_file mmap(filename);
+    this->f.open(mmap);
 	return this->f.good();
 }
 
@@ -38,12 +36,12 @@ void DiskHashMap::close() {
 
 bool DiskHashMap::insert(const std::string& key, /*template*/const lexicon_entry& le) {
     // Truncate key to be in 20 bytes
-    std::string hash_key = key.substr(0, MAX_KEY_LEN-1);
+    std::string hash_key = key.substr(0, MAX_KEY_LEN);
     unsigned int target_offset;    // Offset where the entry will be written
 
     // Compute the index using hash 
     std::size_t h1 = std::hash<std::string>{}(hash_key);
-    unsigned int index = h1 % this->N;
+    unsigned int index = h1 % 1000000;
 
     // Index of the first member of the collision list if present
     unsigned start_offset = index * sizeof(HashMapEntry);   
@@ -83,7 +81,7 @@ bool DiskHashMap::insert(const std::string& key, /*template*/const lexicon_entry
 bool DiskHashMap::search(const std::string& key, lexicon_entry& le) {
     // Compute the index using hash 
     std::size_t h1 = std::hash<std::string>{}(key);
-    unsigned int index = h1 % this->N;
+    unsigned int index = h1 % 1000000;
 
     unsigned int prev;
 

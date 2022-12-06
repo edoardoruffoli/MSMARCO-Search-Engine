@@ -353,6 +353,8 @@ bool execute_query(std::vector<std::string> &terms, unsigned int mode, unsigned 
 
 void query_evaluation(std::string& topics, std::string& result, const std::unordered_set<std::string>& stopwords, unsigned int mode, unsigned int k) {
     std::cout << "Executing queries\n";
+    boost::chrono::high_resolution_clock::time_point t1 = boost::chrono::high_resolution_clock::now();
+    std::vector<double> max_scores;
 
     std::ifstream instream(topics);
     std::ofstream outstream(result);
@@ -360,7 +362,7 @@ void query_evaluation(std::string& topics, std::string& result, const std::unord
 
     //Execution of input queries
     while (getline(instream, loaded_content)) {
-        std::vector<std::string> terms;
+        std::vector<std::string> query_terms;
         std::unordered_map<std::string, int> tokens;
         std::istringstream iss;
         std::string query_id;
@@ -372,25 +374,36 @@ void query_evaluation(std::string& topics, std::string& result, const std::unord
 
         tokenize(text, true, stopwords, tokens);
         for (auto kv : tokens) {
-            terms.push_back(kv.first);
+            query_terms.push_back(kv.first);
         }
 
         // Vector of max score one per query term
         std::vector<double> max_scores;
 
         std::vector<posting_list*> pls;
-        for (unsigned int i = 0; i < terms.size(); i++) {
+        for (unsigned int i = 0; i < query_terms.size(); i++) {
             lexicon_entry le;
-            bool found = lexicon.search(terms[i], le);
+            bool found = false;
+
+            // Check if current term is in cache
+            if (LRUCache.contains(query_terms[i])) {
+                le = LRUCache.get(query_terms[i]).get();
+                found = true;
+            }
+            else {
+                if (found = lexicon.search(query_terms[i], le))
+                    LRUCache.insert(query_terms[i], le);
+            }
             if (found) {
                 posting_list* pl = new posting_list();
+                pl->n_skip_pointers = ceil((double)le.doc_freq / ((unsigned int)sqrt(le.doc_freq))); //Rounding up
                 pl->openList(le.docs_offset, le.freqs_offset, le.doc_freq);
+                pl->doc_freq = le.doc_freq;
                 pls.push_back(pl);
                 max_scores.push_back(le.max_score);
             }
             else {
-                std::cout << terms[i] << " not present in lexicon.\n";
-                terms.erase(terms.begin() + i);
+                std::cout << query_terms[i] << " not present in lexicon.\n";
             }
         }
 
@@ -399,6 +412,7 @@ void query_evaluation(std::string& topics, std::string& result, const std::unord
 
         if (pls.size() == 0) {
             std::cout << "No terms found.\n";
+            continue;
         }
 
         switch (mode) {
@@ -430,6 +444,8 @@ void query_evaluation(std::string& topics, std::string& result, const std::unord
         }
         
     }
+    boost::chrono::high_resolution_clock::time_point t2 = boost::chrono::high_resolution_clock::now();
+    std::cout << "The elapsed time was " << boost::chrono::duration_cast<boost::chrono::minutes>(t2 - t1) << ".\n";
     instream.close();
     outstream.close();
 

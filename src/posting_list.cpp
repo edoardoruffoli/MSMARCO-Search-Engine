@@ -1,6 +1,7 @@
 #include "MSMARCO-Search-Engine/compressing.hpp"
 #include "MSMARCO-Search-Engine/model.hpp"
 
+#define MIN_POSTING_LEN 1024
 
 bool posting_list::openList(unsigned long docs_offset, unsigned long freqs_offset, unsigned int posting_list_len) {
 
@@ -16,8 +17,8 @@ bool posting_list::openList(unsigned long docs_offset, unsigned long freqs_offse
     // Save posting_list_len
     this->pl_len = posting_list_len;
     
-    // We have skip pointers only if size > 20
-    if (this->pl_len > 20) {
+    // We have skip pointers only if size > MIN_POSTING_LEN
+    if (this->pl_len > MIN_POSTING_LEN) {
 
         // Compute skip pointers number
         this->block_size = (unsigned int)sqrt(posting_list_len);
@@ -70,7 +71,7 @@ greater than or equal to d.
 */
 void posting_list::nextGEQ(unsigned int d) {
     // Check if skip pointers are present
-    if (this->pl_len > 20) {
+    if (this->pl_len > MIN_POSTING_LEN) {
 
         // Check if there is a block that contains doc_id greater or equal than d (FROM THE CURRENT POINT)
         // Get cur_doc_id block

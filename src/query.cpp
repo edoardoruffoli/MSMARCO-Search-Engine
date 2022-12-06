@@ -445,7 +445,7 @@ void query_evaluation(std::string& topics, std::string& result, const std::unord
         
     }
     boost::chrono::high_resolution_clock::time_point t2 = boost::chrono::high_resolution_clock::now();
-    std::cout << "The elapsed time was " << boost::chrono::duration_cast<boost::chrono::minutes>(t2 - t1) << ".\n";
+    std::cout << "The elapsed time was " << boost::chrono::duration_cast<boost::chrono::seconds>(t2 - t1) << ".\n";
     instream.close();
     outstream.close();
 

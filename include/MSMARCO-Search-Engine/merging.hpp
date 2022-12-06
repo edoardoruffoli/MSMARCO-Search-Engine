@@ -29,6 +29,8 @@
 #include "MSMARCO-Search-Engine/disk_vector.hpp"
 #include "MSMARCO-Search-Engine/disk_hash_map.hpp"
 
+#define MIN_POSTING_LEN 1024
+
 bool read_record(std::ifstream &in, term_entry &term_entry);
 
 void write_inverted_index_record(std::ofstream &out, term_entry &term_entry);

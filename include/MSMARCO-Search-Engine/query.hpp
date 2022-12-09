@@ -13,12 +13,11 @@
 #include <boost/compute/detail/lru_cache.hpp>
 
 #include "MSMARCO-Search-Engine/model.hpp"
-#include "MSMARCO-Search-Engine/io.hpp"
 #include "MSMARCO-Search-Engine/compressing.hpp"
 #include "MSMARCO-Search-Engine/scoring_functions.hpp"
 #include "MSMARCO-Search-Engine/parsing.hpp"
-#include "MSMARCO-Search-Engine/disk_vector.hpp"
-#include "MSMARCO-Search-Engine/disk_hash_map.hpp"
+#include "MSMARCO-Search-Engine/doc_table.hpp"
+#include "MSMARCO-Search-Engine/lexicon.hpp"
 
 #define CONJUNCTIVE_MODE 0  // DAAT
 #define DISJUNCTIVE_MODE 1

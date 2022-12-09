@@ -1,17 +1,19 @@
 #pragma once
-#include <boost/iostreams/device/mapped_file.hpp>
-#include <boost/iostreams/stream.hpp>
 #include <iostream>
 #include <fstream>
+
+#include <boost/iostreams/device/mapped_file.hpp>
+#include <boost/iostreams/stream.hpp>
+
 #include "MSMARCO-Search-Engine/model.hpp"
 
-class DiskVector {
+class DocTable {
     public:
         // Constructor
-        DiskVector();
+        DocTable();
 
         // Destructor
-        ~DiskVector();
+        ~DocTable();
 
         // Create a new Doc Table in filename
         bool create(const std::string& filename);

@@ -3,11 +3,8 @@
 int main(int argc, char* argv[])
 {
 	unsigned int n_threads = std::thread::hardware_concurrency() - 1;
-	const int BLOCK_SIZE = 2000000;
+	const int BLOCK_SIZE = 500000;
 	const char* docfile = "../../collection.tar.gz";
-	//const char* docfile = "../../test.tsv.gz";
-	//const char* docfile = "../../examples.txt";
 	const char* stopwords = "../../stopwords.txt";
     parse(docfile, BLOCK_SIZE, true, stopwords, n_threads);
-    //merge_blocks(block_num);
 }

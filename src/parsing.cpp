@@ -69,11 +69,30 @@ void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& 
     }
 }
 
+/* Save the intermediate inverted index passed as parameter on a temporary file.
+*/
+bool save_intermediate_inv_idx(std::map<std::string, std::list<std::pair<int, int>>>& dictionary, 
+                std::string &filename) {
+    std::ofstream filestream(filename, std::ios::binary);
+    if (filestream.fail()) {
+        std::cout << "Fail intermediate inverted index write!" << std::endl;
+        return false;
+    }
+	for (auto& kv : dictionary) {
+		filestream << kv.first;
+		for (auto& i : kv.second)
+			filestream << ' ' << i.first << ' ' << i.second;
+		filestream << std::endl;
+	}
+    filestream.close();
+    return true;
+}
+
 /* Process a block of documents and write the results on file. The processing is done using a pool of threads.
 */
 void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id, unsigned int block_num, 
                    BS::thread_pool &pool, 
-                   DiskVector &doc_table,
+                   DocTable &doc_table,
                    std::unordered_set<std::string> &stopwords, bool flag) 
 {
     // Data structures that will be used to merge the threads outputs
@@ -203,7 +222,7 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
     }
     
     // Disk based Doc Table data structure
-    DiskVector doc_table;
+    DocTable doc_table;
     doc_table.create("../../output/doc_table.bin");
 
 	// Load stopwords

@@ -3,13 +3,15 @@
 #include <fstream>
 #include <string>
 #include <cstring>
+
 #include <boost/iostreams/device/mapped_file.hpp>
 #include <boost/iostreams/stream.hpp>
+
 #include "MSMARCO-Search-Engine/model.hpp"
 
 const unsigned int MAX_KEY_LEN = 20;
 
-class DiskHashMap {
+class Lexicon {
     public:
         // Hash Map Entry struct
         struct HashMapEntry {
@@ -28,10 +30,10 @@ class DiskHashMap {
         };
 
         // Constructor
-        DiskHashMap();
+        Lexicon();
 
         // Destructor
-        ~DiskHashMap();
+        ~Lexicon();
 
         // Create a new Lexicon in filename with N possible hash keys
         bool create(const std::string& filename, unsigned int N);

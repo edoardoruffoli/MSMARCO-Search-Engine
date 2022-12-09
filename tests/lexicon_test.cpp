@@ -1,10 +1,10 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
-#include "MSMARCO-Search-Engine/disk_hash_map.hpp"
+#include "MSMARCO-Search-Engine/lexicon.hpp"
 #include "MSMARCO-Search-Engine/model.hpp"
 
-TEST_CASE("DiskHashMap1", "create") {
-    DiskHashMap lexicon;
+TEST_CASE("Lexicon1", "create") {
+    Lexicon lexicon;
     
     REQUIRE(lexicon.create("../../output/lexicon_test.bin", 10) == true);
 
@@ -18,8 +18,8 @@ TEST_CASE("DiskHashMap1", "create") {
     lexicon.close();
 }
 
-TEST_CASE("DiskHashMap2", "search") {
-    DiskHashMap lexicon;
+TEST_CASE("Lexicon2", "search") {
+    Lexicon lexicon;
     REQUIRE(lexicon.open("../../output/lexicon_test.bin") == true);
 
     lexicon_entry le;

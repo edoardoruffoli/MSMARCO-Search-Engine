@@ -1,5 +1,7 @@
 #include "MSMARCO-Search-Engine/merging.hpp"
 
+/* Read a record from the temportary inverted index file stream passed as parameter and put in term_entry.
+*/
 bool read_record(std::ifstream &in, term_entry &term_entry) {
     if (in.eof())
         return false;
@@ -9,9 +11,12 @@ bool read_record(std::ifstream &in, term_entry &term_entry) {
     if (!getline(in, loaded_content))
         return false;
     
+    // Parse term
 	std::istringstream iss(loaded_content);
 	getline(iss, term_entry.term, ' ');
     std::string docid;
+
+    // Parse the posting list
 	while (getline(iss, docid, ' ')) {
         std::string freq;
         getline(iss, freq, ' ');
@@ -20,6 +25,9 @@ bool read_record(std::ifstream &in, term_entry &term_entry) {
     return true;
 }
 
+/* Write term_entry in the .docs and .freqs file in variable byte compressed form. Return the number of bytes 
+   written in each of the two files.
+*/
 std::pair<unsigned long, unsigned long> write_inverted_index_record_compressed(std::ofstream& out_docs, 
                     std::ofstream& out_freqs, 
                     term_entry& term_entry) 
@@ -166,7 +174,7 @@ void merge_blocks(const unsigned int n_blocks) {
     std::string lexicon_file("../../output/lexicon.bin");
     std::string doc_table_file("../../output/doc_table.bin");
 
-    // Utility to sort the priority queue as min heap based on lexicographic order
+    // Utility to keep the priority queue sorted as min heap based on lexicographic order
     struct compare {
         bool operator()(term_entry const& a, term_entry const& b) const {
                 if (a.term == b.term)
@@ -177,7 +185,7 @@ void merge_blocks(const unsigned int n_blocks) {
 
     std::priority_queue<term_entry, std::vector<term_entry>, compare> min_heap;
 
-    // Buffer pointers to the intermediate posting lists
+    // Streams of the intermediate posting lists
     std::vector<std::ifstream> in_files;
     for (unsigned int i = 1; i <= n_blocks; ++i) {
         in_files.push_back(std::ifstream("../tmp/intermediate_" + std::to_string(i)));
@@ -193,20 +201,22 @@ void merge_blocks(const unsigned int n_blocks) {
     }
 
     // Lexicon data structure
-    DiskHashMap lexicon;
-    lexicon.create(lexicon_file, 1000000);
+    Lexicon lexicon;
+    lexicon.create(lexicon_file, N_HASH_KEYS);
 
     // Doc Table data structure
-    DiskVector doc_table; 
+    DocTable doc_table; 
     doc_table.open(doc_table_file);
 
-    // Pointer to the posting list in the inverted index file
+    // Utility variables
     unsigned long docs_offset = 0, freqs_offset = 0;
     std::pair<unsigned long, unsigned long> len;
     double max_score = 0;
     double bm25 = 0;
 
     while (!min_heap.empty()) {
+        
+        // Extract top item in min heap
         term_entry cur = min_heap.top();
         min_heap.pop();
 
@@ -248,17 +258,20 @@ void merge_blocks(const unsigned int n_blocks) {
         
         // Writing
         //std::cout << "Writing Inverted Index record -> " << cur.term << '\n';
+
+        // Update file offsets values
         docs_offset += len.first;
         freqs_offset += len.second;
+
+        // Write the current term entry in the final inverted index in compressed form
         len = write_inverted_index_record_compressed(out_inverted_index_docs, out_inverted_index_freqs, cur);
-        //write_inverted_index_record(out_inverted_index, cur);
         
-        //lexicon : [term, num_docs, offset inverted index, maxscore]
+        //lexicon entry format : [term, num_docs, offset inverted index, maxscore]
         lexicon_entry le = {(unsigned int) cur.posting_list.size(), docs_offset, freqs_offset, max_score};
         lexicon.insert(cur.term, le);
     }
 
-    // Write Lexicon on file
+    // Close Lexicon
     lexicon.close();
 
     // Close Doc Table
@@ -273,16 +286,4 @@ void merge_blocks(const unsigned int n_blocks) {
     */
 
    // DELETE in_files
-}
-
-void write_inverted_index_record(std::ofstream &out, term_entry &term_entry) {
-    out << term_entry.term << ' ';
-	for (auto& entry : term_entry.posting_list) {
-		out << entry.first << ',';
-	}
-    out << ' ';
-    for (auto& entry : term_entry.posting_list) {
-		out << entry.second << ',';
-	}
-    out << '\n';
 }

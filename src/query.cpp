@@ -1,10 +1,10 @@
 #include "MSMARCO-Search-Engine/query.hpp"
 
 // Doc Table
-DiskVector doc_table;
+DocTable doc_table;
 
 // Lexicon
-DiskHashMap lexicon;
+Lexicon lexicon;
 
 bool init_data_structures() {
     std::cout << "Opening Lexicon and Document Table ...\n";
@@ -331,6 +331,7 @@ bool execute_query(std::vector<std::string> &terms, unsigned int mode, unsigned 
     boost::chrono::high_resolution_clock::time_point t2 = boost::chrono::high_resolution_clock::now();
     std::cout << "The elapsed time was " << boost::chrono::duration_cast<boost::chrono::milliseconds>(t2-t1) << ".\n";
     std::cout << " ," << boost::chrono::duration_cast<boost::chrono::nanoseconds>(t2 - t1) << ".\n";
+
     // Showing results
     std::vector<std::pair<unsigned int, double>> results;
     while (!min_heap.empty()) {
@@ -432,5 +433,4 @@ void query_evaluation(std::string& topics, std::string& result, const std::unord
     }
     instream.close();
     outstream.close();
-
 }

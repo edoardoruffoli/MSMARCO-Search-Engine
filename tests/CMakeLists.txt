@@ -4,9 +4,17 @@
   GIT_TAG v2.13.6)
 FetchContent_MakeAvailable(catch)
 
+add_executable(compressing_test compressing_test.cpp)
+target_link_libraries(compressing_test PRIVATE msmarco_search_engine Catch2::Catch2)
+
+add_executable(doc_table_test doc_table_test.cpp)
+target_link_libraries(doc_table_test PRIVATE msmarco_search_engine Catch2::Catch2)
+
+add_executable(lexicon_test lexicon_test.cpp)
+target_link_libraries(lexicon_test PRIVATE msmarco_search_engine Catch2::Catch2)
+
 add_executable(posting_lists_test posting_lists_test.cpp)
 target_link_libraries(posting_lists_test PRIVATE msmarco_search_engine Catch2::Catch2)
-add_test(NAME testlibtest COMMAND posting_lists_test)
 
-add_executable(hash_map_test hash_map_test.cpp)
-target_link_libraries(hash_map_test PRIVATE msmarco_search_engine Catch2::Catch2)
+add_executable(tokenizer_test tokenizer_test.cpp)
+target_link_libraries(tokenizer_test PRIVATE msmarco_search_engine Catch2::Catch2)

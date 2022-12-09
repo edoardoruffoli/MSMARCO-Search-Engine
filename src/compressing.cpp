@@ -37,29 +37,3 @@ unsigned int VBdecode(std::istream& ifile, unsigned int &n_bytes) {
 	num += (byte.to_ulong()) * pow(128, p);
     return num;
 }
-
-std::vector<unsigned int> VBdecode(std::vector<char> &vec) {
-	char c;
-	int num;
-	int p;
-	std::vector<unsigned int> result;
-	for (std::vector<char>::iterator it = vec.begin(); it != vec.end(); it++) {
-		c = *it;
-		std::bitset<8> byte(c);
-		num = 0;
-		p = 0;
-		while (byte[7] == 1) {
-			byte.flip(7);
-			num += byte.to_ulong() * pow(128, p);
-			p++;
-			it++;
-			c = *it;
-			byte = std::bitset<8>(c);
-		}
-		num += (byte.to_ulong()) * pow(128, p);
-
-		result.push_back(num);
-	}
-
-	return result;
-}

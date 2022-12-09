@@ -1,10 +1,10 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
-#include "MSMARCO-Search-Engine/disk_vector.hpp"
+#include "MSMARCO-Search-Engine/doc_table.hpp"
 #include "MSMARCO-Search-Engine/model.hpp"
 
-TEST_CASE("DiskVector1", "create") {
-    DiskVector doc_table;
+TEST_CASE("DocTable1", "create") {
+    DocTable doc_table;
     
     REQUIRE(doc_table.create("../../output/doc_table_test.bin") == true);
 
@@ -35,8 +35,8 @@ TEST_CASE("DiskVector1", "create") {
     doc_table.close();
 }
 
-TEST_CASE("DiskVector2", "open") {
-    DiskVector doc_table;
+TEST_CASE("DocTable2", "open") {
+    DocTable doc_table;
     
     REQUIRE(doc_table.open("../../output/doc_table_test.bin") == true);
 

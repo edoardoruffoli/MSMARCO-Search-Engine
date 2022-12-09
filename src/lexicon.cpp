@@ -1,4 +1,4 @@
-#include "MSMARCO-Search-Engine/disk_hash_map.hpp"
+#include "MSMARCO-Search-Engine/lexicon.hpp"
 #include <list>
 #include <unordered_map> // Hash function
 #include <vector>
@@ -7,10 +7,11 @@
 #include <iostream>
 #include <algorithm>
 
-DiskHashMap::DiskHashMap() {}
-DiskHashMap::~DiskHashMap() {}
+Lexicon::Lexicon() {}
 
-bool DiskHashMap::create(const std::string& filename, unsigned int N) {
+Lexicon::~Lexicon() {}
+
+bool Lexicon::create(const std::string& filename, unsigned int N) {
 	this->f_create.open(filename, std::ios::in | std::ios::out | std::ios::binary | std::ios::trunc);
 
     // Fill file with null values. So that we can know when an entry has been inserted
@@ -27,7 +28,7 @@ bool DiskHashMap::create(const std::string& filename, unsigned int N) {
 	return this->f_create.good();
 }
 
-bool DiskHashMap::open(const std::string& filename) {
+bool Lexicon::open(const std::string& filename) {
     boost::iostreams::mapped_file_params params;
     params.path = filename;
     params.flags = boost::iostreams::mapped_file_source::mapmode::readonly;
@@ -41,7 +42,7 @@ bool DiskHashMap::open(const std::string& filename) {
 	return this->f_read.good();
 }
 
-void DiskHashMap::close() {
+void Lexicon::close() {
     // If the Lexicon was opened in write mode
     if (f_create.is_open()) {
         // Write the N value at the start of the file
@@ -56,7 +57,7 @@ void DiskHashMap::close() {
     }
 }
 
-bool DiskHashMap::insert(const std::string& key, const lexicon_entry& le) {
+bool Lexicon::insert(const std::string& key, const lexicon_entry& le) {
     // Truncate key to be in 20 bytes
     std::string hash_key = key.substr(0, MAX_KEY_LEN);
 
@@ -71,7 +72,7 @@ bool DiskHashMap::insert(const std::string& key, const lexicon_entry& le) {
     unsigned start_offset = sizeof(unsigned int) + index * sizeof(HashMapEntry);   
 
     // Check if there is already an entry at index
-    DiskHashMap::HashMapEntry e = DiskHashMap::getEntryByOffset(this->f_create, start_offset);
+    Lexicon::HashMapEntry e = Lexicon::getEntryByOffset(this->f_create, start_offset);
     if (e.isEmpty()) {
         target_offset = start_offset;
     } 
@@ -84,7 +85,7 @@ bool DiskHashMap::insert(const std::string& key, const lexicon_entry& le) {
         }
 
         // Find the first free offset using the number of collisions
-        target_offset = sizeof(unsigned int) + (N + n_collisions) * sizeof(DiskHashMap::HashMapEntry);
+        target_offset = sizeof(unsigned int) + (N + n_collisions) * sizeof(Lexicon::HashMapEntry);
         n_collisions++;
 
         // Update the previous member of the collision list
@@ -102,7 +103,7 @@ bool DiskHashMap::insert(const std::string& key, const lexicon_entry& le) {
     return true;
 }
 
-bool DiskHashMap::search(const std::string& key, lexicon_entry& le) {
+bool Lexicon::search(const std::string& key, lexicon_entry& le) {
     // Compute the index using hash 
     std::size_t h1 = std::hash<std::string>{}(key);
     unsigned int index = h1 % this->N;
@@ -112,7 +113,7 @@ bool DiskHashMap::search(const std::string& key, lexicon_entry& le) {
     // Index of the first member of the collision list if present
     unsigned start_offset = sizeof(unsigned int) + index * sizeof(HashMapEntry);   
 
-    DiskHashMap::HashMapEntry e = DiskHashMap::getEntryByOffset(this->f_read, start_offset);
+    Lexicon::HashMapEntry e = Lexicon::getEntryByOffset(this->f_read, start_offset);
     if (e.isEmpty()) {
         return false;
     } 
@@ -134,14 +135,14 @@ bool DiskHashMap::search(const std::string& key, lexicon_entry& le) {
     }
 }
 
-DiskHashMap::HashMapEntry DiskHashMap::getEntryByOffset(std::istream &f, unsigned long offset) {
+Lexicon::HashMapEntry Lexicon::getEntryByOffset(std::istream &f, unsigned long offset) {
 	HashMapEntry entry;
     f.seekg(offset, std::ios::beg);
     f.read(reinterpret_cast<char*>(&entry), sizeof(entry));
 	return entry;
 }
 
-bool DiskHashMap::updateEntry(DiskHashMap::HashMapEntry entry, unsigned long offset) { 
+bool Lexicon::updateEntry(Lexicon::HashMapEntry entry, unsigned long offset) { 
     return this->f_create.seekg(offset, std::ios::beg) && 
             this->f_create.write(reinterpret_cast<const char*>(&entry), sizeof(entry)); 
 }

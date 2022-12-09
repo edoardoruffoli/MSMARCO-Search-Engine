@@ -5,12 +5,15 @@
 #include <vector>
 #include <list>
 
+
+// Inverted Index
 struct term_entry {
     int block_id;
     std::string term;
     std::list<std::pair<int, int>> posting_list;
 };
 
+// Posting list skip pointer
 struct skip_pointer {
     unsigned int max_doc_id;
     unsigned int doc_id_offset;
@@ -43,31 +46,17 @@ struct posting_list {
 };
 
 // Lexicon
+const int N_HASH_KEYS = 1000000;
+
 struct lexicon_entry {
     unsigned int doc_freq;
     unsigned long docs_offset;
     unsigned long freqs_offset;
     double max_score;
-
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int version) {
-        ar & doc_freq;
-        ar & docs_offset;
-        ar & freqs_offset;
-        ar & max_score;
-    }
 };
 
 // Document Table
 struct doc_table_entry {
     char doc_no[10];
     unsigned int doc_len;
-    // URL
-    // Page Rank
-
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int version) {
-        ar & doc_no;
-        ar & doc_len;
-    }
 };

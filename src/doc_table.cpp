@@ -1,10 +1,10 @@
-#include "MSMARCO-Search-Engine/disk_vector.hpp"
+#include "MSMARCO-Search-Engine/doc_table.hpp"
 
-DiskVector::DiskVector() {}
+DocTable::DocTable() {}
 
-DiskVector::~DiskVector() {}
+DocTable::~DocTable() {}
 
-bool DiskVector::create(const std::string& filename) {
+bool DocTable::create(const std::string& filename) {
     this->f_write.open(filename, std::ios::binary | std::ios::out | std::ios::trunc);
 
     this->size = 0;
@@ -18,7 +18,7 @@ bool DiskVector::create(const std::string& filename) {
 	return this->f_write.good();
 }
 
-bool DiskVector::open(const std::string& filename) {
+bool DocTable::open(const std::string& filename) {
     boost::iostreams::mapped_file_params params;
     params.path = filename;
     params.flags = boost::iostreams::mapped_file_source::mapmode::readonly;
@@ -33,7 +33,7 @@ bool DiskVector::open(const std::string& filename) {
 	return this->f_read.good();
 }
 
-void DiskVector::close() {
+void DocTable::close() {
     // If the Doc Table was open in write mode
     if (f_write.is_open()) {
         // Write the avg doc len at the start of the file
@@ -52,7 +52,7 @@ void DiskVector::close() {
     }
 }
 
-bool DiskVector::insert(std::vector<doc_table_entry> &entries) {
+bool DocTable::insert(std::vector<doc_table_entry> &entries) {
     // Update size
     this->size += entries.size();
 
@@ -64,16 +64,16 @@ bool DiskVector::insert(std::vector<doc_table_entry> &entries) {
     return true;
 }
 
-bool DiskVector::getEntryByIndex(unsigned int index, doc_table_entry& de) {
+bool DocTable::getEntryByIndex(unsigned int index, doc_table_entry& de) {
 	this->f_read.seekg(sizeof(unsigned int) + sizeof(double) + index * sizeof(doc_table_entry), std::ios::beg);
     this->f_read.read(reinterpret_cast<char*>(&de), sizeof(doc_table_entry));
     return true;
 }
 
-unsigned int DiskVector::getSize() {
+unsigned int DocTable::getSize() {
     return this->size;
 }
 
-double DiskVector::getAvgDocLen() {
+double DocTable::getAvgDocLen() {
     return this->avg_doc_len;
 }

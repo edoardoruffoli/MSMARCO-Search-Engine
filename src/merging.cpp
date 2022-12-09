@@ -41,7 +41,7 @@ std::pair<unsigned long, unsigned long> write_inverted_index_record_compressed(s
     unsigned int prev_doc_id = 0;
 
     // Compute skip pointers
-    if (term_entry.posting_list.size() > 20) {
+    if (term_entry.posting_list.size() > MIN_POSTING_LEN) {
         // Compute skip pointer block size
         unsigned int block_size = sqrt(term_entry.posting_list.size());
 

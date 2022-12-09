@@ -1,7 +1,6 @@
 #include "MSMARCO-Search-Engine/compressing.hpp"
 #include "MSMARCO-Search-Engine/model.hpp"
 
-#define MIN_POSTING_LEN 1024
 
 bool posting_list::openList(unsigned long docs_offset, unsigned long freqs_offset, unsigned int posting_list_len) {
 

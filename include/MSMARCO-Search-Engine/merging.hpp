@@ -14,8 +14,8 @@
 #include "MSMARCO-Search-Engine/scoring_functions.hpp"
 #include "MSMARCO-Search-Engine/doc_table.hpp"
 #include "MSMARCO-Search-Engine/lexicon.hpp"
+#include "MSMARCO-Search-Engine/model.hpp"
 
-#define MIN_POSTING_LEN 1024
 
 bool read_record(std::ifstream &in, term_entry &term_entry);
 

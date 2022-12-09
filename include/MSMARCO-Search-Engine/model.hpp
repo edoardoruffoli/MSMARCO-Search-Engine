@@ -21,6 +21,8 @@ struct skip_pointer {
 };
 
 // Posting list iterator
+const int MIN_POSTING_LEN = 1024;
+
 struct posting_list {
     std::ifstream f_docs;
     std::ifstream f_freqs;

@@ -21,8 +21,7 @@
 
 #define CONJUNCTIVE_MODE 0  // DAAT
 #define DISJUNCTIVE_MODE 1
-#define CONJUNCTIVE_MODE_MAX_SCORE 2
-#define DISJUNCTIVE_MODE_MAX_SCORE 3
+#define DISJUNCTIVE_MODE_MAX_SCORE 2
 
 // Min heap <doc_id, score>
 struct compare {

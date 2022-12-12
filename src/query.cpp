@@ -354,13 +354,14 @@ bool execute_query(std::vector<std::string> &terms, unsigned int mode, unsigned 
 
 void query_evaluation(std::string& topics, std::string& result, const std::unordered_set<std::string>& stopwords, unsigned int mode, unsigned int k) {
     std::cout << "Executing queries\n";
-    boost::chrono::high_resolution_clock::time_point t1 = boost::chrono::high_resolution_clock::now();
     std::vector<double> max_scores;
 
     std::ifstream instream(topics);
     std::ofstream outstream(result);
     std::string loaded_content;
 
+    int total_time = 0;
+    int num_queries = 0;
     //Execution of input queries
     while (getline(instream, loaded_content)) {
         std::vector<std::string> query_terms;
@@ -404,7 +405,7 @@ void query_evaluation(std::string& topics, std::string& result, const std::unord
                 max_scores.push_back(le.max_score);
             }
             else {
-                std::cout << query_terms[i] << " not present in lexicon.\n";
+                //std::cout << query_terms[i] << " not present in lexicon.\n";
             }
         }
 
@@ -412,10 +413,12 @@ void query_evaluation(std::string& topics, std::string& result, const std::unord
             std::vector<std::pair<unsigned int, double>>, compare> min_heap;
 
         if (pls.size() == 0) {
-            std::cout << "No terms found.\n";
+            //std::cout << "No terms found.\n";
             continue;
         }
 
+        num_queries++;
+        boost::chrono::high_resolution_clock::time_point t1 = boost::chrono::high_resolution_clock::now();
         switch (mode) {
         case CONJUNCTIVE_MODE:
             conjunctive_query(min_heap, pls, k);
@@ -427,7 +430,8 @@ void query_evaluation(std::string& topics, std::string& result, const std::unord
             disjunctive_query_max_score(min_heap, pls, max_scores, k);
             break;
         }
-
+        boost::chrono::high_resolution_clock::time_point t2 = boost::chrono::high_resolution_clock::now();
+        total_time += boost::chrono::duration_cast<boost::chrono::milliseconds>(t2 - t1).count();
         std::vector<std::pair<unsigned int, double>> results;
         while (!min_heap.empty()) {
             std::pair<unsigned int, double> tmp = min_heap.top();
@@ -445,8 +449,7 @@ void query_evaluation(std::string& topics, std::string& result, const std::unord
         }
         
     }
-    boost::chrono::high_resolution_clock::time_point t2 = boost::chrono::high_resolution_clock::now();
-    std::cout << "The elapsed time was " << boost::chrono::duration_cast<boost::chrono::seconds>(t2 - t1) << ".\n";
+    std::cout << "The mean response time is: " <<  total_time/num_queries << " milliseconds.\n";
     instream.close();
     outstream.close();
 }

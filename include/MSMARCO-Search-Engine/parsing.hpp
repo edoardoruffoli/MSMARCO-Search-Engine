@@ -38,7 +38,7 @@ void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& 
 
 bool save_intermediate_inv_idx(std::map<std::string, std::list<std::pair<int, int>>>& dictionary, std::string &filename);
 
-void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id, unsigned int block_num, 
+void SPIMI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id, unsigned int block_num,
                    BS::thread_pool &pool, 
                    DocTable &doc_table,
                    std::unordered_set<std::string> &stopwords, bool flag);

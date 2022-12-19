@@ -63,6 +63,7 @@ static void query(std::ostream& out, std::string& query, int mode, int k) {
         loaded_data = true;
     }
     Clear();
+    std::cout << query << "\n\n";
     if (mode < 3) {
         std::vector<std::string> query_terms;
         std::unordered_map<std::string, int> tokens;
@@ -98,7 +99,7 @@ static void eval(std::ostream& out, int mode, int k, std::string& queriesfile) {
 }
 
 int main(int argc, char* argv[]){
-    auto rootMenu = std::make_unique<cli::Menu>("MSMARCO-Search-Engine");
+    auto rootMenu = std::make_unique<cli::Menu>("MSMARCO");
     rootMenu->Insert(
         "q",
         query,

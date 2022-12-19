@@ -3,7 +3,7 @@
 int main(int argc, char* argv[])
 {
 	unsigned int n_threads = std::thread::hardware_concurrency() - 1;
-	const int BLOCK_SIZE = 500000;
+	const int BLOCK_SIZE = 4000000;
 	const char* docfile = "../../collection.tar.gz";
 	const char* stopwords = "../../stopwords.txt";
     parse(docfile, BLOCK_SIZE, true, stopwords, n_threads);

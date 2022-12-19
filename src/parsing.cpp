@@ -90,7 +90,7 @@ bool save_intermediate_inv_idx(std::map<std::string, std::list<std::pair<int, in
 
 /* Process a block of documents and write the results on file. The processing is done using a pool of threads.
 */
-void BSBI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id, unsigned int block_num, 
+void SPIMI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id, unsigned int block_num,
                    BS::thread_pool &pool, 
                    DocTable &doc_table,
                    std::unordered_set<std::string> &stopwords, bool flag) 
@@ -270,7 +270,7 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 		}
 		else {
             // When a block of BLOCK_SIZE documents has been read, start the processing
-            BSBI_Invert(block, doc_id, block_num, pool, doc_table, stopwords, flag);
+            SPIMI_Invert(block, doc_id, block_num, pool, doc_table, stopwords, flag);
             doc_id += current_size;
 			block_num++;
             current_size = 0;
@@ -280,7 +280,7 @@ void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char*
 	}
 
     // Process last block
-    BSBI_Invert(block, doc_id, block_num, pool, doc_table, stopwords, flag);
+    SPIMI_Invert(block, doc_id, block_num, pool, doc_table, stopwords, flag);
     block.clear();
 
     // Close the Doc Table

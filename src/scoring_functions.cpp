@@ -5,7 +5,7 @@ double TFIDF(unsigned int tf, unsigned int df, unsigned int N) {
 }
 
 double BM25(unsigned int tf, unsigned int df, unsigned int doc_len, unsigned int avg_doc_len, unsigned int N) {
-    double k1 = 1.2;
-    double b = 0.75;
+    double k1 = 0.82;
+    double b = 0.68;
     return tf * log10((double)N / df) / (k1 * ((1 - b) + b * ((double)doc_len / avg_doc_len)) + tf);
 }

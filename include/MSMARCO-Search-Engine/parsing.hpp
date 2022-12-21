@@ -36,7 +36,7 @@ void tokenize(std::string &content, bool flag, const std::unordered_set<std::str
 void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& dictionary,
                   const std::unordered_map<std::string, int>& token_stream, int doc_id, unsigned int &doc_len);
 
-bool save_intermediate_inv_idx(std::map<std::string, std::list<std::pair<int, int>>>& dictionary, std::string &filename);
+bool save_intermediate_inv_idx(std::map<std::string, std::list<std::pair<int, int>>>& dictionary, const char *filename);
 
 void SPIMI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id, unsigned int block_num,
                    BS::thread_pool &pool, 

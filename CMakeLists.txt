@@ -42,5 +42,5 @@ add_subdirectory(apps)
 
 option(PACKAGE_TESTS "Build the tests" ON)
 if(PACKAGE_TESTS)
-  add_subdirectory(tests)
+  #add_subdirectory(tests)
 endif()

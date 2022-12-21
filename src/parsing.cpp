@@ -72,7 +72,7 @@ void add_to_posting_list(std::map<std::string, std::list<std::pair<int, int>>>& 
 /* Save the intermediate inverted index passed as parameter on a temporary file.
 */
 bool save_intermediate_inv_idx(std::map<std::string, std::list<std::pair<int, int>>>& dictionary, 
-                std::string &filename) {
+                const char *filename) {
     std::ofstream filestream(filename, std::ios::binary);
     if (filestream.fail()) {
         std::cout << "Fail intermediate inverted index write!" << std::endl;
@@ -180,7 +180,11 @@ void SPIMI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id
     doc_table.insert(doc_table_entries);
 
     // Save the intermediate dictionary results on file
-    save_intermediate_inv_idx(dictionary, std::string("../tmp/intermediate_" + std::to_string(block_num)));
+    char path[40];
+    sprintf(path, "../tmp/intermediate_%d", block_num);
+
+    save_intermediate_inv_idx(dictionary, path);
+    //save_intermediate_inv_idx(dictionary, std::string("../tmp/intermediate_" + std::to_string(block_num)));
 
     std::cout << "Ended Paralleling Processing: \n"; 
 

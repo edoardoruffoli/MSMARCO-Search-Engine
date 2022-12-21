@@ -59,7 +59,7 @@ void Lexicon::close() {
 
 bool Lexicon::insert(const std::string& key, const lexicon_entry& le) {
     // Truncate key to be in 20 bytes
-    std::string hash_key = key.substr(0, MAX_KEY_LEN);
+    std::string hash_key = key.substr(0, MAX_KEY_LEN-1);
 
      // Offset where the entry will be written
     unsigned int target_offset;   

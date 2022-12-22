@@ -37,8 +37,13 @@ int main() {
             handleInsertQueryParam(mode, k);
             while (true) {
                 std::string arg;
+                std::cout << "Digit _exit to return to main menu, or\n" << std::endl;
                 std::cout << "Enter the query:\n" << std::endl;
                 std::getline(std::cin, arg);
+                if (arg == "_exit") {
+                    clear();
+                    break;
+                }
                 clear();
                 handleQuery(arg, mode, k);
             }
@@ -98,7 +103,10 @@ void printMenu() {
 void printHelp() {
     std::cout << "Available commands:" << std::endl;
     std::cout << "  help - display a list of commands" << std::endl;
-    std::cout << "  query <string> <int> <int> - perform a query" << std::endl;
+    std::cout << "  query <int> <int> <string> - perform a query" << std::endl;
+    std::cout << "  eval <int> <int> <string> - execute a queries dataset, saving the result file for trec_eval " << std::endl;
+    std::cout << "  parse <int> - create the intermediate posting lists " << std::endl;
+    std::cout << "  merge - merge intermediate posting lists to create the index" << std::endl;
     std::cout << "  exit - exit the program" << std::endl;
     std::cout << std::endl;
 }

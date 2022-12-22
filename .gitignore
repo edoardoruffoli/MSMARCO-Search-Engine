@@ -36,7 +36,6 @@
 # VS folder
 .vs/
 .vscode
-output/
 
 # Data
 collection.*

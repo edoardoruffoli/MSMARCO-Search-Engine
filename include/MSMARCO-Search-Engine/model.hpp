@@ -37,6 +37,8 @@ struct posting_list {
     unsigned int cur_doc_id;    // DocId of the current document
     unsigned int cur_freq;      // Number of term occurences in the current document
     unsigned int doc_freq;      // Number of documents that contains term of the posting list
+    unsigned int start_docs_offset; //Starting offset of the documents posting list 
+    unsigned int start_freq_offset; //Starting offset of the frequencies posting list 
 
     // API
     bool openList(unsigned long docs_offset, unsigned long freqs_offset, unsigned int posting_list_len);

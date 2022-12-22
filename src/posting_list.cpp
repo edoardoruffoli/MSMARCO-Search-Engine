@@ -37,8 +37,13 @@ bool posting_list::openList(unsigned long docs_offset, unsigned long freqs_offse
 
             this->skip_pointers.push_back(cur_skip_pointer);
         }
+
     }
 
+    //Used in nextGEQ
+    this->start_docs_offset = docs_offset + num_bytes_skip_pointers_list;
+    this->start_freq_offset = freqs_offset;
+    
     this->cur_doc_id = 0;
     // Init
     next();
@@ -88,8 +93,8 @@ void posting_list::nextGEQ(unsigned int d) {
         }
 
         // Position the file pointers to the start of the block that contains doc_id greater or equal than d
-        this->f_docs.seekg(skip_pointers[block_idx].doc_id_offset);
-        this->f_freqs.seekg(skip_pointers[block_idx].freqs_offset);
+        this->f_docs.seekg(start_docs_offset + skip_pointers[block_idx].doc_id_offset);
+        this->f_freqs.seekg(start_freq_offset + skip_pointers[block_idx].freqs_offset);
 
         // Update the counter
         this->count = block_idx * this->block_size;
@@ -99,6 +104,8 @@ void posting_list::nextGEQ(unsigned int d) {
             this->cur_doc_id = skip_pointers[block_idx-1].max_doc_id;
         else 
             this->cur_doc_id = 0;
+        // Init cur_doc_id and cur_freq
+        next();
     }
     // Scan the list until I find the doc_id greater or equal
     while (this->cur_doc_id < d) {

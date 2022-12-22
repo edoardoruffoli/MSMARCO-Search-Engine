@@ -38,7 +38,7 @@ int main() {
             while (true) {
                 std::string arg;
                 std::cout << "Digit _exit to return to main menu, or\n" << std::endl;
-                std::cout << "Enter the query:\n" << std::endl;
+                std::cout << "Enter the query:\n" << std::endl << ">";
                 std::getline(std::cin, arg);
                 if (arg == "_exit") {
                     clear();
@@ -50,13 +50,13 @@ int main() {
         }
         else if (command == "parse") {
             int block_size;
-            std::cout << "Enter the block size:" << std::endl;
+            std::cout << "Enter the block size:" << std::endl << ">";
             std::cin >> block_size;
             while (!std::cin.good()) {
                 std::cin.clear();
                 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                 clear();
-                std::cout << "Enter the block size:" << std::endl;
+                std::cout << "Enter the block size:" << std::endl << ">";
                 std::cin >> block_size;
             }
             handleParse(block_size);
@@ -69,7 +69,7 @@ int main() {
             int mode;
             handleInsertQueryParam(mode, k);
             std::string arg;
-            std::cout << "Enter file name:\n" << std::endl;
+            std::cout << "Enter file name:\n" << std::endl << ">";
             std::getline(std::cin, arg);
             clear();
             handleEval(mode, k, arg);
@@ -96,7 +96,7 @@ void clear() {
 
 // Prints the main menu to the console
 void printMenu() {
-    std::cout << "Enter a command: ";
+    std::cout << "Enter a command: \n" << ">";
 }
 
 // Prints a list of available commands to the console //DA FINIRE
@@ -130,7 +130,7 @@ void handleInsertQueryParam(int &mode, int &k) {
     std::cout << "Enter the query exectuon mode:\n"
         "    0 : CONJUNCTIVE_MODE\n"
         "    1 : DISJUNCTIVE_MODE\n"
-        "    2 : DISJUNCTIVE_MODE_MAX_SCORE\n " << std::endl;
+        "    2 : DISJUNCTIVE_MODE_MAX_SCORE\n " << std::endl << ">";
     //print dei tre valori
     std::cin >> mode;
     while (!std::cin.good() || mode > 2) {
@@ -140,16 +140,16 @@ void handleInsertQueryParam(int &mode, int &k) {
         std::cout << "Enter the query exectuon mode:\n"
             "    0 : CONJUNCTIVE_MODE\n"
             "    1 : DISJUNCTIVE_MODE\n"
-            "    2 : DISJUNCTIVE_MODE_MAX_SCORE\n " << std::endl;
+            "    2 : DISJUNCTIVE_MODE_MAX_SCORE\n " << std::endl << ">";
         std::cin >> mode;
     }
-    std::cout << "Select how many documents return:" << std::endl;
+    std::cout << "Select how many documents return:" << std::endl << ">";
     std::cin >> k;
     while (!std::cin.good()) {
         std::cin.clear();
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         clear();
-        std::cout << "Enter the number of relevant documents to return:" << std::endl;
+        std::cout << "Enter the number of relevant documents to return:" << std::endl << ">";
         std::cin >> k;
     }
     std::cin.ignore();

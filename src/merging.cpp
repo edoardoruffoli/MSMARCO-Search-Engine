@@ -66,6 +66,7 @@ std::pair<unsigned long, unsigned long> write_inverted_index_record_compressed(s
 
             if (cur_block_count == block_size) {
                 // Store the max doc_id of the current block, that is the prev iteration doc_id, stored in bytes variable
+                VBencode(unsigned(entry.first), cur_doc_id_bytes);
                 VB_block_max_doc_ids.push_back(cur_doc_id_bytes);
 
                 // Store the doc_id offset of the current block
@@ -89,6 +90,7 @@ std::pair<unsigned long, unsigned long> write_inverted_index_record_compressed(s
 
         // The last block may contain a number of elements < BLOCK_SIZE
         if (cur_block_count > 0) {
+            VBencode(unsigned(term_entry.posting_list.back().first), cur_doc_id_bytes);
             VB_block_max_doc_ids.push_back(cur_doc_id_bytes);
             
             // Store the doc_id offset of the current block
@@ -255,9 +257,6 @@ void merge_blocks(const unsigned int n_blocks) {
             if (bm25 > max_score)
                 max_score = bm25;
         }
-        
-        // Writing
-        //std::cout << "Writing Inverted Index record -> " << cur.term << '\n';
 
         // Update file offsets values
         docs_offset += len.first;
@@ -277,13 +276,8 @@ void merge_blocks(const unsigned int n_blocks) {
     // Close Doc Table
     doc_table.close();
 
-    // Remove intermediate files
-/*    for (unsigned int i = 1; i <= n_blocks; ++i) {
+    // Close file pointers
+    for (unsigned int i = 1; i <= n_blocks; ++i) {
         in_files[i-1].close();
-        boost::filesystem::remove(boost::filesystem::path{"../tmp/intermediate_" + std::to_string(i)});
     }
-    std::cout << "Removed intermediate files.\n";
-    */
-
-   // DELETE in_files
 }

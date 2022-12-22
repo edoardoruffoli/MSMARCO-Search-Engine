@@ -196,6 +196,16 @@ void SPIMI_Invert(std::vector<std::string> &documents, unsigned int start_doc_id
 void parse(const char* in, const unsigned int BLOCK_SIZE, bool flag, const char* stopwords_filename, 
             unsigned int n_threads) 
 {
+    // Remove intermediate files
+    boost::filesystem::path p("../tmp");
+ 
+    if (boost::filesystem::exists(p) && boost::filesystem::is_directory(p)) {
+        boost::filesystem::directory_iterator end;
+        for (boost::filesystem::directory_iterator it(p); it != end; ++it) {
+            boost::filesystem::remove(it->path());
+        }
+    }
+
     std::cout << "Started Parsing Phase: \n\n";
 
     // Check input arguments

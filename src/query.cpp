@@ -30,74 +30,16 @@ unsigned int get_min_doc_id(std::vector<posting_list*> pls) {
     return min_doc_id;
 }
 
-/*
-bool get_conjunctive_doc_id(std::vector<posting_list*> pls) {
-    unsigned int min_doc_id = std::numeric_limits<unsigned int>::max();
-    bool find = false;
-    while (!find) {
-        auto prev = pls.begin();   
-        for (auto pl = pls.begin()+1; pl != pls.end(); pl++) {
-            if (((*prev)->cur_doc_id == min_doc_id) || ((*pl)->cur_doc_id == min_doc_id)) {
-                return false;
-            }
-            else if ((*prev)->cur_doc_id < (*pl)->cur_doc_id) {
-                (*prev)->next();
-                break;
-            }
-            else if ((*prev)->cur_doc_id > (*pl)->cur_doc_id) {
-                (*pl)->next();
-                break;
-            }
-            else {
-                prev = pl;
-                if (pl == pls.end() - 1) {
-                    find = true;
-                }
-            }
-        }
-    }
-    return true;
+bool compareByLength(const posting_list* a, const posting_list* b) {
+    return a->doc_freq < b->doc_freq;
 }
-
-void conjunctive_query(std::priority_queue<std::pair<unsigned int, double>, 
-                       std::vector<std::pair<unsigned int, double>>, compare> &min_heap,
-                       std::vector<posting_list*> pls,
-                       unsigned int k) {
-
-    bool find = get_conjunctive_doc_id(pls);
-
-    while (find) {
-        double score = 0.0;
-        unsigned int cur_doc_id;
-        for (auto& pl : pls) {
-            cur_doc_id = pl->getDocId();
-            unsigned int term_freq = pl->getFreq();
-            unsigned int doc_len = doc_table[cur_doc_id].doc_len; // ONLY BM25
-            unsigned int doc_freq = pl->doc_freq;
-            unsigned int N = (unsigned int)doc_table.size();   // O(1)
-            //score += TFIDF(term_freq, doc_freq, N);
-            score += BM25(term_freq, doc_freq, doc_len, avg_doc_len, N);
-            pl->next();
-        }
-        // SCORE OF A DOCUMENT
-        if (min_heap.size() >= k) {
-            if (min_heap.top().second < score) {
-                min_heap.pop();
-                min_heap.push(std::make_pair(cur_doc_id, score));
-            }
-        }
-        else {
-            min_heap.push(std::make_pair(cur_doc_id, score));
-        }
-        find = get_conjunctive_doc_id(pls);
-    }
-}*/
 
 void conjunctive_query(std::priority_queue<std::pair<unsigned int, double>,
     std::vector<std::pair<unsigned int, double>>, compare>& min_heap,
     std::vector<posting_list*> pls,
     unsigned int k) {
 
+    std::sort(pls.begin(), pls.end(), compareByLength);
     unsigned int max_doc_id = std::numeric_limits<unsigned int>::max();
     unsigned int cur_doc_id = pls[0]->getDocId();
     unsigned int i = 1;
@@ -105,7 +47,6 @@ void conjunctive_query(std::priority_queue<std::pair<unsigned int, double>,
 
         while (i < pls.size()) {
             pls[i]->nextGEQ(cur_doc_id);
-            //std::cout << pls[i]->getDocId() << std::endl;
             if (pls[i]->getDocId() > cur_doc_id) {
                 pls[0]->nextGEQ(pls[i]->getDocId());
                 if (pls[0]->getDocId() > pls[i]->getDocId()) {
@@ -131,7 +72,6 @@ void conjunctive_query(std::priority_queue<std::pair<unsigned int, double>,
                     unsigned int doc_freq = pl->doc_freq;
                     unsigned int N = (unsigned int) doc_table.getSize();
                     //score += TFIDF(term_freq, doc_freq, N);
-                    //std::cout << doc_len << " " << avg_doc_len << std::endl;
                     score += BM25(term_freq, doc_freq, doc_len, doc_table.getAvgDocLen(), N);
                 }
             }
@@ -170,7 +110,6 @@ void disjunctive_query(std::priority_queue<std::pair<unsigned int, double>,
                 unsigned int doc_freq = pl->doc_freq;
                 unsigned int N = (unsigned int) doc_table.getSize();
                 //score += TFIDF(term_freq, doc_freq, N);
-                //std::cout << doc_len << " " << avg_doc_len << std::endl;
                 score += BM25(term_freq, doc_freq, doc_len, doc_table.getAvgDocLen(), N);
                 pl->next();
             }
@@ -223,7 +162,6 @@ void disjunctive_query_max_score(std::priority_queue<std::pair<unsigned int, dou
                 unsigned int doc_freq = pls[i]->doc_freq;
                 unsigned int N = (unsigned int) doc_table.getSize();
                 //score += TFIDF(term_freq, doc_freq, N);
-                //std::cout << doc_len << " " << avg_doc_len << std::endl;
                 score += BM25(term_freq, doc_freq, doc_len, doc_table.getAvgDocLen(), N);
                 pls[i]->next();
             }
@@ -246,7 +184,6 @@ void disjunctive_query_max_score(std::priority_queue<std::pair<unsigned int, dou
                 unsigned int doc_freq = pls[i]->doc_freq;
                 unsigned int N = (unsigned int) doc_table.getSize();
                 //score += TFIDF(term_freq, doc_freq, N);
-                //std::cout << doc_len << " " << avg_doc_len << std::endl;
                 score += BM25(term_freq, doc_freq, doc_len, doc_table.getAvgDocLen(), N);
             }
         }
@@ -344,6 +281,7 @@ bool execute_query(std::vector<std::string> &terms, unsigned int mode, unsigned 
     for (int i=results.size()-1; i>=0; i--) {
         std::cout << results[i].first << '\t' << results[i].second << '\n';
     }
+    std::cout << std::endl;
 
     for (auto pl : pls) {
         pl->closeList();
@@ -404,16 +342,12 @@ void query_evaluation(std::string& topics, std::string& result, const std::unord
                 pls.push_back(pl);
                 max_scores.push_back(le.max_score);
             }
-            else {
-                //std::cout << query_terms[i] << " not present in lexicon.\n";
-            }
         }
 
         std::priority_queue<std::pair<unsigned int, double>,
             std::vector<std::pair<unsigned int, double>>, compare> min_heap;
 
         if (pls.size() == 0) {
-            //std::cout << "No terms found.\n";
             continue;
         }
 

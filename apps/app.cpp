@@ -20,8 +20,9 @@ void handleMerge();
 void handleEval(int mode, int k, std::string& queriesfile);
 
 int main() {
-
+    std::cout << "*** Started MSMARCO Search Engine ***" << std::endl;
     while (true) {
+        printHelp();
         printMenu();
 
         std::string command;
@@ -69,7 +70,7 @@ int main() {
             int mode;
             handleInsertQueryParam(mode, k);
             std::string arg;
-            std::cout << "Enter file name:\n" << std::endl << ">";
+            std::cout << "Enter the file name:\n" << std::endl << ">";
             std::getline(std::cin, arg);
             clear();
             handleEval(mode, k, arg);
@@ -103,9 +104,9 @@ void printMenu() {
 void printHelp() {
     std::cout << "Available commands:" << std::endl;
     std::cout << "  help - display a list of commands" << std::endl;
-    std::cout << "  query <int> <int> <string> - perform a query" << std::endl;
-    std::cout << "  eval <int> <int> <string> - execute a queries dataset, saving the result file for trec_eval " << std::endl;
-    std::cout << "  parse <int> - create the intermediate posting lists " << std::endl;
+    std::cout << "  query - perform a query" << std::endl;
+    std::cout << "  eval - execute a queries dataset, saving the result file for trec_eval " << std::endl;
+    std::cout << "  parse - create the intermediate posting lists " << std::endl;
     std::cout << "  merge - merge intermediate posting lists to create the index" << std::endl;
     std::cout << "  exit - exit the program" << std::endl;
     std::cout << std::endl;
@@ -127,7 +128,7 @@ bool load_stopwords(std::unordered_set<std::string>& stopwords, const char* file
 }
 
 void handleInsertQueryParam(int &mode, int &k) {
-    std::cout << "Enter the query exectuon mode:\n"
+    std::cout << "Enter the query execution mode:\n"
         "    0 : CONJUNCTIVE_MODE\n"
         "    1 : DISJUNCTIVE_MODE\n"
         "    2 : DISJUNCTIVE_MODE_MAX_SCORE\n " << std::endl << ">";
@@ -137,7 +138,7 @@ void handleInsertQueryParam(int &mode, int &k) {
         std::cin.clear();
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         clear();
-        std::cout << "Enter the query exectuon mode:\n"
+        std::cout << "Enter the query execution mode:\n"
             "    0 : CONJUNCTIVE_MODE\n"
             "    1 : DISJUNCTIVE_MODE\n"
             "    2 : DISJUNCTIVE_MODE_MAX_SCORE\n " << std::endl << ">";
@@ -166,8 +167,7 @@ void handleQuery(std::string& query, int mode, int k) {
         loaded_data = true;
     }
     clear();
-    std::cout << mode << " " << k << std::endl;
-    std::cout << query << "\n\n";
+    std::cout << "Results for: \""<< query << "\"\n";
     std::vector<std::string> query_terms;
     std::unordered_map<std::string, int> tokens;
 

@@ -212,7 +212,6 @@ void disjunctive_query_max_score(std::priority_queue<std::pair<unsigned int, dou
 auto LRUCache = boost::compute::detail::lru_cache<std::string, lexicon_entry>(1000);
 
 bool execute_query(std::vector<std::string> &terms, unsigned int mode, unsigned int k) {
-    std::cout << "Executing query\n";
     boost::chrono::high_resolution_clock::time_point t1 = boost::chrono::high_resolution_clock::now();
 
     // Vector of max score one per query term
@@ -267,7 +266,7 @@ bool execute_query(std::vector<std::string> &terms, unsigned int mode, unsigned 
 
     boost::chrono::high_resolution_clock::time_point t2 = boost::chrono::high_resolution_clock::now();
     std::cout << "The elapsed time was " << boost::chrono::duration_cast<boost::chrono::milliseconds>(t2-t1);
-    std::cout << " ," << boost::chrono::duration_cast<boost::chrono::nanoseconds>(t2 - t1) << ".\n\n";
+    std::cout << ", " << boost::chrono::duration_cast<boost::chrono::nanoseconds>(t2 - t1) << ".\n\n";
 
     // Showing results
     std::vector<std::pair<unsigned int, double>> results;

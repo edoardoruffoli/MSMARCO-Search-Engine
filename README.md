@@ -4,6 +4,7 @@ Project developed for the MIRVC course of the Master of Artificial Intelligence 
 
 This project consists in the design and implementation of a Search Engine for MSMARCO dataset.
 
+To run this project you need to download in the main folder the [@MSMARCO](https://msmarco.blob.core.windows.net/msmarcoranking/collection.tar.gz) dataset.
 ## Compiling on UNIX
 
 ### 1. Install the required software

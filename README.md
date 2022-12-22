@@ -5,8 +5,15 @@ Project developed for the MIRVC course of the Master of Artificial Intelligence 
 This project consists in the design and implementation of a Search Engine for MSMARCO dataset.
 
 To run this project you need to download in the main folder the [MSMARCO](https://msmarco.blob.core.windows.net/msmarcoranking/collection.tar.gz) dataset.
-## Compiling on UNIX
 
+## Compiling on Windows
+### 1. Import the project in Visual Studio/Visual Studio Code
+
+### 2. Build the project using Cmake
+
+### 3. Execute app.exe
+
+## Compiling on UNIX
 ### 1. Install the required software
 ```bash
 $ sudo apt-get install git cmake build-essential zlib1g-dev libboost-all-dev
@@ -32,21 +39,59 @@ $ cd bin
 $ ./app
 ```
 
-## Compiling on Windows
-### a. Install and run with Visual Studio
-Clone the reposiotry, generate the build file with cmake, build and run!
-### b. Run without an IDE
+## Running
+```
+*** Started MSMARCO Search Engine ***
+Available commands:
+  help - display a list of commands
+  query <int> <int> <string> - perform a query
+  eval <int> <int> <string> - execute a queries dataset, saving the result file for trec_eval
+  parse <int> - create the intermediate posting lists
+  merge - merge intermediate posting lists to create the index
+  exit - exit the program
+
+Enter a command:
+>query
+Enter the query exectuon mode:
+    0 : CONJUNCTIVE_MODE
+    1 : DISJUNCTIVE_MODE
+    2 : DISJUNCTIVE_MODE_MAX_SCORE
+
+>2
+Select how many documents return:
+>10
+Enter the query:
+
+>manhattan project
+
+Results for: "manhattan project"
+The elapsed time was 15 milliseconds, 15293700 nanoseconds.
+
+RESULTS:
+Doc Id  Score
+2036644 4.31715
+3870080 4.30079
+2       4.29498
+3615618 4.28213
+2395250 4.27013
+4404039 4.25136
+3607205 4.23599
+7243450 4.20026
+3689999 4.1146
+3870082 4.09159
+
+```
 
 ## Repository
 
 The repository is organized as follows:
-- *apps/* contains 
-- *docs/* contains the report and the assignment
-- *evaluation/* contains the IMDb dataset stored in *film_ratings.txt*
-- *include/* contains 
-- *src/* contains
-- *tests/* contains 
-- *thirdparty/* contains 
+- *apps/* contains the main of the programs
+- *docs/* contains the project report and the assignment
+- *evaluation/* contains the dataset used to evaluate the search engine with trec_eval
+- *include/* contains the header files
+- *src/* contains the source files
+- *tests/* contains the unit tests
+- *thirdparty/* contains the thirdparty dependencies
 
 ## Contributors
 - Francesco Hudema [@MrFransis](https://github.com/mrfransis)

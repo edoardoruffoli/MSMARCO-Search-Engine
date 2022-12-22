@@ -7,33 +7,33 @@ This project consists in the design and implementation of a Search Engine for MS
 To run this project you need to download in the main folder the [MSMARCO](https://msmarco.blob.core.windows.net/msmarcoranking/collection.tar.gz) dataset.
 
 ## Compiling on Windows
-### 1. Import the project in Visual Studio/Visual Studio Code
+1. Import the project in Visual Studio/Visual Studio Code
 
-### 2. Build the project using Cmake
+2. Build the project using Cmake
 
-### 3. Execute app.exe
+3. Execute app.exe
 
 ## Compiling on UNIX
-### 1. Install the required software
+1. Install the required software
 ```bash
 $ sudo apt-get install git cmake build-essential zlib1g-dev libboost-all-dev
 ```
-### 2. Download the source code
+2. Download the source code
 ```bash
 $ git clone --recursive https://github.com/edoardoruffoli/MSMARCO-Search-Engine
 ```
-### 3. Generate the build files
+3. Generate the build files
 ```bash
 $ cd MSMARCO-Search-Engine
 $ mkdir build && cd build
 $ cmake ..
 ```
-### 4. Build
+4. Build
 ```bash
 $ make
 ```
 
-### 5. Run
+5. Run
 ```bash
 $ cd bin
 $ ./app
@@ -44,15 +44,15 @@ $ ./app
 *** Started MSMARCO Search Engine ***
 Available commands:
   help - display a list of commands
-  query <int> <int> <string> - perform a query
-  eval <int> <int> <string> - execute a queries dataset, saving the result file for trec_eval
-  parse <int> - create the intermediate posting lists
+  query - perform a query
+  eval - execute a queries dataset, saving the result file for trec_eval
+  parse - create the intermediate posting lists
   merge - merge intermediate posting lists to create the index
   exit - exit the program
 
 Enter a command:
 >query
-Enter the query exectuon mode:
+Enter the query execution mode:
     0 : CONJUNCTIVE_MODE
     1 : DISJUNCTIVE_MODE
     2 : DISJUNCTIVE_MODE_MAX_SCORE

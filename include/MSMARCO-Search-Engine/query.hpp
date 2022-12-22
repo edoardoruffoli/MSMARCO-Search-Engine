@@ -42,5 +42,5 @@ void conjunctive_query(std::priority_queue<std::pair<unsigned int, unsigned int>
 void disjunctive_query(std::priority_queue<std::pair<unsigned int, unsigned int>> &min_heap,
                        std::vector<posting_list*> &pls, unsigned int k);
 
-void query_evaluation(const char* topics, const char* result, const std::unordered_set<std::string>& stopwords, unsigned int mode, unsigned int k);
+void query_evaluation(std::string& topics, std::string& result, const std::unordered_set<std::string>& stopwords, unsigned int mode, unsigned int k);
 

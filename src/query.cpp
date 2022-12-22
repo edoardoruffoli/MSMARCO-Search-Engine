@@ -352,7 +352,7 @@ bool execute_query(std::vector<std::string> &terms, unsigned int mode, unsigned 
     return true;
 }
 
-void query_evaluation(const char* topics, const char* result, const std::unordered_set<std::string>& stopwords, unsigned int mode, unsigned int k) {
+void query_evaluation(std::string& topics, std::string& result, const std::unordered_set<std::string>& stopwords, unsigned int mode, unsigned int k) {
     std::cout << "Executing queries\n";
     std::vector<double> max_scores;
 

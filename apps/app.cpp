@@ -203,9 +203,7 @@ void handleEval(int mode, int k, std::string& queriesfile) {
         loaded_data = true;
     }
     clear();
-    char topics[128];
-    sprintf(topics, "../../evaluation/%s", queriesfile.c_str());
-    char results[128];
-    sprintf(results, "../../output/%s.test", queriesfile.c_str());
+    std::string topics = "../../evaluation/" + queriesfile;
+    std::string results = "../../output/" + queriesfile + ".test";
     query_evaluation(topics, results, stopwords, mode, k);
 }

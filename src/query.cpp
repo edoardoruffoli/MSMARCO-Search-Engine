@@ -294,6 +294,10 @@ void query_evaluation(std::string& topics, std::string& result, const std::unord
     std::vector<double> max_scores;
 
     std::ifstream instream(topics);
+    if (instream.fail()) {
+        std::cout << "File doesn't exist!\n";
+        return;
+    }
     std::ofstream outstream(result);
     std::string loaded_content;
 

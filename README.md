@@ -46,8 +46,7 @@ Available commands:
   help - display a list of commands
   query - perform a query
   eval - execute a queries dataset, saving the result file for trec_eval
-  parse - create the intermediate posting lists
-  merge - merge intermediate posting lists to create the index
+  index - create the inverted index
   exit - exit the program
 
 Enter a command:

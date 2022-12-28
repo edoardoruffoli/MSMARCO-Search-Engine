@@ -15,8 +15,7 @@ void printMenu();
 void printHelp();
 void handleInsertQueryParam(int& mode, int& k);
 void handleQuery(std::string& query, int mode, int k);
-void handleParse(int block_num);
-void handleMerge();
+void handleIndex(int block_num);
 void handleEval(int mode, int k, std::string& queriesfile);
 
 int main() {
@@ -49,7 +48,7 @@ int main() {
                 handleQuery(arg, mode, k);
             }
         }
-        else if (command == "parse") {
+        else if (command == "index") {
             int block_size;
             std::cout << "Enter the block size:" << std::endl << ">";
             std::cin >> block_size;
@@ -60,10 +59,7 @@ int main() {
                 std::cout << "Enter the block size:" << std::endl << ">";
                 std::cin >> block_size;
             }
-            handleParse(block_size);
-        }
-        else if (command == "merge") {
-            handleMerge();
+            handleIndex(block_size);
         }
         else if (command == "eval") {
             int k;
@@ -106,8 +102,7 @@ void printHelp() {
     std::cout << "  help - display a list of commands" << std::endl;
     std::cout << "  query - perform a query" << std::endl;
     std::cout << "  eval - execute a queries dataset, saving the result file for trec_eval " << std::endl;
-    std::cout << "  parse - create the intermediate posting lists " << std::endl;
-    std::cout << "  merge - merge intermediate posting lists to create the index" << std::endl;
+    std::cout << "  index - create the inverted index " << std::endl;
     std::cout << "  exit - exit the program" << std::endl;
     std::cout << std::endl;
 }
@@ -178,14 +173,10 @@ void handleQuery(std::string& query, int mode, int k) {
     execute_query(query_terms, mode, k);
 }
 
-void handleParse(int block_size) {
+void handleIndex(int block_size) {
     clear();
     unsigned int n_threads = std::thread::hardware_concurrency() - 1;
     parse(docfile, block_size, true, stopwordsFile, n_threads);
-}
-
-void handleMerge() {
-    clear();
     unsigned int n_blocks = 0;
     while (boost::filesystem::exists("../tmp/intermediate_" + std::to_string(n_blocks + 1))) {
         n_blocks++;

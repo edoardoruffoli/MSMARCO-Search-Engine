@@ -75,6 +75,9 @@ greater than or equal to d.
 */
 void posting_list::nextGEQ(unsigned int d) {
     // Check if skip pointers are present
+    if (this->cur_doc_id >= d) {
+        return;
+    }
     if (this->pl_len > MIN_POSTING_LEN) {
 
         // Check if there is a block that contains doc_id greater or equal than d (FROM THE CURRENT POINT)

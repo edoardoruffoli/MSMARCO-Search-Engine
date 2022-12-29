@@ -20,8 +20,8 @@ void handleEval(int mode, int k, std::string& queriesfile);
 
 int main() {
     std::cout << "*** Started MSMARCO Search Engine ***" << std::endl;
+    printHelp();
     while (true) {
-        printHelp();
         printMenu();
 
         std::string command;

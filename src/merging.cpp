@@ -214,7 +214,7 @@ void merge_blocks(const unsigned int n_blocks) {
     unsigned long docs_offset = 0, freqs_offset = 0;
     std::pair<unsigned long, unsigned long> len;
     double max_score = 0;
-    double bm25 = 0;
+    double score = 0;
 
     while (!min_heap.empty()) {
         
@@ -251,11 +251,13 @@ void merge_blocks(const unsigned int n_blocks) {
                 return;
             }
 
-            bm25 = BM25(entry.second, (unsigned int)cur.posting_list.size(), 
+            //score = TFIDF(entry.second, (unsigned int)cur.posting_list.size(), doc_table.getSize());
+
+            score = BM25(entry.second, (unsigned int)cur.posting_list.size(), 
                         de.doc_len, doc_table.getAvgDocLen(), 
                         doc_table.getSize());
-            if (bm25 > max_score)
-                max_score = bm25;
+            if (score > max_score)
+                max_score = score;
         }
 
         // Update file offsets values
@@ -276,8 +278,9 @@ void merge_blocks(const unsigned int n_blocks) {
     // Close Doc Table
     doc_table.close();
 
-    // Close file pointers
+    // Close file pointers and remove intermediate files
     for (unsigned int i = 1; i <= n_blocks; ++i) {
         in_files[i-1].close();
+        boost::filesystem::remove(boost::filesystem::path{ "../tmp/intermediate_" + std::to_string(i) });
     }
 }
